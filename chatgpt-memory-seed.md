@@ -10,7 +10,9 @@ global stop. Memory paraphrases what it stores, so wording that must be exact be
 in a file. Operating rules for repo work are NOT here; they live in each repo's
 AGENTS.md, generated from SHARED-AGENT-POLICY.md and drift-checked.
 
-BOOTSTRAP. Saved memory holds one small pointer entry, not this text. Every new
+BOOTSTRAP. Saved memory is empty and stays empty: the bootstrap instruction lives in
+custom instructions, so storing it in memory too would be the same rule in two places,
+and memory is the layer that silently goes stale. Every new
 conversation, worker and timed chat loads this seed once at start, and again after a
 reset or a version change, then works from it. Load it through MCP by reading
 `C:\Users\Lauri\.agents\chatgpt-memory-seed.md`. Do not open the Files/Library copy in
