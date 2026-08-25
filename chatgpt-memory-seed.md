@@ -164,3 +164,16 @@ background or ground shadow, no cartoon or painterly style. Visual delivery: PNG
 JPEG stills and animated GIFs render inline in chat, so show the frame instead of
 describing it or handing over a download link; MP4 remains the full-quality video
 artifact alongside the inline preview.
+
+
+MCP `start_process` hands your command to `powershell.exe -Command` as one argv string,
+so Windows argv serialisation and the PowerShell parser both re-read it: embedded double
+quotes, backticks and regex mangle before the command runs. Keep PowerShell for reads,
+process control and the build wrappers, and quote with single quotes. Do file mutation
+with a Python patcher passed as a here-string that asserts a single match before it
+writes — that route survives the transport and leaves a verifiable diff. When a
+PowerShell one-liner fails on quoting the cmdlet is not missing: on 2026-08-25 four
+failed patch attempts were blamed on this host lacking `Set-Content -NoNewline`, which a
+probe through the same MCP shell showed present and working under PowerShell 5.1 in
+FullLanguage mode. Verify a capability through the surface that reported it absent before
+writing it down as a machine fact.
