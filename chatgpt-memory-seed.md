@@ -166,6 +166,18 @@ describing it or handing over a download link; MP4 remains the full-quality vide
 artifact alongside the inline preview.
 
 
+`read_output` payload size is capped upstream, not by this server. Measured 2026-08-25:
+payloads of 10 B, 5.2 KB, 6.4 KB and 6.4 KB were delivered; 12.8 KB and 14.4 KB were
+blocked by the platform safety layer after the process had already run to exit 0 on the
+machine, so the output exists in the receipt while the agent sees only a safety error.
+Keep any single read near or below 6 KB and page long output with -TotalCount and
+Select-Object -Skip. The server's own 20,000-character cap is looser than what will
+actually arrive. A block is sticky: after one, the following `start_process` calls were
+rejected before reaching the machine, which is the same discovered-but-dead state a
+connector shows when tools list yet no request arrives. Recover with a new conversation,
+never by restarting a healthy server. An absolute user-profile path was blocked where the
+same read with working_directory and a relative path succeeded.
+
 MCP `start_process` passes your command through intact; measured 2026-08-25, a string
 carrying nested double quotes, backticks and a slash-bearing regex arrived byte-identical
 and ran correctly. Failures that look like transport mangling are almost always invalid
