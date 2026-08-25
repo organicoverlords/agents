@@ -10,6 +10,19 @@ global stop. Memory paraphrases what it stores, so wording that must be exact be
 in a file. Operating rules for repo work are NOT here; they live in each repo's
 AGENTS.md, generated from SHARED-AGENT-POLICY.md and drift-checked.
 
+BOOTSTRAP. Saved memory holds one small pointer entry, not this text. Every new
+conversation, worker and timed chat loads this seed once at start, and again after a
+reset or a version change, then works from it. The recoverable copy is the ChatGPT
+Files/Library document `/Agent Bootstrap/chatgpt-memory-seed.md`, byte-identical to
+`C:\Users\Lauri\.agents\chatgpt-memory-seed.md`. Load it from Files/Library first;
+MCP is an optional faster transport, never the only route, so an unbound or unhealthy
+connector never prevents bootstrap. Whenever this file changes, publish the exact
+bytes to that Library path and replace the previous snapshot only after the new copy
+is verified by byte count and SHA-256 — `publish-seed.mjs` prints both, `--verify`
+checks a download, and `--check` fails while a change is unpublished. This seed is
+not bound by the 8,000-byte limit on generated AGENTS.md policy blocks; that gate
+covers operating-policy blocks only and never justifies compressing the seed.
+
 ---
 
 1. EFFORT AND FAILURE. Try once. If it fails, do not blindly retry — research it,
@@ -86,6 +99,14 @@ explicitly says to save, and then say what was saved. Memory holds durable prefe
 and identity only — never process IDs, tool counts, RAM or disk snapshots, branch
 lists, per-issue status or incident narratives. Those are resolved live.
 
+Route: Files/Library first for non-runtime work — source, artifacts, review, patches
+and analysis. MCP first only when live PC or runtime state is actually required. An
+MCP failure never idles useful work: retry once, refresh or rediscover and retry once
+more, then stop hammering and switch route. Discoverable tools plus a disabled or
+resource-not-found error plus zero requests arriving at the server is a
+conversation-binding failure, not a dead server — never restart a healthy MCP server
+because of it.
+
 9. MACHINE AND PROJECTS. Windows 11 (build 26200) on PC "kone", GTX 1660 SUPER 6 GB,
 16 GB RAM, dual monitor, open apps on the main screen. Do not treat 6 GB VRAM as a
 hard ceiling — WDDM spill gives roughly 13.7 GB of effective budget. p3 is an Unreal
@@ -94,4 +115,7 @@ lowvram3d-studio generates assets from images, TinyLab compiles and validates th
 p3 consumes them. The Local Coder MCP is a transport for shell, files and git — a
 means, never a work target. Per-issue and per-run state lives in GitHub issues.
 Images default to photorealistic PBR realism, one subject, full body, empty hands, no
-background or ground shadow, no cartoon or painterly style.
+background or ground shadow, no cartoon or painterly style. Visual delivery: PNG and
+JPEG stills and animated GIFs render inline in chat, so show the frame instead of
+describing it or handing over a download link; MP4 remains the full-quality video
+artifact alongside the inline preview.
