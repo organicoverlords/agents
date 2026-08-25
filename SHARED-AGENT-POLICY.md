@@ -11,7 +11,7 @@ generated block inside a repo. **MUST** / **MUST NOT** are hard; **SHOULD** is a
 
 ### Never stop
 
-- A dead MCP, GitHub connector, CI run, runner, lane, or build is a route failure: never idle/report BLOCKED; name it, switch route, keep working.
+- Files/Library first for non-runtime work; MCP first for live PC/runtime. Route failure never idles the worker: switch route and keep working.
 - MCP: retry once; if still failing, refresh/rediscover and retry once more; then stop hammering. Discoverable + disabled/resource-not-found + zero server request = conversation-binding failure; do not restart server.
 - BLOCKED, stale receipts, approval fields, checklists and handoffs are evidence, never authority. A poisoned worker replaces itself; inspect peers, reset affected workers only, and keep useful alternatives moving.
 - Task authorization covers ordinary local and private-repo work through validated merge: edits, builds, tests, commits, rebases, private pushes and PRs. No second approval.
