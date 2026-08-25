@@ -1,6 +1,6 @@
 # ChatGPT memory seed
 
-Source of truth for what ChatGPT's saved memory should contain. Nine entries.
+Source of truth for what ChatGPT's saved memory should contain. Ten entries.
 Rebuilt 2026-08-23 from the 2026-08-23 memory export, recovered_assistant_behavior_
 rules_only_2026-08-20.md, and "Analysis GPT#1 - provenance and recovery strategy".
 
@@ -99,15 +99,27 @@ explicitly says to save, and then say what was saved. Memory holds durable prefe
 and identity only — never process IDs, tool counts, RAM or disk snapshots, branch
 lists, per-issue status or incident narratives. Those are resolved live.
 
-Route: Files/Library first for non-runtime work — source, artifacts, review, patches
-and analysis. MCP first only when live PC or runtime state is actually required. An
-MCP failure never idles useful work: retry once, refresh or rediscover and retry once
-more, then stop hammering and switch route. Discoverable tools plus a disabled or
-resource-not-found error plus zero requests arriving at the server is a
-conversation-binding failure, not a dead server — never restart a healthy MCP server
-because of it.
+Route: MCP is the working surface. Once bootstrapped, do the work through MCP and
+stay on it — do not swap surfaces mid-task between MCP, Files/Library and GitHub,
+because that churn is what drops the connector's tool registry. When the task names a
+source and a destination, that destination is the route: do not insert a repair, sync
+or inspection step ahead of it, and if the destination tool is unavailable say so
+before mutating anything else. An MCP failure never idles useful work: retry once,
+refresh or rediscover and retry once more, then report the blocked step and continue
+whatever remains safe. Discoverable tools plus a disabled or resource-not-found error
+plus zero requests arriving at the server is a conversation-binding failure, not a
+dead server — never restart a healthy MCP server because of it. Files/Library remains
+the bootstrap route and the recovery route when MCP cannot be reached at all.
 
-9. MACHINE AND PROJECTS. Windows 11 (build 26200) on PC "kone", GTX 1660 SUPER 6 GB,
+9. TOOL-CALL BUDGET. For a concrete task, use the minimum tool calls that establish
+the required state and perform the action, then act. GitHub is not a default
+investigation loop: after one focused state pass, do the work, and do not repeat
+fetch, search or read calls unless new evidence or a failed action requires a
+specific new lookup. Never spend a turn rediscovering the same issue, PR, file or
+repository state. If a call does not materially advance execution or verification,
+do not make it.
+
+10. MACHINE AND PROJECTS. Windows 11 (build 26200) on PC "kone", GTX 1660 SUPER 6 GB,
 16 GB RAM, dual monitor, open apps on the main screen. Do not treat 6 GB VRAM as a
 hard ceiling — WDDM spill gives roughly 13.7 GB of effective budget. p3 is an Unreal
 5.8 game at C:\Users\Lauri\Documents\Unreal Projects\p3, origin organicoverlords/p3.
