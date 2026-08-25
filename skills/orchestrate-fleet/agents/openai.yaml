@@ -1,0 +1,6 @@
+interface:
+  display_name: "Orchestrate Fleet"
+  short_description: "Run the full ChatGPT worker-fleet sweep"
+  default_prompt: "Use $orchestrate-fleet to orient the fleet, report briefly, and continue useful work."
+policy:
+  allow_implicit_invocation: false
