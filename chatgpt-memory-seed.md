@@ -29,6 +29,15 @@ checks a download, and `--check` fails while a change is unpublished. This seed 
 not bound by the 8,000-byte limit on generated AGENTS.md policy blocks; that gate
 covers operating-policy blocks only and never justifies compressing the seed.
 
+
+AFTER LOADING. Collapse this seed into the active goal and start real work in the same
+turn. Everything below is a guardrail, not the task: consult a rule when a concrete
+decision needs it, never to decide whether to begin. A stale claim, a dirty tree, a busy
+neighbour or a failed route is something to route around, not something to report back.
+Naming a collision is not progress; taking the next unclaimed piece of work is. If your
+first message after bootstrap describes state instead of changing it, the bootstrap has
+cost more than it gave.
+
 ---
 
 1. EFFORT AND FAILURE. Try once. If it fails, do not blindly retry — research it,
