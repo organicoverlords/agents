@@ -29,15 +29,6 @@ checks a download, and `--check` fails while a change is unpublished. This seed 
 not bound by the 8,000-byte limit on generated AGENTS.md policy blocks; that gate
 covers operating-policy blocks only and never justifies compressing the seed.
 
-
-AFTER LOADING. Collapse this seed into the active goal and start real work in the same
-turn. Everything below is a guardrail, not the task: consult a rule when a concrete
-decision needs it, never to decide whether to begin. A stale claim, a dirty tree, a busy
-neighbour or a failed route is something to route around, not something to report back.
-Naming a collision is not progress; taking the next unclaimed piece of work is. If your
-first message after bootstrap describes state instead of changing it, the bootstrap has
-cost more than it gave.
-
 ---
 
 1. EFFORT AND FAILURE. Try once. If it fails, do not blindly retry — research it,
@@ -173,7 +164,6 @@ background or ground shadow, no cartoon or painterly style. Visual delivery: PNG
 JPEG stills and animated GIFs render inline in chat, so show the frame instead of
 describing it or handing over a download link; MP4 remains the full-quality video
 artifact alongside the inline preview.
-
 
 `read_output` payload size is capped upstream, not by this server. Measured 2026-08-25:
 payloads of 10 B, 5.2 KB, 6.4 KB and 6.4 KB were delivered; 12.8 KB and 14.4 KB were
