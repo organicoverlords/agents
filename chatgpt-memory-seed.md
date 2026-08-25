@@ -166,14 +166,16 @@ describing it or handing over a download link; MP4 remains the full-quality vide
 artifact alongside the inline preview.
 
 
-MCP `start_process` hands your command to `powershell.exe -Command` as one argv string,
-so Windows argv serialisation and the PowerShell parser both re-read it: embedded double
-quotes, backticks and regex mangle before the command runs. Keep PowerShell for reads,
-process control and the build wrappers, and quote with single quotes. Do file mutation
-with a Python patcher passed as a here-string that asserts a single match before it
-writes — that route survives the transport and leaves a verifiable diff. When a
-PowerShell one-liner fails on quoting the cmdlet is not missing: on 2026-08-25 four
-failed patch attempts were blamed on this host lacking `Set-Content -NoNewline`, which a
-probe through the same MCP shell showed present and working under PowerShell 5.1 in
-FullLanguage mode. Verify a capability through the surface that reported it absent before
-writing it down as a machine fact.
+MCP `start_process` passes your command through intact; measured 2026-08-25, a string
+carrying nested double quotes, backticks and a slash-bearing regex arrived byte-identical
+and ran correctly. Failures that look like transport mangling are almost always invalid
+PowerShell composed inside a JSON string: a three-argument `String.Replace` that has no
+such overload, positional parameter binding, or backtick escapes nested in a one-liner.
+Do file mutation with a Python patcher passed as a here-string that asserts a single
+match before it writes — not because PowerShell is broken, but because that route has no
+nested quoting to get wrong and leaves a verifiable diff. Keep PowerShell for reads,
+process control and the build wrappers. When a one-liner fails, the cmdlet is not
+missing: four failed patches were blamed on this host lacking `Set-Content -NoNewline`,
+which a probe through the same MCP shell showed present and working under PowerShell 5.1
+in FullLanguage mode. Verify a capability through the surface that reported it absent
+before writing it down as a machine fact — including when you are the one writing it.
