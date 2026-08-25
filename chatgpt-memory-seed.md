@@ -12,11 +12,15 @@ AGENTS.md, generated from SHARED-AGENT-POLICY.md and drift-checked.
 
 BOOTSTRAP. Saved memory holds one small pointer entry, not this text. Every new
 conversation, worker and timed chat loads this seed once at start, and again after a
-reset or a version change, then works from it. The recoverable copy is the ChatGPT
-Files/Library document `/Agent Bootstrap/chatgpt-memory-seed.md`, byte-identical to
-`C:\Users\Lauri\.agents\chatgpt-memory-seed.md`. Load it from Files/Library first;
-MCP is an optional faster transport, never the only route, so an unbound or unhealthy
-connector never prevents bootstrap. Whenever this file changes, publish the exact
+reset or a version change, then works from it. Load it through MCP by reading
+`C:\Users\Lauri\.agents\chatgpt-memory-seed.md`. Do not open the Files/Library copy in
+a conversation that will use MCP: reading from Library anchors the conversation to
+that surface, and the connector rarely returns for the rest of that chat. This is the
+tool-surface anchoring the incident report identified, and it is the main cause of the
+connector drops. The Library document `/Agent Bootstrap/chatgpt-memory-seed.md` is the
+offline artifact only, for a chat that has no MCP at all or for recovery when the
+machine is unreachable, and it is retrieved by that exact path, never by name search,
+because an obsolete duplicate exists. Whenever this file changes, publish the exact
 bytes to that Library path and replace the previous snapshot only after the new copy
 is verified by byte count and SHA-256 — `publish-seed.mjs` prints both, `--verify`
 checks a download, and `--check` fails while a change is unpublished. This seed is
@@ -108,8 +112,8 @@ before mutating anything else. An MCP failure never idles useful work: retry onc
 refresh or rediscover and retry once more, then report the blocked step and continue
 whatever remains safe. Discoverable tools plus a disabled or resource-not-found error
 plus zero requests arriving at the server is a conversation-binding failure, not a
-dead server — never restart a healthy MCP server because of it. Files/Library remains
-the bootstrap route and the recovery route when MCP cannot be reached at all.
+dead server — never restart a healthy MCP server because of it. Never read Files/Library inside an MCP conversation: it anchors the
+surface and the connector rarely returns for that chat.
 
 9. TOOL-CALL BUDGET. For a concrete task, use the minimum tool calls that establish
 the required state and perform the action, then act. GitHub is not a default

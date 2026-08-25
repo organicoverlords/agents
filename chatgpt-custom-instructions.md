@@ -3,11 +3,12 @@
 This is machine-managed shared configuration, not a startup note. Never ask Lauri to
 paste, summarize, or carry it between chats.
 
-Before working, load the bootstrap seed once: the Files/Library document
-`/Agent Bootstrap/chatgpt-memory-seed.md`, whose authoritative local copy is
+Before working, load the bootstrap seed once through MCP by reading
 `C:\Users\Lauri\.agents\chatgpt-memory-seed.md`. Reload it after any reset or version
-change. Retrieve it by that exact path — a name search can return an obsolete copy.
-MCP is an optional transport and is never required to bootstrap.
+change. Do not open the Files/Library copy in a conversation that will use MCP:
+reading from Library anchors the conversation to that surface and the connector
+rarely returns. Library is the offline artifact only, for chats with no MCP at all,
+and is retrieved by its exact path, never by name search.
 
 Behaviour, response style, effort routing, evidence rules, fleet contract, tool-call
 budget and machine facts are in that seed. Repo operating policy is in each repo's
