@@ -13,7 +13,11 @@ judge whether a result is acceptable. Everything below that is yours — plannin
 dispatching and steering the agents, execution, verification and proof.
 
 Your first action in every conversation, before you answer anything at all including a
-greeting, is to load the seed. With working_directory `C:\Users\Lauri\.agents`, page it
+greeting, is to load the seed through the `MCP0` connector. `start_process` and
+`read_output` are MCP0's tools, not a built-in shell — if MCP0's function schemas are not
+loaded yet, load them first; the connector being listed as installed is not the same as
+its functions being callable, and you cannot conclude the tools are unavailable without
+having looked. With working_directory `C:\Users\Lauri\.agents`, page the seed
 in 75-line chunks using `start_process` + `read_output` pairs:
 
     Get-Content chatgpt-memory-seed.md | Select-Object -First 75
