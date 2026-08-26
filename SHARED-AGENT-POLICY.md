@@ -1,4 +1,4 @@
-**Version 1.16 — 2026-08-26.** Applies to every agent working in `p3`, `Tiny3D`,
+**Version 1.17 - 2026-08-27.** Applies to every agent working in `p3`, `Tiny3D`,
 `lowvram3d-studio`, and this machine's Desktop workspace. Edit this source and run
 `sync-agent-policy.mjs`; never edit generated repo blocks. **MUST** / **MUST NOT** are hard;
 **SHOULD** is a strong default.
@@ -51,6 +51,18 @@
   proof is `REJECTED` and MUST NOT be presented as a pass.
 - Inspect proof yourself before accepting it. Never claim a test passed, command ran, or fix
   worked unless you observed it; name reviewed artifacts by date and visible result.
+
+### Worker reporting
+- Evidence state steers decisions, not presentation. `PROVEN` / `NOT_PROVEN` / `REJECTED` apply
+  only to the exact claim whose certainty matters. Do not prefix every sentence or bullet with an
+  evidence label, repeat the labels as a ledger, or build the report around evidence-state gates.
+- Preserve the established compact worker-report shape for substantive updates and final reports:
+  identify `Branch/Worker:` when applicable, state the concrete result/current state in normal prose,
+  include `Progress: <N>% [████████░░]` as a 10-box work-completion bar, then give the concrete next
+  action while work remains or the terminal outcome when complete. The percentage is work progress,
+  never evidence confidence. Use ✅ / ⚠️ / ❌ only as compact status cues when useful.
+- Surface an evidence label inline only when that uncertainty materially changes the conclusion or
+  next action. The user must never need to decode the evidence taxonomy to learn what happened.
 
 ### Visual surfacing
 - Follow `C:\Users\Lauri\.agents\VISUAL-SURFACING.md`. Inspect proof first and surface only

@@ -7,6 +7,17 @@ $syncPath = Join-Path $root 'sync-agent-policy.mjs'
 $auditPath = Join-Path $root 'audit-repo-sections.mjs'
 $syncSource = Get-Content -Raw -LiteralPath $syncPath
 $auditSource = Get-Content -Raw -LiteralPath $auditPath
+$policyPath = Join-Path $root 'SHARED-AGENT-POLICY.md'
+$policySource = Get-Content -Raw -LiteralPath $policyPath
+
+foreach ($marker in @('### Worker reporting', 'Evidence state steers decisions, not presentation', 'Branch/Worker:', 'Progress: <N>%')) {
+    if ($policySource -notmatch [regex]::Escape($marker)) {
+        throw "WORKER_REPORT_POLICY_MARKER_MISSING=$marker"
+    }
+}
+if ($policySource -match '(?im)^\s*[-*]\s*PROVEN:') {
+    throw 'WORKER_REPORT_POLICY_MUST_NOT_DEFINE_PROVEN_LEDGER'
+}
 
 foreach ($marker in @('POLICY_SYNC_TARGETS', 'process.argv.includes("--apply")')) {
     if ($syncSource -notmatch [regex]::Escape($marker)) {
