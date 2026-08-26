@@ -10,7 +10,7 @@ $auditSource = Get-Content -Raw -LiteralPath $auditPath
 $policyPath = Join-Path $root 'SHARED-AGENT-POLICY.md'
 $policySource = Get-Content -Raw -LiteralPath $policyPath
 
-foreach ($marker in @('### Worker reporting', 'Evidence state steers decisions, not presentation', 'Branch/Worker:', 'Progress: <N>%')) {
+foreach ($marker in @('### Worker reporting', 'Evidence state steers decisions, not presentation', 'For claims that affect acceptance or the next action', 'Branch/Worker:', 'Progress: <N>%')) {
     if ($policySource -notmatch [regex]::Escape($marker)) {
         throw "WORKER_REPORT_POLICY_MARKER_MISSING=$marker"
     }

@@ -35,8 +35,9 @@
   immediately with exact paths.
 
 ### Proof
-- Use `PROVEN` / `NOT_PROVEN` / `REJECTED`, never "should work". Compile success, logs, exit
-  codes and file existence are supporting evidence, not QA.
+- For claims that affect acceptance or the next action, distinguish `PROVEN` / `NOT_PROVEN` /
+  `REJECTED`; never use "should work" as evidence. Compile success, logs, exit codes and file
+  existence are supporting evidence, not QA.
 - Player-visible acceptance still requires rendered proof from the normal runtime path, but
   low-risk related visual increments MAY share a bounded render checkpoint instead of forcing one
   render per PR. Runtime/gameplay-risky changes still require rendered proof before merge. An
