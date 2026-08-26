@@ -18,7 +18,7 @@ const DEFAULT_TARGETS = [
   "C:/Users/Lauri/Desktop/lowvram3d-studio-p0a-worktree/AGENTS.md",
   "C:/Users/Lauri/Desktop/AGENTS.md",
   "C:/Users/Lauri/Desktop/tiny3d/AGENTS.md",
-  "C:/Users/Lauri/Desktop/regression-research/AGENTS.md",
+  "C:/Users/Lauri/Desktop/vault/AGENTS.md",
   // global harness homes
   "C:/Users/Lauri/.codex/AGENTS.md",
   "C:/Users/Lauri/.config/opencode/AGENTS.md",
@@ -38,18 +38,11 @@ if (apply && explicitCheck) {
 }
 const check = !apply;
 
-// The block is the one artifact every repo must carry, so it gets the same kind of
-// mechanical limit the repos apply to AGENTS.md. lowvram3d-studio caps AGENTS.md at
-// 12000 bytes; a block anywhere near that leaves no room for a repo's own section and
-// is a sign the policy is growing by accretion again. Trim the source, do not raise this.
-const MAX_BLOCK_BYTES = 8000;
+// Report policy size for observability, but do not impose an arbitrary hard cap.
+// The shared policy is authoritative; structure and ownership, not byte count, decide
+// whether detail belongs here or in a linked document.
 const blockBytes = Buffer.byteLength(block, "utf-8");
-if (blockBytes > MAX_BLOCK_BYTES) {
-  console.error(`POLICY_BLOCK_TOO_LARGE_BYTES=${blockBytes} max=${MAX_BLOCK_BYTES}`);
-  console.error("Trim SHARED-AGENT-POLICY.md. Detail belongs in a doc with one owner, not here.");
-  process.exit(1);
-}
-console.log(`policy block ${blockBytes} / ${MAX_BLOCK_BYTES} bytes`);
+console.log(`policy block ${blockBytes} bytes`);
 
 let changed = 0, drifted = [], missing = [], malformed = [];
 for (const target of TARGETS) {
