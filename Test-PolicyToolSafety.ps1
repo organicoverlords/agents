@@ -10,7 +10,7 @@ $auditSource = Get-Content -Raw -LiteralPath $auditPath
 $policyPath = Join-Path $root 'SHARED-AGENT-POLICY.md'
 $policySource = Get-Content -Raw -LiteralPath $policyPath
 
-foreach ($marker in @('### Worker reporting', 'Evidence state steers decisions, not presentation', 'For claims that affect acceptance or the next action', 'Branch/Worker:', 'Progress: <N>%')) {
+foreach ($marker in @('### Worker reporting', 'only to classify the claim being made', 'Branch/Worker:', 'Progress: <N>%')) {
     if ($policySource -notmatch [regex]::Escape($marker)) {
         throw "WORKER_REPORT_POLICY_MARKER_MISSING=$marker"
     }
@@ -18,6 +18,10 @@ foreach ($marker in @('### Worker reporting', 'Evidence state steers decisions, 
 if ($policySource -match '(?im)^\s*[-*]\s*PROVEN:') {
     throw 'WORKER_REPORT_POLICY_MUST_NOT_DEFINE_PROVEN_LEDGER'
 }
+if ($policySource -match [regex]::Escape('Evidence state steers decisions, not presentation')) { throw 'POLICY_DECISION_GATING_REGRESSION' }
+if ($policySource -match [regex]::Escape('For claims that affect acceptance or the next action')) { throw 'POLICY_NEXT_ACTION_EVIDENCE_GATE_REGRESSION' }
+if ($policySource -match [regex]::Escape('recent-title window')) { throw 'POLICY_WORKER_RECENT_MEMORY_BOOTSTRAP_REGRESSION' }
+if ($policySource -match [regex]::Escape('An active process_id, BUSY scope, unfinished mutation')) { throw 'POLICY_GLOBAL_COMPLETION_TAIL_REGRESSION' }
 
 foreach ($marker in @('POLICY_SYNC_TARGETS', 'process.argv.includes("--apply")')) {
     if ($syncSource -notmatch [regex]::Escape($marker)) {

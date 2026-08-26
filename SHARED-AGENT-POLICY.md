@@ -35,9 +35,9 @@
   immediately with exact paths.
 
 ### Proof
-- For claims that affect acceptance or the next action, distinguish `PROVEN` / `NOT_PROVEN` /
-  `REJECTED`; never use "should work" as evidence. Compile success, logs, exit codes and file
-  existence are supporting evidence, not QA.
+- Use `PROVEN` / `NOT_PROVEN` / `REJECTED` only to classify the claim being made; never use
+  "should work" as evidence. Compile success, logs, exit codes and file existence are supporting
+  evidence, not QA.
 - Player-visible acceptance still requires rendered proof from the normal runtime path, but
   low-risk related visual increments MAY share a bounded render checkpoint instead of forcing one
   render per PR. Runtime/gameplay-risky changes still require rendered proof before merge. An
@@ -54,9 +54,6 @@
   worked unless you observed it; name reviewed artifacts by date and visible result.
 
 ### Worker reporting
-- Evidence state steers decisions, not presentation. `PROVEN` / `NOT_PROVEN` / `REJECTED` apply
-  only to the exact claim whose certainty matters. Do not prefix every sentence or bullet with an
-  evidence label, repeat the labels as a ledger, or build the report around evidence-state gates.
 - Preserve the established compact worker-report shape for substantive updates and final reports:
   identify `Branch/Worker:` when applicable, state the concrete result/current state in normal prose,
   include `Progress: <N>% [████████░░]` as a 10-box work-completion bar, then give the concrete next
@@ -79,8 +76,6 @@
 - Work longer than a few minutes launches detached under the scheduler, not the calling session.
   Agent harness shells own their children so children die with the session. This governs OS child
   lifetime only; it does not end the assistant task/execution state.
-- An active process_id, BUSY scope, unfinished mutation, or explicit remaining next action means
-  execution is still live. Do not final-answer or hand off until it completes or a real blocker is proven.
 - Prove a fix on the broken item before rerunning a batch. One failure is an item, two the same
   pattern; requeue errored items first and never repeat completed items.
 - Expensive build, runtime, render, and GPU-generation work is single-flight by exact input identity. A duplicate request MUST join the in-flight work or reuse a still-valid PASS result; it MUST NOT start another heavy execution. A failed flight may be retried only after that flight ends. Enforce this at the canonical execution entrypoint so worker wording, PRs, sessions, and retries cannot bypass it.
@@ -157,7 +152,6 @@
 - The canonical shared historical-memory bank is `C:\Users\Lauri\Desktop\vault\memory\memory-bank.jsonl`, with CLI `C:\Users\Lauri\Desktop\vault\tools\memory_bank.py`.
 - Write to it only for durable, important facts, decisions, corrections, lessons, preferences, or status that will matter beyond the current task. It is not a worker diary: do not store routine steps, transient handoff chatter, ordinary progress, or facts already represented better by live issues/PRs/runtime state.
 - PROVEN applies only to the exact claim supported by its evidence; it never widens scope. Per-run, per-worker, per-branch, and per-test-window traces belong in corpus/evidence unless they establish a durable conclusion useful beyond that slice. Durable memory must state the surviving conclusion at the same or narrower scope than the evidence.
-- At the start of repo work, when the bank is available, glance at its bounded recent-title window (`python C:\Users\Lauri\Desktop\vault\tools\memory_bank.py recent`). Retrieve/search a memory only when a recent title looks relevant to the current task or resembles an error about to be repeated.
 - When an important new memory changes an existing conclusion, first identify the directly related current memory, preserve the established scope/tags when they still fit, and use `supersedes` only when the new evidence actually replaces that conclusion. Similar-looking incidents or failure classes do not imply supersession.
 - A rejected or superseded claim must never be the only durable record of the lesson. Preserve the rejected claim as history, but keep a current `PROVEN` correction/lesson that states what was rejected and the current safe conclusion and links it with `supersedes`. Ordinary recall may suppress stale claims; it must not suppress the fact that they were disproven.
 - The bank is optional enrichment, never a startup dependency or authority over current instruction, live repo/runtime state, or repo `AGENTS.md`. If unavailable, continue normally.
