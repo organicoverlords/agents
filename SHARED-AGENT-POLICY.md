@@ -74,11 +74,10 @@
 - Change running batch behavior via a marker it checks between items, not by editing the live script.
 
 ### BUSY
-- Before mutating shared scope, set the GitHub issue title to
-  `BUSY - <actor> <scope> :: <original title>`. Read-only work needs none.
-- Release when mutation stops. A marker idle >5 minutes without live-process evidence is stale.
-  BUSY is advisory and last-write-wins; a later claimant that collides yields.
-
+- MCP0 BUSY is the live ownership authority. Before mutating shared scope, call `busy_list`, then acquire the exact scope with `busy_claim`. Read-only work needs no claim. If another live claim owns that scope, yield rather than mutating it.
+- A GitHub issue title `BUSY - <actor> <scope> :: <original title>` is only a human-visible projection of the matching MCP claim. It never establishes ownership by itself. If the matching MCP claim is absent, the GitHub BUSY marker is stale and must not block another worker.
+- Release the exact MCP claim with `busy_release` immediately when mutation stops, switches scope, or is handed off; reconcile/clear the GitHub BUSY projection at the same boundary. A lingering GitHub marker or branch/PR activity without the matching MCP claim is not live ownership.
+- Do not create a second BUSY authority. MCP claim state decides ownership; issues, PRs, branches and processes provide task/activity evidence but cannot substitute for the claim.
 ### Dirty worktrees are owned work
 - A dirty worktree is a reconciliation obligation, not an exclusion zone. Before changing it,
   inspect status/diff, branch/upstream, recent commits, related issue/PR, and live ownership.
