@@ -143,7 +143,10 @@
 
 ### Shared memory bank
 - The canonical shared historical-memory bank is `C:\Users\Lauri\Desktop\vault\memory\memory-bank.jsonl`, with CLI `C:\Users\Lauri\Desktop\vault\tools\memory_bank.py`.
+- Write to it only for durable, important facts, decisions, corrections, lessons, preferences, or status that will matter beyond the current task. It is not a worker diary: do not store routine steps, transient handoff chatter, ordinary progress, or facts already represented better by live issues/PRs/runtime state.
 - At the start of repo work, when the bank is available, glance at its bounded recent-title window (`python C:\Users\Lauri\Desktop\vault\tools\memory_bank.py recent`). Retrieve/search a memory only when a recent title looks relevant to the current task or resembles an error about to be repeated.
+- When an important new memory changes an existing conclusion, first identify the directly related current memory, preserve the established scope/tags when they still fit, and use `supersedes` only when the new evidence actually replaces that conclusion. Similar-looking incidents or failure classes do not imply supersession.
+- A rejected or superseded claim must never be the only durable record of the lesson. Preserve the rejected claim as history, but keep a current `PROVEN` correction/lesson that states what was rejected and the current safe conclusion and links it with `supersedes`. Ordinary recall may suppress stale claims; it must not suppress the fact that they were disproven.
 - The bank is optional enrichment, never a startup dependency or authority over current instruction, live repo/runtime state, or repo `AGENTS.md`. If unavailable, continue normally.
 ### Asking and precedence
 - Ask only for destructive actions, spending money, public publishing, or external authority.
