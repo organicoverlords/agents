@@ -42,7 +42,7 @@ const check = !apply;
 // mechanical limit the repos apply to AGENTS.md. lowvram3d-studio caps AGENTS.md at
 // 12000 bytes; a block anywhere near that leaves no room for a repo's own section and
 // is a sign the policy is growing by accretion again. Trim the source, do not raise this.
-const MAX_BLOCK_BYTES = 10000;
+const MAX_BLOCK_BYTES = 8000;
 const blockBytes = Buffer.byteLength(block, "utf-8");
 if (blockBytes > MAX_BLOCK_BYTES) {
   console.error(`POLICY_BLOCK_TOO_LARGE_BYTES=${blockBytes} max=${MAX_BLOCK_BYTES}`);

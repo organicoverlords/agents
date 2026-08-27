@@ -23,22 +23,34 @@ foreach ($skill in Get-ChildItem -LiteralPath $skillRoot -Recurse -Filter 'SKILL
     if ($body -notmatch '(?m)^name:\s*\S') { throw "SKILL_NAME_MISSING=$($skill.FullName)" }
     if ($body -notmatch '(?m)^description:\s*\S') { throw "SKILL_DESCRIPTION_MISSING=$($skill.FullName)" }
 }
-if ($policySource -notmatch [regex]::Escape('**Version 1.18 - 2026-08-27.**')) { throw 'POLICY_RECOVERY_VERSION_MISSING' }
-
-foreach ($marker in @('### Worker reporting', 'only to classify the claim being made', 'Branch/Worker:', 'Progress: <N>%')) {
-    if ($policySource -notmatch [regex]::Escape($marker)) {
-        throw "WORKER_REPORT_POLICY_MARKER_MISSING=$marker"
-    }
+if ($policySource -notmatch [regex]::Escape('**Version 1.19 - 2026-08-27.**')) { throw 'POLICY_VERSION_1_19_MISSING' }
+foreach ($required in @(
+    '### Route failure is local',
+    'currently scheduled task prompt is current task instruction',
+    'Do not centralize routine resilience',
+    'scope-visible pending work',
+    'MCP0 BUSY is the single live ownership authority',
+    'busy_claim',
+    'busy_release',
+    'Never update it silently; disclose every change in the same reply',
+    'Project-specific machinery belongs in the narrowest repo, skill, adapter, automation prompt, or test that owns it'
+)) {
+    if ($policySource -notmatch [regex]::Escape($required)) { throw "POLICY_REQUIRED_INVARIANT_MISSING=$required" }
 }
-if ($policySource -match '(?im)^\s*[-*]\s*PROVEN:') {
-    throw 'WORKER_REPORT_POLICY_MUST_NOT_DEFINE_PROVEN_LEDGER'
-}
-if ($policySource -match [regex]::Escape('Evidence state steers decisions, not presentation')) { throw 'POLICY_DECISION_GATING_REGRESSION' }
-if ($policySource -match [regex]::Escape('For claims that affect acceptance or the next action')) { throw 'POLICY_NEXT_ACTION_EVIDENCE_GATE_REGRESSION' }
-if ($policySource -match [regex]::Escape('recent-title window')) { throw 'POLICY_WORKER_RECENT_MEMORY_BOOTSTRAP_REGRESSION' }
-if ($policySource -match [regex]::Escape('An active process_id, BUSY scope, unfinished mutation')) { throw 'POLICY_GLOBAL_COMPLETION_TAIL_REGRESSION' }
-
 foreach ($forbidden in @(
+    '### Never stop',
+    '### Worker reporting',
+    'Progress: <N>%',
+    'current multi-plugin reliability trial',
+    '`plugin5`',
+    '`plugin2`',
+    'A player-visible claim needs a rendered frame',
+    'MUST NOT be merged, closed, or ticked',
+    'Prompts, schedules, names, receipts and handoffs describe the past',
+    'No roles, no reserved work',
+    'fleet owner/coordinator owns fleet health',
+    'recent-title window',
+    'An active process_id, BUSY scope, unfinished mutation',
     'A dirty worktree is a reconciliation obligation',
     'Producer backpressure is mandatory',
     'completed or idle PR awaiting integration is fleet debt',
@@ -46,23 +58,11 @@ foreach ($forbidden in @(
     'merge immediately',
     'memory_bank.py recent'
 )) {
-    if ($policySource -match [regex]::Escape($forbidden)) {
-        throw "POLICY_SCOPE_EXPANSION_REGRESSION=$forbidden"
-    }
+    if ($policySource -match [regex]::Escape($forbidden)) { throw "POLICY_ACCRETION_REGRESSION=$forbidden" }
 }
-foreach ($required in @(
-    'MCP0 BUSY is the live ownership authority',
-    'busy_claim',
-    'busy_release'
-)) {
-    if ($policySource -notmatch [regex]::Escape($required)) {
-        throw "POLICY_BUSY_AUTHORITY_MARKER_MISSING=$required"
-    }
-}
-if ($syncSource -notmatch [regex]::Escape('const MAX_BLOCK_BYTES = 10000;')) { throw 'POLICY_SIZE_CAP_NOT_10000' }
+if ($syncSource -notmatch [regex]::Escape('const MAX_BLOCK_BYTES = 8000;')) { throw 'POLICY_SIZE_CAP_NOT_8000' }
 if ($syncSource -notmatch [regex]::Escape('C:/Users/Lauri/Desktop/vault/AGENTS.md')) { throw 'POLICY_VAULT_SYNC_TARGET_MISSING' }
 if ($syncSource -match [regex]::Escape('C:/Users/Lauri/Desktop/regression-research/AGENTS.md')) { throw 'POLICY_STALE_REGRESSION_RESEARCH_TARGET' }
-
 foreach ($marker in @('POLICY_SYNC_TARGETS', 'process.argv.includes("--apply")')) {
     if ($syncSource -notmatch [regex]::Escape($marker)) {
         throw "POLICY_SYNC_SAFETY_MARKER_MISSING=$marker"
