@@ -9,6 +9,7 @@ $syncSource = Get-Content -Raw -LiteralPath $syncPath
 $auditSource = Get-Content -Raw -LiteralPath $auditPath
 $policyPath = Join-Path $root 'SHARED-AGENT-POLICY.md'
 $policySource = Get-Content -Raw -LiteralPath $policyPath
+if ($policySource -notmatch [regex]::Escape('**Version 1.18 - 2026-08-27.**')) { throw 'POLICY_RECOVERY_VERSION_MISSING' }
 
 foreach ($marker in @('### Worker reporting', 'only to classify the claim being made', 'Branch/Worker:', 'Progress: <N>%')) {
     if ($policySource -notmatch [regex]::Escape($marker)) {
@@ -22,6 +23,31 @@ if ($policySource -match [regex]::Escape('Evidence state steers decisions, not p
 if ($policySource -match [regex]::Escape('For claims that affect acceptance or the next action')) { throw 'POLICY_NEXT_ACTION_EVIDENCE_GATE_REGRESSION' }
 if ($policySource -match [regex]::Escape('recent-title window')) { throw 'POLICY_WORKER_RECENT_MEMORY_BOOTSTRAP_REGRESSION' }
 if ($policySource -match [regex]::Escape('An active process_id, BUSY scope, unfinished mutation')) { throw 'POLICY_GLOBAL_COMPLETION_TAIL_REGRESSION' }
+
+foreach ($forbidden in @(
+    'A dirty worktree is a reconciliation obligation',
+    'Producer backpressure is mandatory',
+    'completed or idle PR awaiting integration is fleet debt',
+    'Open-PR count is work to reconcile',
+    'merge immediately',
+    'memory_bank.py recent'
+)) {
+    if ($policySource -match [regex]::Escape($forbidden)) {
+        throw "POLICY_SCOPE_EXPANSION_REGRESSION=$forbidden"
+    }
+}
+foreach ($required in @(
+    'MCP0 BUSY is the live ownership authority',
+    'busy_claim',
+    'busy_release'
+)) {
+    if ($policySource -notmatch [regex]::Escape($required)) {
+        throw "POLICY_BUSY_AUTHORITY_MARKER_MISSING=$required"
+    }
+}
+if ($syncSource -notmatch [regex]::Escape('const MAX_BLOCK_BYTES = 10000;')) { throw 'POLICY_SIZE_CAP_NOT_10000' }
+if ($syncSource -notmatch [regex]::Escape('C:/Users/Lauri/Desktop/vault/AGENTS.md')) { throw 'POLICY_VAULT_SYNC_TARGET_MISSING' }
+if ($syncSource -match [regex]::Escape('C:/Users/Lauri/Desktop/regression-research/AGENTS.md')) { throw 'POLICY_STALE_REGRESSION_RESEARCH_TARGET' }
 
 foreach ($marker in @('POLICY_SYNC_TARGETS', 'process.argv.includes("--apply")')) {
     if ($syncSource -notmatch [regex]::Escape($marker)) {
@@ -75,6 +101,21 @@ try {
     Write-Host 'POLICY_SYNC_DEFAULT_READ_ONLY=PASS'
     Write-Host 'POLICY_SYNC_OUTSIDE_BYTES_PRESERVED=PASS'
     Write-Host 'POLICY_AUDIT_FAIL_CLOSED=PASS'
+
+    $guardDir = Join-Path $tmp 'size-guard'
+    New-Item -ItemType Directory -Path $guardDir | Out-Null
+    $guardSync = Join-Path $guardDir 'sync-agent-policy.mjs'
+    $guardPolicy = Join-Path $guardDir 'SHARED-AGENT-POLICY.md'
+    Copy-Item -LiteralPath $syncPath -Destination $guardSync
+    [IO.File]::WriteAllText($guardPolicy, ('X' * 11000), [Text.UTF8Encoding]::new($false))
+    $oldErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $guardOutput = & node $guardSync 2>&1 | Out-String
+    $guardExitCode = $LASTEXITCODE
+    $ErrorActionPreference = $oldErrorActionPreference
+    if ($guardExitCode -eq 0) { throw 'POLICY_SIZE_GUARD_ACCEPTED_OVERSIZE' }
+    if ($guardOutput -notmatch 'POLICY_BLOCK_TOO_LARGE_BYTES=') { throw 'POLICY_SIZE_GUARD_WRONG_FAILURE' }
+    Write-Host 'POLICY_SIZE_GUARD=PASS'
 } finally {
     Remove-Item Env:POLICY_SYNC_TARGETS -ErrorAction SilentlyContinue
     Remove-Item Env:POLICY_AUDIT_TARGETS -ErrorAction SilentlyContinue
