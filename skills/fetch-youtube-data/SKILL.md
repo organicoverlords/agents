@@ -1,3 +1,8 @@
+---
+name: fetch-youtube-data
+description: Fetch a YouTube transcript, description, and comments using the bundled Python workflow.
+---
+
 # Skill: fetch-youtube-data
 
 Fetch YouTube video transcript, description, and comments using Python (youtube-transcript-api + yt-dlp).

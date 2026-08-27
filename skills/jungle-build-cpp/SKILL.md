@@ -1,3 +1,8 @@
+---
+name: jungle-build-cpp
+description: Build the legacy UE5.8 JungleScene2 procedural jungle through its C++/Python orchestration workflow.
+---
+
 # Jungle Scene C++ Builder - opencode Skill
 
 ## Description
