@@ -16,7 +16,6 @@ const NOTE = `<!-- Generated from ${SOURCE_DISPLAY}. Do not edit between these m
 
 const DEFAULT_TARGETS = [
   "C:/Users/Lauri/Documents/Unreal Projects/p3/AGENTS.md",
-  "C:/Users/Lauri/Desktop/TinyLab/AGENTS.md",
   "C:/Users/Lauri/Desktop/lowvram3d-repo/AGENTS.md",
   "C:/Users/Lauri/Desktop/AGENTS.md",
   "C:/Users/Lauri/Desktop/tiny3d/AGENTS.md",

@@ -79,6 +79,7 @@ foreach ($forbidden in @(
 if ($syncSource -notmatch [regex]::Escape('const MAX_BLOCK_BYTES = 8000;')) { throw 'POLICY_SIZE_CAP_NOT_8000' }
 if ($syncSource -notmatch [regex]::Escape('C:/Users/Lauri/Desktop/vault/AGENTS.md')) { throw 'POLICY_VAULT_SYNC_TARGET_MISSING' }
 if ($syncSource -match [regex]::Escape('C:/Users/Lauri/Desktop/lowvram3d-studio-p0a-worktree/AGENTS.md')) { throw 'POLICY_DEAD_P0A_SYNC_TARGET_PRESENT' }
+if ($syncSource -match [regex]::Escape('C:/Users/Lauri/Desktop/TinyLab/AGENTS.md')) { throw 'POLICY_ARCHIVED_TINYLAB_SYNC_TARGET_PRESENT' }
 foreach ($marker in @('check-remotes', 'REMOTE_DRIFTED', 'REMOTE_MISSING', 'REMOTE_UNAVAILABLE', 'git-backed origin defaults match the source')) {
     if ($syncSource -notmatch [regex]::Escape($marker)) { throw "POLICY_REMOTE_SYNC_GUARD_MISSING=$marker" }
 }
