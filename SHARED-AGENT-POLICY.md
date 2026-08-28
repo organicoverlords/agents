@@ -1,4 +1,4 @@
-**Version 1.19 - 2026-08-27.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and this machine's Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and run `sync-agent-policy.mjs`; never edit generated repo blocks directly.
+**Version 1.20 - 2026-08-27.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and this machine's Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and run `sync-agent-policy.mjs`; never edit generated repo blocks directly.
 
 ### Authority and bounded scope
 - Current user instruction and live repo/runtime state outrank historical prompts, receipts, handoffs, recalled context, and stale project prose where higher-priority constraints permit.
@@ -26,11 +26,11 @@
 - Do not centralize routine resilience. Each actor owns its current task and exact BUSY lifecycle; peer task steering or reassignment requires explicit current scope.
 - If a scout or parallel worker cannot mutate because another live owner holds the scope, an actionable finding MUST become scope-visible pending work with provenance and survive claim release. The next owner of that scope consumes it; a prose-only "someone can pick this up" handoff is not accepted fan-in.
 
-### BUSY
-- MCP0 BUSY is the single live ownership authority for shared mutable scope. Read-only work needs no claim. Before mutation, inspect live claims and acquire the exact scope with `busy_claim`.
-- If another live claim owns that scope, yield mutation on that scope, route actionable findings to the owner/coordinator, and continue independent in-scope work where possible.
-- Release the exact claim with `busy_release` immediately when mutation stops, switches scope, completes, or is handed off.
-- Issue titles, branches, PRs, processes, schedules, and receipts are activity evidence/projections, not a second BUSY authority. A stale projection without the matching live claim must not block work.
+### Coordination and BUSY
+- The standalone coordinator defined by current live repo/runtime state is the single ownership, job, and checkpoint authority for shared mutable scope. Read-only work needs no claim. Before mutation, inspect canonical coordinator state and acquire the exact scope through its supported route. On this Windows machine, unless current repo/runtime docs explicitly override it, invoke `%LOCALAPPDATA%\BusyCoordinator\busy-python.cmd` directly through the available shell/process transport. Do not search for an MCP/tool named `BusyCoordinator`, and do not require legacy MCP BUSY tools to exist.
+- Process-only MCP/plugin connectors are transport surfaces, not schedulers or ownership authorities. Codex or any other worker without the new MCP can still run the standalone coordinator directly through its native shell. Legacy `busy_list` / `busy_claim` / `busy_release`, when exposed, are compatibility adapters only; their absence is expected and must not block mutation after the canonical coordinator check succeeds. Aggregate process/worktree counts are diagnostics, not collision claims.
+- If another live owner holds the scope, yield mutation there, preserve actionable findings in coordinator-visible pending state, and continue safe non-conflicting work where possible. Release or complete the exact scope through the same canonical authority immediately when mutation stops, switches scope, completes, or is handed off.
+- Legacy BUSY claims may remain durable until explicit release; age alone does not prove staleness. Issue titles, branches, PRs, processes, schedules, receipts, and legacy claims are projections/evidence, not competing ownership authorities. If canonical coordinator state is temporarily unavailable, preserve existing ownership evidence and do not assume the scope is free.
 
 ### Repository and machine boundaries
 - Read the applicable repo `AGENTS.md` before the first mutation there. Repo-specific proof surfaces, report formats, changelog rules, build limits, branch conventions, and north-star details belong to that repo, not this global block.

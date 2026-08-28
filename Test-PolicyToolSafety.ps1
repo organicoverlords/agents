@@ -23,13 +23,16 @@ foreach ($skill in Get-ChildItem -LiteralPath $skillRoot -Recurse -Filter 'SKILL
     if ($body -notmatch '(?m)^name:\s*\S') { throw "SKILL_NAME_MISSING=$($skill.FullName)" }
     if ($body -notmatch '(?m)^description:\s*\S') { throw "SKILL_DESCRIPTION_MISSING=$($skill.FullName)" }
 }
-if ($policySource -notmatch [regex]::Escape('**Version 1.19 - 2026-08-27.**')) { throw 'POLICY_VERSION_1_19_MISSING' }
+if ($policySource -notmatch [regex]::Escape('**Version 1.20 - 2026-08-27.**')) { throw 'POLICY_VERSION_1_20_MISSING' }
 foreach ($required in @(
     '### Route failure is local',
     'currently scheduled task prompt is current task instruction',
     'Do not centralize routine resilience',
     'scope-visible pending work',
-    'MCP0 BUSY is the single live ownership authority',
+    '### Coordination and BUSY',
+    'standalone coordinator defined by current live repo/runtime state is the single ownership, job, and checkpoint authority',
+    'compatibility adapters only',
+    'their absence is expected and must not block mutation',
     'busy_claim',
     'busy_release',
     'Never update it silently; disclose every change in the same reply',
@@ -56,6 +59,7 @@ foreach ($forbidden in @(
     'completed or idle PR awaiting integration is fleet debt',
     'Open-PR count is work to reconcile',
     'merge immediately',
+    'MCP0 BUSY is the single live ownership authority',
     'memory_bank.py recent'
 )) {
     if ($policySource -match [regex]::Escape($forbidden)) { throw "POLICY_ACCRETION_REGRESSION=$forbidden" }
