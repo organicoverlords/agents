@@ -1,4 +1,4 @@
-**Version 1.20 - 2026-08-27.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and this machine's Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and run `sync-agent-policy.mjs`; never edit generated repo blocks directly.
+**Version 1.21 - 2026-08-28.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and this machine's Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and run `sync-agent-policy.mjs`; never edit generated repo blocks directly. A shared-policy repair is incomplete until `node sync-agent-policy.mjs --check-remotes` passes, proving git-backed origin defaults carry the same generated block.
 
 ### Authority and bounded scope
 - Current user instruction and live repo/runtime state outrank historical prompts, receipts, handoffs, recalled context, and stale project prose where higher-priority constraints permit.
