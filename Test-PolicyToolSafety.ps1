@@ -7,7 +7,74 @@ $syncPath = Join-Path $root 'sync-agent-policy.mjs'
 $auditPath = Join-Path $root 'audit-repo-sections.mjs'
 $syncSource = Get-Content -Raw -LiteralPath $syncPath
 $auditSource = Get-Content -Raw -LiteralPath $auditPath
+$policyPath = Join-Path $root 'SHARED-AGENT-POLICY.md'
+$policySource = Get-Content -Raw -LiteralPath $policyPath
+function Invoke-GitQuiet([string[]]$GitArgs) {
+    $oldPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        & git @GitArgs *> $null
+        $rc = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $oldPreference
+    }
+    if ($rc -ne 0) { throw "POLICY_TEST_GIT_FAILED=$rc args=$($GitArgs -join ' ')" }
+}
 
+if ($policySource -notmatch [regex]::Escape('**Version 1.23 - 2026-08-29.**')) { throw 'POLICY_VERSION_1_23_MISSING' }
+foreach ($required in @(
+    '### Route failure is local',
+    'currently scheduled task prompt is current task instruction',
+    'Do not centralize routine resilience',
+    'scope-visible pending work',
+    '### Coordination and BUSY',
+    'Every mutation claim actor must identify its harness',
+    'task/session suffix',
+    'sync-agent-policy.mjs --check-remotes',
+    'standalone coordinator defined by current live repo/runtime state is the single ownership, job, and checkpoint authority',
+    'Dirty state is neither disposable nor a universal blocker',
+    'admitted clean worktree route',
+    'never hard-code or redirect output into a human/shared checkout',
+    'Never update it silently; disclose every change in the same reply',
+    'Project-specific machinery belongs in the narrowest repo, skill, adapter, automation prompt, or test that owns it'
+)) {
+    if ($policySource -notmatch [regex]::Escape($required)) { throw "POLICY_REQUIRED_INVARIANT_MISSING=$required" }
+}
+foreach ($forbidden in @(
+    '### Never stop',
+    '### Worker reporting',
+    'Progress: <N>%',
+    'current multi-plugin reliability trial',
+    '`plugin5`',
+    '`plugin2`',
+    'A player-visible claim needs a rendered frame',
+    'MUST NOT be merged, closed, or ticked',
+    'Prompts, schedules, names, receipts and handoffs describe the past',
+    'No roles, no reserved work',
+    'fleet owner/coordinator owns fleet health',
+    'recent-title window',
+    'An active process_id, BUSY scope, unfinished mutation',
+    'A dirty worktree is a reconciliation obligation',
+    'Producer backpressure is mandatory',
+    'completed or idle PR awaiting integration is fleet debt',
+    'Open-PR count is work to reconcile',
+    'merge immediately',
+    'MCP0 BUSY is the single live ownership authority',
+    'memory_bank.py recent'
+)) {
+    if ($policySource -match [regex]::Escape($forbidden)) { throw "POLICY_ACCRETION_REGRESSION=$forbidden" }
+}
+if ($syncSource -notmatch [regex]::Escape('const MAX_BLOCK_BYTES = 8000;')) { throw 'POLICY_SIZE_CAP_NOT_8000' }
+if ($syncSource -notmatch [regex]::Escape('C:/Users/Lauri/Desktop/vault/AGENTS.md')) { throw 'POLICY_VAULT_SYNC_TARGET_MISSING' }
+if ($syncSource -match [regex]::Escape('C:/Users/Lauri/Desktop/lowvram3d-studio-p0a-worktree/AGENTS.md')) { throw 'POLICY_DEAD_P0A_SYNC_TARGET_PRESENT' }
+if ($syncSource -match [regex]::Escape('C:/Users/Lauri/Desktop/TinyLab/AGENTS.md')) { throw 'POLICY_ARCHIVED_TINYLAB_SYNC_TARGET_PRESENT' }
+foreach ($marker in @('check-remotes', 'REMOTE_DRIFTED', 'REMOTE_MISSING', 'REMOTE_UNAVAILABLE', 'git-backed origin defaults match the source')) {
+    if ($syncSource -notmatch [regex]::Escape($marker)) { throw "POLICY_REMOTE_SYNC_GUARD_MISSING=$marker" }
+}
+foreach ($marker in @('DIRTY_TARGET_REFUSED', 'dirtyRefused', 'planned')) {
+    if ($syncSource -notmatch [regex]::Escape($marker)) { throw "POLICY_DIRTY_TARGET_GUARD_MISSING=$marker" }
+}
+if ($syncSource -match [regex]::Escape('C:/Users/Lauri/Desktop/regression-research/AGENTS.md')) { throw 'POLICY_STALE_REGRESSION_RESEARCH_TARGET' }
 foreach ($marker in @('POLICY_SYNC_TARGETS', 'process.argv.includes("--apply")')) {
     if ($syncSource -notmatch [regex]::Escape($marker)) {
         throw "POLICY_SYNC_SAFETY_MARKER_MISSING=$marker"
@@ -57,9 +124,63 @@ try {
     & node $auditPath *> $null
     if ($LASTEXITCODE -eq 0) { throw 'POLICY_AUDIT_FINDING_DID_NOT_FAIL' }
 
+    # Regression: local apply must not masquerade as durable propagation. A stale origin/default
+    # must fail --check-remotes until the generated block is committed and pushed.
+    $remoteRepo = Join-Path $tmp 'remote-check-work'
+    $bareRepo = Join-Path $tmp 'remote-check-origin.git'
+    New-Item -ItemType Directory -Path $remoteRepo | Out-Null
+    Invoke-GitQuiet @('-C',$remoteRepo,'init','-b','main')
+    Invoke-GitQuiet @('-C',$remoteRepo,'config','user.email','policy-test@example.invalid')
+    Invoke-GitQuiet @('-C',$remoteRepo,'config','user.name','Policy Test')
+    $remoteTarget = Join-Path $remoteRepo 'AGENTS.md'
+    [IO.File]::WriteAllText($remoteTarget, "# Probe`n`n<!-- SHARED-AGENT-POLICY:BEGIN -->`nold`n<!-- SHARED-AGENT-POLICY:END -->`n", [Text.UTF8Encoding]::new($false))
+    Invoke-GitQuiet @('-C',$remoteRepo,'add','AGENTS.md')
+    Invoke-GitQuiet @('-C',$remoteRepo,'commit','-m','old policy')
+    Invoke-GitQuiet @('init','--bare',$bareRepo)
+    Invoke-GitQuiet @('-C',$remoteRepo,'remote','add','origin',$bareRepo)
+    Invoke-GitQuiet @('-C',$remoteRepo,'push','-u','origin','main')
+    $env:POLICY_SYNC_TARGETS = $remoteTarget
+    & node $syncPath --apply *> $null
+    if ($LASTEXITCODE -ne 0) { throw "POLICY_REMOTE_TEST_LOCAL_APPLY_FAILED=$LASTEXITCODE" }
+    $remoteDrift = & node $syncPath --check-remotes 2>&1
+    if ($LASTEXITCODE -eq 0) { throw 'POLICY_REMOTE_DRIFT_WAS_NOT_DETECTED' }
+    if (($remoteDrift -join "`n") -notmatch 'REMOTE_DRIFTED') { throw 'POLICY_REMOTE_DRIFT_WRONG_FAILURE' }
+    Invoke-GitQuiet @('-C',$remoteRepo,'add','AGENTS.md')
+    Invoke-GitQuiet @('-C',$remoteRepo,'commit','-m','current policy')
+    Invoke-GitQuiet @('-C',$remoteRepo,'push','origin','main')
+    $remoteClean = & node $syncPath --check-remotes 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "POLICY_REMOTE_SYNC_DID_NOT_CLEAR=$LASTEXITCODE $($remoteClean -join ' ')" }
+    Write-Host 'POLICY_REMOTE_PROPAGATION_GUARD=PASS'
+
+    # Regression: apply must refuse a dirty Git worktree before changing its generated block.
+    [IO.File]::WriteAllText($remoteTarget, "# Probe`n`n<!-- SHARED-AGENT-POLICY:BEGIN -->`nold`n<!-- SHARED-AGENT-POLICY:END -->`n", [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText((Join-Path $remoteRepo 'LOCAL-WORK.txt'), 'preserve me', [Text.UTF8Encoding]::new($false))
+    $dirtyTargetBefore = (Get-FileHash -Algorithm SHA256 -LiteralPath $remoteTarget).Hash
+    $dirtyApply = & node $syncPath --apply 2>&1
+    if ($LASTEXITCODE -eq 0) { throw 'POLICY_DIRTY_TARGET_WAS_MUTATED' }
+    $dirtyTargetAfter = (Get-FileHash -Algorithm SHA256 -LiteralPath $remoteTarget).Hash
+    if ($dirtyTargetAfter -ne $dirtyTargetBefore) { throw 'POLICY_DIRTY_TARGET_HASH_CHANGED' }
+    if (($dirtyApply -join "`n") -notmatch 'DIRTY_TARGET_REFUSED') { throw 'POLICY_DIRTY_TARGET_WRONG_FAILURE' }
+    Write-Host 'POLICY_DIRTY_TARGET_REFUSAL=PASS'
+
     Write-Host 'POLICY_SYNC_DEFAULT_READ_ONLY=PASS'
     Write-Host 'POLICY_SYNC_OUTSIDE_BYTES_PRESERVED=PASS'
     Write-Host 'POLICY_AUDIT_FAIL_CLOSED=PASS'
+
+    $guardDir = Join-Path $tmp 'size-guard'
+    New-Item -ItemType Directory -Path $guardDir | Out-Null
+    $guardSync = Join-Path $guardDir 'sync-agent-policy.mjs'
+    $guardPolicy = Join-Path $guardDir 'SHARED-AGENT-POLICY.md'
+    Copy-Item -LiteralPath $syncPath -Destination $guardSync
+    [IO.File]::WriteAllText($guardPolicy, ('X' * 11000), [Text.UTF8Encoding]::new($false))
+    $oldErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $guardOutput = & node $guardSync 2>&1 | Out-String
+    $guardExitCode = $LASTEXITCODE
+    $ErrorActionPreference = $oldErrorActionPreference
+    if ($guardExitCode -eq 0) { throw 'POLICY_SIZE_GUARD_ACCEPTED_OVERSIZE' }
+    if ($guardOutput -notmatch 'POLICY_BLOCK_TOO_LARGE_BYTES=') { throw 'POLICY_SIZE_GUARD_WRONG_FAILURE' }
+    Write-Host 'POLICY_SIZE_GUARD=PASS'
 } finally {
     Remove-Item Env:POLICY_SYNC_TARGETS -ErrorAction SilentlyContinue
     Remove-Item Env:POLICY_AUDIT_TARGETS -ErrorAction SilentlyContinue
