@@ -22,6 +22,7 @@ const DEFAULT_TARGETS = [
   "C:/Users/Lauri/Desktop/vault/AGENTS.md",
   // global harness homes
   "C:/Users/Lauri/.codex/AGENTS.md",
+  "C:/Users/Lauri/.claude/CLAUDE.md",
   "C:/Users/Lauri/.config/opencode/AGENTS.md",
   "C:/Users/Lauri/.traycer/agent-selection-guide.md",
 ];
