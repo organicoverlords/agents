@@ -30,7 +30,7 @@ const TARGETS = process.env.POLICY_SYNC_TARGETS
   ? process.env.POLICY_SYNC_TARGETS.split(path.delimiter).filter(Boolean)
   : DEFAULT_TARGETS;
 
-const body = fs.readFileSync(SOURCE, "utf-8").trim();
+const body = fs.readFileSync(SOURCE, "utf-8").replace(/\r\n?/g, "\n").trim();
 const block = `${BEGIN}\n${NOTE}\n## Shared agent policy\n\n${body}\n${END}`;
 const apply = process.argv.includes("--apply");
 const explicitCheck = process.argv.includes("--check");

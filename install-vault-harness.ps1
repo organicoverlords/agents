@@ -23,7 +23,9 @@ try {
 if (-not (Test-Path -LiteralPath $stableRoot -PathType Container)) {
   throw "stable agent root missing: $stableRoot"
 }
-Copy-Item -LiteralPath $sourceHook -Destination $stableHook -Force
+if (-not [string]::Equals([IO.Path]::GetFullPath($sourceHook), [IO.Path]::GetFullPath($stableHook), [StringComparison]::OrdinalIgnoreCase)) {
+  Copy-Item -LiteralPath $sourceHook -Destination $stableHook -Force
+}
 
 function Backup-Once([string]$path) {
   $backup = "$path.vault-harness-pre-20260829"
