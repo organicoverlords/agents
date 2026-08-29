@@ -1,3 +1,8 @@
+---
+name: youtube-transcript
+description: Fetch YouTube transcripts, descriptions, and metadata with the documented yt-dlp workflow.
+---
+
 # YouTube Transcript Fetcher Skill
 
 Fetch YouTube video transcripts, descriptions, and metadata using yt-dlp.

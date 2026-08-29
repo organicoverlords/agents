@@ -21,6 +21,19 @@ function Invoke-GitQuiet([string[]]$GitArgs) {
     if ($rc -ne 0) { throw "POLICY_TEST_GIT_FAILED=$rc args=$($GitArgs -join ' ')" }
 }
 
+$skillRoot = Join-Path $root 'skills'
+foreach ($skill in Get-ChildItem -LiteralPath $skillRoot -Recurse -Filter 'SKILL.md' -File) {
+    $bytes = [IO.File]::ReadAllBytes($skill.FullName)
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        throw "SKILL_UTF8_BOM_FORBIDDEN=$($skill.FullName)"
+    }
+    $skillSource = [IO.File]::ReadAllText($skill.FullName)
+    $frontmatter = [regex]::Match($skillSource, '\A---\r?\n(?<body>.*?)\r?\n---\r?\n', [Text.RegularExpressions.RegexOptions]::Singleline)
+    if (-not $frontmatter.Success) { throw "SKILL_FRONTMATTER_MISSING=$($skill.FullName)" }
+    $body = $frontmatter.Groups['body'].Value
+    if ($body -notmatch '(?m)^name:\s*\S') { throw "SKILL_NAME_MISSING=$($skill.FullName)" }
+    if ($body -notmatch '(?m)^description:\s*\S') { throw "SKILL_DESCRIPTION_MISSING=$($skill.FullName)" }
+}
 if ($policySource -notmatch [regex]::Escape('**Version 1.23 - 2026-08-29.**')) { throw 'POLICY_VERSION_1_23_MISSING' }
 foreach ($required in @(
     '### Route failure is local',
