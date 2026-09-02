@@ -28,9 +28,11 @@ Never run a Vault bootstrap or broad memory/history sweep at chat startup or aft
 compaction. Retrieve Vault history only when a specific past fact, decision, incident, or
 prior piece of work would materially help.
 
-MCP0 is retired and must not be used, discovered, probed, or recommended. Use only
-currently exposed supported routes, and verify routing from live capabilities or the
-Stack Atlas rather than old memory.
+MCP0 is retired and must not be used, discovered, probed, or recommended. For
+ChatGPT/WebGPT/Codex tool routing, use the currently exposed supported route first,
+normally plugin2 when available. If plugin2 fails or is unavailable, Commander and
+GitHub are permitted fallbacks; do not use either ahead of a working plugin2 route.
+Verify routing from live capabilities or the Stack Atlas rather than old memory.
 
 For status or liveness questions, verify the smallest relevant live surface before
 answering. Scheduler state, enabled flags, claims, leases, heartbeats, and historical
