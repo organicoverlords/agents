@@ -154,7 +154,8 @@ for (const target of TARGETS) {
   if (check) { drifted.push(target); continue; }
   const root = gitRootFor(target);
   if (root) {
-    const dirtyText = git(["status", "--porcelain=v1", "--untracked-files=all"], root, { trim: false });
+    const rel = path.relative(root, target).split(path.sep).join("/");
+    const dirtyText = git(["status", "--porcelain=v1", "--untracked-files=all", "--", rel], root, { trim: false });
     const dirtyCount = dirtyText === null ? -1 : dirtyText.split(/\r?\n/).filter(Boolean).length;
     if (dirtyCount !== 0) {
       dirtyRefused.push(`${target} (${dirtyCount < 0 ? "status unavailable" : `${dirtyCount} dirty rows`})`);
