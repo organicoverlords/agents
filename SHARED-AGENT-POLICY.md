@@ -1,9 +1,9 @@
-**Version 1.32 - 2026-09-02.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and sync only the targets that need the change; never edit generated repo blocks directly.
+**Version 1.33 - 2026-09-02.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and sync only the targets that need the change; never edit generated repo blocks directly.
 
 ### Authority and bounded scope
-- Current user instruction and live repo/runtime state outrank historical prompts, receipts, handoffs, recalled context, and stale project prose where higher-priority constraints permit.
-- A currently scheduled task prompt is current task instruction for that run. Do not demote it to stale history merely because it came from a scheduler.
-- Finish the bounded requested outcome. Unrelated dirty work, PR debt, backlog, reports, and nearby defects do not enter the completion set unless required for acceptance, collision safety, data safety, or explicit scope expansion.
+- Current user instruction and live repo/runtime state outrank history, handoffs, recalled context, and stale prose.
+- A scheduled task prompt is current instruction for that run; do not demote it because it came from a scheduler.
+- Finish the bounded outcome. Unrelated work enters scope only for acceptance, collision/data safety, or explicit expansion.
 
 ### Route failure is local
 - A failed route is not task failure while supported recovery, fallback, or independent work remains.
@@ -34,9 +34,9 @@
 - If another live owner holds the scope, yield mutation, preserve actionable findings as pending scope state, and continue elsewhere. A claim alone does not prove liveness: when its session/process is proven terminated, immediately `recover` the exact claim with recorded owner + timestamp; this preserves its checkpoint and returns the job ready. Release/complete the scope whenever mutation stops, switches, completes, or hands off.
 - Legacy BUSY claims persist until release; age alone does not prove staleness. Issue titles, branches, PRs, processes, schedules, receipts, and legacy claims are evidence/projections, not ownership authorities. If the coordinator is temporarily unavailable, preserve ownership evidence and do not assume the scope is free.
 
-### Vault history and context
-- Vault memory, reports, timelines, and archives are optional history/notebook/evidence, not startup, behavior, ownership, or current-state authority.
-- Never bootstrap Vault at startup or compaction. Use targeted search/context/history only when past context materially helps; current instruction, policy, Atlas/live sources, and harness memory remain the normal context.
+### Navigation minimap
+- For stack/infra work: Stack Atlas -> smallest relevant live authority -> targeted Vault history only when needed. Atlas navigates; live sources are current truth; Vault is history/evidence; reports and boards are projections.
+- If a capability seems missing, search Atlas before designing another service, registry, queue, policy layer, database, or authority. Use or minimally repair the existing owner; never recursively scan Vault or make it a startup gate.
 
 ### Repository and machine boundaries
 - Read the applicable target repo's `AGENTS.md` immediately before the first mutation inside that repo. Scheduler, automation, coordinator, MCP/plugin, and other control-plane operations that do not mutate that repo do not trigger this requirement. Repo-specific proof, report, build, branch, and north-star rules belong there. Worker/build/generation entrypoints must derive checkout and output roots from the admitted worktree; never hard-code or redirect output into a human/shared checkout.
