@@ -9,6 +9,15 @@ $syncSource = Get-Content -Raw -LiteralPath $syncPath
 $auditSource = Get-Content -Raw -LiteralPath $auditPath
 $policyPath = Join-Path $root 'SHARED-AGENT-POLICY.md'
 $policySource = Get-Content -Raw -LiteralPath $policyPath
+$customInstructionsPath = Join-Path $root 'chatgpt-custom-instructions.md'
+$customInstructionsSource = Get-Content -Raw -LiteralPath $customInstructionsPath
+if ($customInstructionsSource -notmatch [regex]::Escape('MCP0 is retired and must not be used')) { throw 'CUSTOM_INSTRUCTIONS_MCP0_RETIREMENT_MISSING' }
+foreach ($forbidden in @('load the seed', 'before you answer anything at all', 'MCP0 connector', 'chatgpt-memory-seed.md')) {
+    if ($customInstructionsSource -match [regex]::Escape($forbidden)) { throw "CUSTOM_INSTRUCTIONS_STALE_BOOTSTRAP=$forbidden" }
+}
+foreach ($required in @('Use the current conversation and ChatGPT Memory for continuity', 'Vault is optional searchable history', 'verify the smallest relevant live surface', 'Match process to risk')) {
+    if ($customInstructionsSource -notmatch [regex]::Escape($required)) { throw "CUSTOM_INSTRUCTIONS_REQUIRED_RULE_MISSING=$required" }
+}
 function Invoke-GitQuiet([string[]]$GitArgs) {
     $oldPreference = $ErrorActionPreference
     try {
