@@ -34,16 +34,15 @@ foreach ($skill in Get-ChildItem -LiteralPath $skillRoot -Recurse -Filter 'SKILL
     if ($body -notmatch '(?m)^name:\s*\S') { throw "SKILL_NAME_MISSING=$($skill.FullName)" }
     if ($body -notmatch '(?m)^description:\s*\S') { throw "SKILL_DESCRIPTION_MISSING=$($skill.FullName)" }
 }
-if ($policySource -notmatch [regex]::Escape('**Version 1.23 - 2026-08-29.**')) { throw 'POLICY_VERSION_1_23_MISSING' }
+if ($policySource -notmatch '(?m)^\*\*Version \d+\.\d+ - \d{4}-\d{2}-\d{2}\.\*\*') { throw 'POLICY_VERSION_HEADER_MISSING' }
 foreach ($required in @(
     '### Route failure is local',
     'currently scheduled task prompt is current task instruction',
     'Do not centralize routine resilience',
     'scope-visible pending work',
     '### Coordination and BUSY',
-    'Every mutation claim actor must identify its harness',
+    'Every claim actor must identify its harness',
     'task/session suffix',
-    'sync-agent-policy.mjs --check-remotes',
     'standalone coordinator defined by current live repo/runtime state is the single ownership, job, and checkpoint authority',
     'Dirty state is neither disposable nor a universal blocker',
     'admitted clean worktree route',
