@@ -37,14 +37,14 @@ foreach ($skill in Get-ChildItem -LiteralPath $skillRoot -Recurse -Filter 'SKILL
 if ($policySource -notmatch '(?m)^\*\*Version \d+\.\d+ - \d{4}-\d{2}-\d{2}\.\*\*') { throw 'POLICY_VERSION_HEADER_MISSING' }
 foreach ($required in @(
     '### Route failure is local',
-    'currently scheduled task prompt is current task instruction',
+    'scheduled task prompt is current instruction for that run',
     'Do not centralize routine resilience',
     'scope-visible pending work',
     '### Coordination and BUSY',
     'Every claim actor must identify its harness',
     'task/session suffix',
-    'standalone coordinator defined by current live repo/runtime state is the single ownership authority',
-    'job/checkpoint records are coordination bookkeeping, not workload',
+    'standalone coordinator defined by current live repo/runtime state is collision/ownership authority only',
+    'records are coordination bookkeeping, never backlog',
     'Dirty state is neither disposable nor a universal blocker',
     'admitted clean worktree route',
     'never hard-code or redirect output into a human/shared checkout',
@@ -165,9 +165,18 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "POLICY_REMOTE_SYNC_DID_NOT_CLEAR=$LASTEXITCODE $($remoteClean -join ' ')" }
     Write-Host 'POLICY_REMOTE_PROPAGATION_GUARD=PASS'
 
-    # Regression: apply must refuse a dirty Git worktree before changing its generated block.
+    # Regression: unrelated dirty work must not block syncing a clean AGENTS target.
     [IO.File]::WriteAllText($remoteTarget, "# Probe`n`n<!-- SHARED-AGENT-POLICY:BEGIN -->`nold`n<!-- SHARED-AGENT-POLICY:END -->`n", [Text.UTF8Encoding]::new($false))
+    Invoke-GitQuiet @('-C',$remoteRepo,'add','AGENTS.md')
+    Invoke-GitQuiet @('-C',$remoteRepo,'commit','-m','stale policy for dirty-neighbor test')
     [IO.File]::WriteAllText((Join-Path $remoteRepo 'LOCAL-WORK.txt'), 'preserve me', [Text.UTF8Encoding]::new($false))
+    $neighborApply = & node $syncPath --apply 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "POLICY_UNRELATED_DIRTY_BLOCKED_APPLY=$LASTEXITCODE $($neighborApply -join ' ')" }
+    if (-not (Test-Path (Join-Path $remoteRepo 'LOCAL-WORK.txt'))) { throw 'POLICY_UNRELATED_DIRTY_WORK_LOST' }
+    Write-Host 'POLICY_UNRELATED_DIRTY_ALLOWED=PASS'
+
+    # Regression: apply must still refuse when the AGENTS target itself is dirty.
+    [IO.File]::WriteAllText($remoteTarget, "# Local edit`n`n<!-- SHARED-AGENT-POLICY:BEGIN -->`nold`n<!-- SHARED-AGENT-POLICY:END -->`n", [Text.UTF8Encoding]::new($false))
     $dirtyTargetBefore = (Get-FileHash -Algorithm SHA256 -LiteralPath $remoteTarget).Hash
     $dirtyApply = & node $syncPath --apply 2>&1
     if ($LASTEXITCODE -eq 0) { throw 'POLICY_DIRTY_TARGET_WAS_MUTATED' }
