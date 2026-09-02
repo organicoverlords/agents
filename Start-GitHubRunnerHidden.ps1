@@ -7,6 +7,14 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $RunnerRoot).Path
+$commandProcessor = $env:ComSpec
+if ([string]::IsNullOrWhiteSpace($commandProcessor)) {
+    $commandProcessor = Join-Path ([Environment]::SystemDirectory) 'cmd.exe'
+}
+if (-not (Test-Path -LiteralPath $commandProcessor -PathType Leaf)) {
+    throw "GITHUB_RUNNER_COMMAND_PROCESSOR_MISSING=$commandProcessor"
+}
+
 $helperTemplate = Join-Path $root 'run-helper.cmd.template'
 $helperCommand = Join-Path $root 'run-helper.cmd'
 if (-not (Test-Path -LiteralPath $helperTemplate -PathType Leaf)) {
@@ -19,7 +27,7 @@ while ($true) {
     Copy-Item -LiteralPath $helperTemplate -Destination $helperCommand -Force
 
     $startInfo = [Diagnostics.ProcessStartInfo]::new()
-    $startInfo.FileName = $env:ComSpec
+    $startInfo.FileName = $commandProcessor
     $startInfo.Arguments = '/d /s /c ""{0}""' -f $helperCommand
     $startInfo.WorkingDirectory = $root
     $startInfo.UseShellExecute = $false
