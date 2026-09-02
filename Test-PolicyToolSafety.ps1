@@ -15,7 +15,7 @@ if ($customInstructionsSource -notmatch [regex]::Escape('MCP0 is retired and mus
 foreach ($forbidden in @('load the seed', 'before you answer anything at all', 'MCP0 connector', 'chatgpt-memory-seed.md')) {
     if ($customInstructionsSource -match [regex]::Escape($forbidden)) { throw "CUSTOM_INSTRUCTIONS_STALE_BOOTSTRAP=$forbidden" }
 }
-foreach ($required in @('Use the current conversation and ChatGPT Memory for continuity', 'Vault is optional searchable history', 'verify the smallest relevant live surface', 'Match process to risk')) {
+foreach ($required in @('Use the current conversation and ChatGPT Memory for continuity', 'Vault is optional searchable history', 'verify the smallest relevant live surface', 'Match process to risk', 'normally plugin2 when available', 'Commander and', 'GitHub are permitted fallbacks', 'do not use either ahead of a working plugin2 route')) {
     if ($customInstructionsSource -notmatch [regex]::Escape($required)) { throw "CUSTOM_INSTRUCTIONS_REQUIRED_RULE_MISSING=$required" }
 }
 function Invoke-GitQuiet([string[]]$GitArgs) {
