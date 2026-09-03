@@ -61,9 +61,9 @@ foreach ($required in @(
     'task/session suffix',
     'standalone coordinator defined by current live repo/runtime state is collision/ownership authority only',
     'records are coordination bookkeeping, never backlog',
-    'Dirty/behind state is not a blocker or proof of current behavior',
-    'before opening a fix lane',
-    'verify current live/default acceptance still fails',
+    'Dirty/behind is not a blocker',
+    'Swarm lanes need no global precheck or shared build/runtime/proof gate',
+    'Check current owner/default only for duplicate fixes',
     'never hard-code or redirect output into a human/shared checkout',
     'Never update it silently; disclose every change in the same reply',
     'Project-specific machinery belongs in the narrowest repo, skill, adapter, automation prompt, or test that owns it'
@@ -71,6 +71,7 @@ foreach ($required in @(
     if ($policySource -notmatch [regex]::Escape($required)) { throw "POLICY_REQUIRED_INVARIANT_MISSING=$required" }
 }
 foreach ($forbidden in @(
+    'before opening a fix lane, verify current live/default acceptance still fails',
     '### Never stop',
     '### Worker reporting',
     'Progress: <N>%',
@@ -202,6 +203,17 @@ try {
     if (($dirtyApply -join "`n") -notmatch 'DIRTY_TARGET_REFUSED') { throw 'POLICY_DIRTY_TARGET_WRONG_FAILURE' }
     Write-Host 'POLICY_DIRTY_TARGET_REFUSAL=PASS'
 
+    # Regression: one dirty target must not serialize clean targets in the same apply.
+    $cleanTarget = Join-Path $tmp 'clean-target.md'
+    [IO.File]::WriteAllText($cleanTarget, "# Clean`n`n<!-- SHARED-AGENT-POLICY:BEGIN -->`nold`n<!-- SHARED-AGENT-POLICY:END -->`n", [Text.UTF8Encoding]::new($false))
+    $env:POLICY_SYNC_TARGETS = $remoteTarget + [IO.Path]::PathSeparator + $cleanTarget
+    $dirtyTargetBefore = (Get-FileHash -Algorithm SHA256 -LiteralPath $remoteTarget).Hash
+    $partialApply = & node $syncPath --apply 2>&1
+    if ($LASTEXITCODE -eq 0) { throw 'POLICY_PARTIAL_APPLY_DID_NOT_REPORT_DIRTY_TARGET' }
+    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $remoteTarget).Hash -ne $dirtyTargetBefore) { throw 'POLICY_PARTIAL_APPLY_MUTATED_DIRTY_TARGET' }
+    if ((Get-Content -Raw -LiteralPath $cleanTarget) -notmatch [regex]::Escape('Swarm lanes need no global precheck or shared build/runtime/proof gate')) { throw 'POLICY_PARTIAL_APPLY_DID_NOT_UPDATE_CLEAN_TARGET' }
+    if (($partialApply -join "`n") -notmatch 'DIRTY_TARGET_REFUSED' -or ($partialApply -join "`n") -notmatch 'updated') { throw 'POLICY_PARTIAL_APPLY_WRONG_RESULT' }
+    Write-Host 'POLICY_PARTIAL_APPLY_CONTINUES=PASS'
     Write-Host 'POLICY_SYNC_DEFAULT_READ_ONLY=PASS'
     Write-Host 'POLICY_SYNC_OUTSIDE_BYTES_PRESERVED=PASS'
     Write-Host 'POLICY_AUDIT_FAIL_CLOSED=PASS'

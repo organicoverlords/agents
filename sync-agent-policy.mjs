@@ -176,14 +176,12 @@ if (check) {
   }
   console.log(`all ${TARGETS.length} local targets match the source`);
 } else {
-  if (missing.length || malformed.length || dirtyRefused.length) {
-    console.log(`\n0 updated; preflight refused ${dirtyRefused.length} dirty, ${missing.length} missing, ${malformed.length} malformed targets`);
-    process.exit(1);
-  }
   for (const item of planned) {
     fs.writeFileSync(item.target, item.next);
     console.log("updated  " + item.target);
     changed++;
   }
-  console.log(`\n${changed} updated, ${TARGETS.length - changed} already current`);
+  const current = TARGETS.length - changed - dirtyRefused.length - missing.length - malformed.length;
+  console.log(`\n${changed} updated, ${current} already current, ${dirtyRefused.length} dirty refused, ${missing.length} missing, ${malformed.length} malformed`);
+  if (missing.length || malformed.length || dirtyRefused.length) process.exit(1);
 }
