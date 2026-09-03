@@ -1,4 +1,4 @@
-﻿---
+---
 name: unreal-mcp
 description: >
   Generic Unreal Engine live-editor automation guidance. Use when a task needs
