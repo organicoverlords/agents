@@ -71,6 +71,13 @@ function generatedBlock(text) {
   if (start === -1 || stop === -1 || stop <= start) return null;
   return value.slice(start, stop + END.length);
 }
+function outsideGeneratedBlock(text) {
+  const value = normalize(text);
+  const start = value.indexOf(BEGIN);
+  const stop = value.indexOf(END);
+  if (start === -1 || stop === -1 || stop <= start) return null;
+  return value.slice(0, start) + value.slice(stop + END.length);
+}
 function gitRootFor(target) {
   const dir = path.dirname(target);
   if (!fs.existsSync(dir)) return null;
@@ -158,6 +165,14 @@ for (const target of TARGETS) {
     const dirtyText = git(["status", "--porcelain=v1", "--untracked-files=all", "--", rel], root, { trim: false });
     const dirtyCount = dirtyText === null ? -1 : dirtyText.split(/\r?\n/).filter(Boolean).length;
     if (dirtyCount !== 0) {
+      const headText = dirtyCount < 0 ? null : git(["show", `HEAD:${rel}`], root, { trim: false });
+      const localOutside = outsideGeneratedBlock(original);
+      const headOutside = headText === null ? null : outsideGeneratedBlock(headText);
+      if (dirtyCount > 0 && localOutside !== null && headOutside !== null && localOutside === headOutside) {
+        console.log("DIRTY_GENERATED_BLOCK_ALLOWED  " + target);
+        planned.push({ target, next });
+        continue;
+      }
       dirtyRefused.push(`${target} (${dirtyCount < 0 ? "status unavailable" : `${dirtyCount} dirty rows`})`);
       continue;
     }
