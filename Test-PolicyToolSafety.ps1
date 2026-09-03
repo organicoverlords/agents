@@ -102,7 +102,7 @@ if ($syncSource -match [regex]::Escape('C:/Users/Lauri/Desktop/TinyLab/AGENTS.md
 foreach ($marker in @('check-remotes', 'REMOTE_DRIFTED', 'REMOTE_MISSING', 'REMOTE_UNAVAILABLE', 'git-backed origin defaults match the source')) {
     if ($syncSource -notmatch [regex]::Escape($marker)) { throw "POLICY_REMOTE_SYNC_GUARD_MISSING=$marker" }
 }
-foreach ($marker in @('DIRTY_TARGET_REFUSED', 'dirtyRefused', 'planned')) {
+foreach ($marker in @('DIRTY_TARGET_REFUSED', 'DIRTY_GENERATED_BLOCK_ALLOWED', 'outsideGeneratedBlock', 'dirtyRefused', 'planned')) {
     if ($syncSource -notmatch [regex]::Escape($marker)) { throw "POLICY_DIRTY_TARGET_GUARD_MISSING=$marker" }
 }
 if ($syncSource -match [regex]::Escape('C:/Users/Lauri/Desktop/regression-research/AGENTS.md')) { throw 'POLICY_STALE_REGRESSION_RESEARCH_TARGET' }
@@ -193,7 +193,28 @@ try {
     if (-not (Test-Path (Join-Path $remoteRepo 'LOCAL-WORK.txt'))) { throw 'POLICY_UNRELATED_DIRTY_WORK_LOST' }
     Write-Host 'POLICY_UNRELATED_DIRTY_ALLOWED=PASS'
 
-    # Regression: apply must still refuse when the AGENTS target itself is dirty.
+    # Regression: a target dirty only inside the generated policy block is safe to refresh.
+    $generatedOnlyBefore = [IO.File]::ReadAllText($remoteTarget)
+    $generatedOnlyDirty = $generatedOnlyBefore.Replace('Swarm lanes need no global precheck or shared build/runtime/proof gate', 'STALE_GENERATED_POLICY_BLOCK')
+    if ($generatedOnlyDirty -ceq $generatedOnlyBefore) { throw 'POLICY_GENERATED_ONLY_TEST_ANCHOR_MISSING' }
+    [IO.File]::WriteAllText($remoteTarget, $generatedOnlyDirty, [Text.UTF8Encoding]::new($false))
+    $begin = '<!-- SHARED-AGENT-POLICY:BEGIN -->'
+    $end = '<!-- SHARED-AGENT-POLICY:END -->'
+    $beforeStart = $generatedOnlyDirty.IndexOf($begin)
+    $beforeStop = $generatedOnlyDirty.IndexOf($end) + $end.Length
+    $beforePrefix = $generatedOnlyDirty.Substring(0, $beforeStart)
+    $beforeSuffix = $generatedOnlyDirty.Substring($beforeStop)
+    $generatedApply = & node $syncPath --apply 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "POLICY_GENERATED_ONLY_APPLY_FAILED=$LASTEXITCODE $($generatedApply -join ' ')" }
+    if (($generatedApply -join "`n") -notmatch 'DIRTY_GENERATED_BLOCK_ALLOWED') { throw 'POLICY_GENERATED_ONLY_ALLOWANCE_NOT_REPORTED' }
+    $generatedOnlyAfter = [IO.File]::ReadAllText($remoteTarget)
+    $afterStart = $generatedOnlyAfter.IndexOf($begin)
+    $afterStop = $generatedOnlyAfter.IndexOf($end) + $end.Length
+    if ($generatedOnlyAfter.Substring(0, $afterStart) -cne $beforePrefix -or $generatedOnlyAfter.Substring($afterStop) -cne $beforeSuffix) { throw 'POLICY_GENERATED_ONLY_CHANGED_OUTSIDE_BLOCK' }
+    if ($generatedOnlyAfter -notmatch [regex]::Escape('Check current owner/default only for duplicate fixes')) { throw 'POLICY_GENERATED_ONLY_DID_NOT_REFRESH_BLOCK' }
+    Write-Host 'POLICY_GENERATED_ONLY_DIRTY_ALLOWED=PASS'
+
+    # Regression: apply must still refuse when the AGENTS target itself is dirty outside the generated block.
     [IO.File]::WriteAllText($remoteTarget, "# Local edit`n`n<!-- SHARED-AGENT-POLICY:BEGIN -->`nold`n<!-- SHARED-AGENT-POLICY:END -->`n", [Text.UTF8Encoding]::new($false))
     $dirtyTargetBefore = (Get-FileHash -Algorithm SHA256 -LiteralPath $remoteTarget).Hash
     $dirtyApply = & node $syncPath --apply 2>&1
