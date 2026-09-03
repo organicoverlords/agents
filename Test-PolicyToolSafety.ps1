@@ -84,6 +84,7 @@ foreach ($forbidden in @(
     'recent-title window',
     'An active process_id, BUSY scope, unfinished mutation',
     'A dirty worktree is a reconciliation obligation',
+    'do not substitute origin/main or isolate merely because main is dirty/behind',
     'Producer backpressure is mandatory',
     'completed or idle PR awaiting integration is fleet debt',
     'Open-PR count is work to reconcile',
