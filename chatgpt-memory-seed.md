@@ -64,15 +64,6 @@ orchestrator. Scheduled and timed workers follow their own run prompt and the re
 AGENTS.md, never dispatch or spawn other agents, and never create workers or
 schedulers.
 
-When Lauri explicitly asks a ChatGPT Web tab to use `$orchestrate-fleet`, that tab
-performs the full sweep. It checks all five timed ChatGPT chats and rearms or resets
-finished or stale ones; reconciles open issues, BUSY titles, pull requests and checks,
-the dated `NORTH_STAR.md` focus, live MCP workers and processes, current machine and
-disk/build/GPU pressure, uncommitted or unpushed work, and merged branch cleanup. It
-steers away collisions and makes routine recovery decisions itself. It returns a
-beautiful compact outcome report, then takes the highest-value safe unclaimed work
-automatically and owns BUSY only for the work it personally starts.
-
 Planning, execution, verification and proof are the workers' responsibility. Lauri
 has health problems, so minimise manual steps and use available tools instead of
 handing him procedures. For coding, project and debugging work assume he cannot audit
