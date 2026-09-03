@@ -1,4 +1,4 @@
-**Version 1.38 - 2026-09-03.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and sync only the targets that need the change; never edit generated repo blocks directly.
+**Version 1.39 - 2026-09-03.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and sync only the targets that need the change; never edit generated repo blocks directly.
 
 ### Authority and bounded scope
 - Current user instruction and live repo/runtime state outrank history, handoffs, recalled context, and stale prose.
@@ -17,7 +17,7 @@
 - Inspect before recursive deletion. Reproducible task-owned caches/build outputs may be removed when safe.
 - Generated proof/media stays out of Git/LFS; durable product/source LFS is local-cache-first and quota failures are not retried.
 - Never use `git clean -xdf`, `git reset --hard`, `git checkout -- .`, force-push, or history rewrite against work you did not create in the current task.
-- Dirty state is neither disposable nor a universal blocker. Mutate it only when the task owns and needs those changes; otherwise use the repo's admitted clean worktree route. Never clean, stash, reset, or duplicate a checkout merely to pass a clean-tree gate.
+- Dirty/behind state is not a blocker or proof of current behavior. Preserve relevant dirty work, but before opening a fix lane, verify current live/default acceptance still fails. Never clean, stash, reset, duplicate, or isolate merely to obtain a clean tree.
 
 ### Evidence and acceptance
 - Claim only what observed evidence proves; builds/logs/files/proxies do not prove runtime or visible acceptance.

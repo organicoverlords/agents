@@ -61,8 +61,9 @@ foreach ($required in @(
     'task/session suffix',
     'standalone coordinator defined by current live repo/runtime state is collision/ownership authority only',
     'records are coordination bookkeeping, never backlog',
-    'Dirty state is neither disposable nor a universal blocker',
-    'admitted clean worktree route',
+    'Dirty/behind state is not a blocker or proof of current behavior',
+    'before opening a fix lane',
+    'verify current live/default acceptance still fails',
     'never hard-code or redirect output into a human/shared checkout',
     'Never update it silently; disclose every change in the same reply',
     'Project-specific machinery belongs in the narrowest repo, skill, adapter, automation prompt, or test that owns it'
