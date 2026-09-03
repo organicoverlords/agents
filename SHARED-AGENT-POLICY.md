@@ -1,4 +1,4 @@
-**Version 1.37 - 2026-09-03.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and sync only the targets that need the change; never edit generated repo blocks directly.
+**Version 1.38 - 2026-09-03.** Applies to every agent working in `p3`, `Tiny3D`, `lowvram3d-studio`, and Desktop workspace. Edit `C:\Users\Lauri\.agents\SHARED-AGENT-POLICY.md` and sync only the targets that need the change; never edit generated repo blocks directly.
 
 ### Authority and bounded scope
 - Current user instruction and live repo/runtime state outrank history, handoffs, recalled context, and stale prose.
@@ -8,6 +8,9 @@
 ### Route failure is local
 - Prefer production `MCPv3` via VPS. On failure use `plugin2`, then Commander/GitHub as supported; do not wait for one route.
 - Route failure is capability-local, not task failure, while another route or independent work remains. Preserve process identity; avoid tight retry loops.
+
+### Shell
+- `MCPv3 start_process` is Windows PowerShell 5.1: no `&&`/`||`/`??`/ternary, `$PID` assignment, or direct `foreach {...} |`. With native `git`/`gh`/`rg`/`python`, avoid global `ErrorActionPreference=Stop`; check `$LASTEXITCODE` because stderr may become `NativeCommandError`. Never hand-build JSON with report text; use `ConvertTo-Json`/`json.dumps`, and parse only clean stdout.
 
 ### Data safety
 - Do not destroy or rewrite irreplaceable masters, assets, captures, evidence, datasets, secrets, dirty work, or another actor's history; use only recoverable operations you can name.
