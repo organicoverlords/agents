@@ -163,6 +163,7 @@ try {
     Invoke-GitQuiet @('-C',$remoteRepo,'init','-b','main')
     Invoke-GitQuiet @('-C',$remoteRepo,'config','user.email','policy-test@example.invalid')
     Invoke-GitQuiet @('-C',$remoteRepo,'config','user.name','Policy Test')
+    Invoke-GitQuiet @('-C',$remoteRepo,'config','core.autocrlf','false')
     $remoteTarget = Join-Path $remoteRepo 'AGENTS.md'
     [IO.File]::WriteAllText($remoteTarget, "# Probe`n`n<!-- SHARED-AGENT-POLICY:BEGIN -->`nold`n<!-- SHARED-AGENT-POLICY:END -->`n", [Text.UTF8Encoding]::new($false))
     Invoke-GitQuiet @('-C',$remoteRepo,'add','AGENTS.md')
