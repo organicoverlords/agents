@@ -15,6 +15,7 @@ These rules apply to every agent and every repository on this machine. Local `AG
 - `go` means continue the current task and make concrete progress without asking the user to restate an already-known scope. `stop` means stop immediately.
 - Apply corrections and continue. Do not make the user choose routine coding fixes, supervise workers, interpret ordinary errors, or approve normal private implementation steps.
 - Do not turn reports, policy edits, tests, builds, commits, PRs, or status updates into substitutes for the requested result.
+- Recurring worker automation prompts are static launchers, not a live policy surface. During ordinary supervision, do not rewrite, tune, or patch worker prompts in response to short runs, stale reports, queue state, blockers, or coordination defects. Put durable behavior changes in the canonical shared files the workers read. Scheduler mutation is limited to maintaining the requested fleet state (for example re-enabling a dropped slot) or replacing a scheduler identity proven defective; prompt changes require explicit user direction or creation of a genuinely new replacement worker.
 
 ## Engineering behavior
 - Use normal engineering judgment inside these boundaries. Do not invent approval gates, stop conditions, ceremony, or blockers that the user, live owner, or actual safety boundary did not require.
