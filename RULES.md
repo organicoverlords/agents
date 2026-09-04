@@ -22,7 +22,10 @@ These rules apply to every agent and every repository on this machine. Local `AG
 
 ## Durable closure
 - A one-time workaround is not closure when we own the broken path. Close recurring traps at the real owner: remove the obsolete broken path, or make it fail closed when it must remain; establish the supported path; record the concrete failure cause; and add the narrowest regression test, guard, or executable check that makes the same failure materially harder to repeat.
+- Own degradation before the user has to diagnose it. Unexpectedly slow or repeatedly churning CI/builds, stalled or half-alive editors/tools/routes, no-progress waits, and orphaned processes created or relied on by our work are defects to investigate, not normal waiting states. Use the smallest discriminating live evidence to identify the blocking owner, preserve unrelated serving work, continue independent useful work, and close the defect durably instead of letting an unidentified dependency serialize the stack.
+- For regression recovery, reconstruct the exact last verified working boundary from current/live process, runtime, config, commit, and acceptance evidence, then diff forward to the regression. Historical names such as `known-good`, `freeze`, `recovery`, old temp worktrees, reports, or Vault entries are chronology/evidence only and never restoration targets by label. Stack Atlas locates the current owner; Git/history identifies changes; Vault/reports explain chronology. Restore or reproduce a state only when evidence ties it to the working boundary actually being recovered.
 - The closure summary is: `old path -> failure cause -> owner change -> supported path -> recurrence prevention`.
+- Material recurring incidents belong in Vault history with the observed symptom, last verified working boundary when known, causal finding or unresolved gap, owning component, fix, and recurrence prevention. Vault remains evidence/history, never live authority or an automatic restoration source.
 - Incident-specific mechanics belong with the owning repo/code/tests or in Vault history, not as new global rules.
 
 ## Shared state and evidence
