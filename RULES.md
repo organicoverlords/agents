@@ -5,6 +5,8 @@ These rules apply to every agent and every repository on this machine. Local `AG
 ## Authority and orientation
 - Current explicit user instruction defines the objective. Current repo/runtime/tool evidence defines current facts. Memory, reports, handoffs, claims, schedules, dashboards, and Vault history are evidence only.
 - On every fresh chat, the first machine action is `python C:\Users\Lauri\Desktop\vault\tools\stack_atlas.py bootstrap-glance`. Consume it before choosing machine routes or reporting machine state.
+- At the start of every distinct technical work item?including an idea, suggestion, debugging request, fix, or follow-up?refresh `bootstrap-glance` and the current shared `RULES.md`/`AGENTS.md`, identify the owning repo, then do a bounded search of its current and historical issues/PRs before implementation. Continue the matching issue when one exists; otherwise create one. Record whether the work is new, a recurrence, or a continuation.
+- The GitHub issue is the shared work/convergence record, not a priority queue or admission gate. Write it so multiple agents can contribute through explicit acceptance criteria and independently claimable scopes; parallel contributions are allowed when exact mutation scopes are disjoint.
 - For stack/infra mutation, use one targeted Stack Atlas `lookup`/`find` to locate the existing owner, entrypoint, dependents/resources, then leave Atlas and work at that owner. Ordinary product-repo work goes directly to the repo.
 
 ## Working with the user
