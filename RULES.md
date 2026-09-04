@@ -8,6 +8,7 @@ These rules apply to every agent and every repository on this machine. Local `AG
 - At the start of every distinct technical work item?including an idea, suggestion, debugging request, fix, or follow-up?refresh `bootstrap-glance` and the current shared `RULES.md`/`AGENTS.md`, identify the owning repo, then do a bounded search of its current and historical issues/PRs before implementation. Continue the matching issue when one exists; otherwise create one. Record whether the work is new, a recurrence, or a continuation.
 - Repo/work history starts from the owning repo's issues, PRs, branches, and commits. Vault is targeted history/evidence only: use its bounded indexed lookup or an exact known path when a specific past event materially helps; never recursively scan Vault or include it as a broad search root.
 - The GitHub issue is the shared work/convergence record, not a priority queue or admission gate. Write it so multiple agents can contribute through explicit acceptance criteria and independently claimable scopes; parallel contributions are allowed when exact mutation scopes are disjoint.
+- The issue/task is the work identity. A branch, lane, worktree, checkout, editor, build slot, tool route, or Busy claim is only an execution surface or resource; never bind worker identity, ownership of the task, or continuation of the task to one such surface.
 - For stack/infra mutation, use one targeted Stack Atlas `lookup`/`find` to locate the existing owner, entrypoint, dependents/resources, then leave Atlas and work at that owner. Ordinary product-repo work goes directly to the repo.
 
 ## Working with the user
@@ -25,7 +26,9 @@ These rules apply to every agent and every repository on this machine. Local `AG
 - Working shared production is not a diagnostic experiment. Prefer reversible/off-path diagnosis and preserve the serving path unless the task actually requires changing it.
 - Before diagnosing or repairing an owned program, read its current live contract/help and the smallest relevant implementation path first. Establish what the operation is supposed to do before interpreting logs, timings, or historical incidents; prior failures are hypotheses, not diagnoses.
 - Classify latency by operation semantics before calling it a stall: requested wait/poll windows and actual child-command runtime are expected time and must be separated from unexplained tool, transport, or backend delay. Never repair infrastructure from aggregate duration alone.
-- A constrained tool, build, CI job, lane, or exact Busy scope is local contention, not a reason to stop unrelated useful work.
+- A constrained tool, build, CI job, lane, checkout, worktree, or exact Busy scope is local contention, not a task-level reason to stop unrelated useful work.
+- Dirty, stale, unsafe, or unusable execution state constrains only the conflicting mutation. Preserve unique/foreign work and leave that surface intact; continue the same issue through another already-existing safe supported surface when available, or continue non-conflicting source, test, build, proof, review, or integration work. Do not create a new lane/worktree merely because the current one is inconvenient.
+- Stop only for a concrete task-level blocker after safe existing execution surfaces and independent useful work are exhausted. Name the exact blocking scope/resource and the evidence that it cannot be bypassed safely. Reporting, checkpointing, or archiving a worker report is not completion while the issue remains actionable.
 
 ## Durable closure
 - A one-time workaround is not closure when we own the broken path. Close recurring traps at the real owner: remove the obsolete broken path, or make it fail closed when it must remain; establish the supported path; record the concrete failure cause; and add the narrowest regression test, guard, or executable check that makes the same failure materially harder to repeat.
@@ -36,7 +39,7 @@ These rules apply to every agent and every repository on this machine. Local `AG
 - Incident-specific mechanics belong with the owning repo/code/tests or in Vault history, not as new global rules.
 
 ## Shared state and evidence
-- BusyCoordinator is exact shared-mutation collision control only. It is not backlog, scheduling, priority, liveness, progress, capacity, or work selection.
+- BusyCoordinator is exact shared-mutation collision control only. It is not backlog, scheduling, priority, liveness, progress, capacity, work selection, worker identity, or task identity.
 - Preserve user-owned, unique, foreign, dirty, or irreplaceable state. Destructive cleanup requires positive evidence that the exact target is disposable/recoverable; age, size, generic names, duplication-looking state, or being process-free are not enough.
 - Claim only what observed evidence establishes. Builds/logs/files/reports are not automatically runtime or user-visible proof.
 - Use the currently approved machine/tool routes exposed by the live environment. Do not substitute retired or unapproved fallbacks merely because a preferred route is inconvenient.
