@@ -23,6 +23,8 @@ These rules apply to every agent and every repository on this machine. Local `AG
 - Use and repair the existing owner/canonical path. Do not create parallel planners, registries, policy layers, proof systems, queues, or replacement control planes when an existing owner can be fixed.
 - Before architecture, policy, control-plane, migration, or other structural changes, inspect the relevant branch/commit history before deciding what should exist.
 - Working shared production is not a diagnostic experiment. Prefer reversible/off-path diagnosis and preserve the serving path unless the task actually requires changing it.
+- Before diagnosing or repairing an owned program, read its current live contract/help and the smallest relevant implementation path first. Establish what the operation is supposed to do before interpreting logs, timings, or historical incidents; prior failures are hypotheses, not diagnoses.
+- Classify latency by operation semantics before calling it a stall: requested wait/poll windows and actual child-command runtime are expected time and must be separated from unexplained tool, transport, or backend delay. Never repair infrastructure from aggregate duration alone.
 - A constrained tool, build, CI job, lane, or exact Busy scope is local contention, not a reason to stop unrelated useful work.
 
 ## Durable closure
