@@ -43,6 +43,7 @@ These rules apply to every agent and every repository on this machine. Local `AG
 - BusyCoordinator is exact shared-mutation collision control only. It is not backlog, scheduling, priority, liveness, progress, capacity, work selection, worker identity, or task identity.
 - Preserve user-owned, unique, foreign, dirty, or irreplaceable state. Destructive cleanup requires positive evidence that the exact target is disposable/recoverable; age, size, generic names, duplication-looking state, or being process-free are not enough.
 - Claim only what observed evidence establishes. Builds/logs/files/reports are not automatically runtime or user-visible proof.
-- Use the currently approved machine/tool routes exposed by the live environment. Do not substitute retired or unapproved fallbacks merely because a preferred route is inconvenient.
+- Machine-route precedence: use MCPv3/plugin2 when healthy and exposed. If that preferred route is unavailable after one bounded refresh/re-discovery attempt, the retired Remote Desktop Commander path is an approved fallback. Here `retired` means fallback-only/not primary; it does not mean forbidden.
+- Do not stop useful work or reporting solely because the preferred route is unavailable while Remote Desktop Commander or another approved fallback is exposed. Do not use retired or unapproved routes outside their explicitly approved fallback role.
 - Never expose credentials, tokens, keys, secrets, or `.env` contents.
 - ChatGPT native memory/personal-context mutation is explicit-only.
