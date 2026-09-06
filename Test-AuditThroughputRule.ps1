@@ -8,9 +8,9 @@ $goLine = @($text -split "`r?`n" | Where-Object { $_ -match '^- On a `go` turn,'
 if ($goLine.Count -ne 1) { throw "expected exactly one go continuation rule; found $($goLine.Count)" }
 foreach ($required in @(
     'finite canonical retry-after',
-    'Honor the emitted interval',
-    'do not re-probe the same unchanged condition before that retry-after elapses',
-    'new discriminating evidence materially changes the state'
+    'honor that interval without hot-polling',
+    'when it elapses, use one bounded recheck rather than a watcher',
+    'Keep the dependency live across those checks instead of abandoning it after one unchanged observation'
 )) {
     if (-not $goLine[0].Contains($required)) { throw "go retry rule missing invariant: $required" }
 }

@@ -3,6 +3,18 @@ $ErrorActionPreference = 'Stop'
 
 $rulesPath = Join-Path $PSScriptRoot 'RULES.md'
 $text = [IO.File]::ReadAllText($rulesPath)
+$goLines = @($text -split "`r?`n" | Where-Object { $_ -match '^- `go` means continue' })
+if ($goLines.Count -ne 1) { throw "expected exactly one go objective-continuation rule; found $($goLines.Count)" }
+$goRule = $goLines[0]
+foreach ($required in @(
+    'a useful but small local result is not a yield boundary',
+    'If the current avenue produces no user-meaningful progress, pivot to another safe supported action instead of final-answering',
+    'Orientation, status inspection, bookkeeping, evidence preservation, a report/commit/PR, or an incidental tiny correction do not count as task-level completion',
+    'Elapsed time, tool-call count, artifact count, and local subtask completion are never standalone stop conditions'
+)) {
+    if (-not $goRule.Contains($required)) { throw "go objective-continuation rule missing invariant: $required" }
+}
+
 $line = @($text -split "`r?`n" | Where-Object { $_ -match '^- On a `go` turn,' })
 if ($line.Count -ne 1) { throw "expected exactly one go continuation rule; found $($line.Count)" }
 $rule = $line[0]
@@ -52,4 +64,5 @@ if ($runtimeRule.Contains('authorizes a live shared-production/control-plane cut
     recoverable_capacity_is_not_hard_boundary = $true
     idle_long_waits_forbidden = $true
     ordinary_live_runtime_needs_no_extra_approval = $true
+    meaningful_progress_required_before_voluntary_yield = $true
 } | ConvertTo-Json -Compress
