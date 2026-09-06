@@ -11,13 +11,16 @@ if ($text.Contains('treat the report itself as required evidence capture')) {
 if ($text.Contains('mcp-security-routing-events.jsonl')) {
     throw 'RULES.md must not route platform security events into the old MCP security-routing event log.'
 }
-if ($text.Contains('security-reroute symptom remained acceptably absent/stable')) {
-    throw 'MCP known-good promotion must measure MCP stability, not platform security-event absence.'
-}
-if (-not $text.Contains('explicit user confirmation that MCP behavior remained acceptably stable')) {
-    throw 'MCP known-good promotion must use explicit user-confirmed MCP stability.'
+foreach ($requiredRecovery in @(
+    'MCP recovery state has one canonical discoverable pointer',
+    'Recovery-target selection is not a health verdict',
+    'Never create a candidate/proven promotion label',
+    'Conditions use `True`/`False`/`Unknown`'
+)) {
+    if (-not $text.Contains($requiredRecovery)) { throw "MCP recovery-state invariant missing: $requiredRecovery" }
 }
 if (-not $text.Contains('Never attempt to disable, evade, or bypass platform security controls.')) {
     throw 'RULES.md must preserve the no-bypass boundary.'
 }
 Write-Output 'PASS platform-security-tracking-rule'
+

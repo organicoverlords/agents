@@ -4,15 +4,15 @@ $ErrorActionPreference = 'Stop'
 $rulesPath = Join-Path $PSScriptRoot 'RULES.md'
 $text = [IO.File]::ReadAllText($rulesPath)
 
-$goLine = @($text -split "`r?`n" | Where-Object { $_ -match '^- On a `go` turn,' })
-if ($goLine.Count -ne 1) { throw "expected exactly one go continuation rule; found $($goLine.Count)" }
+$pollLine = @($text -split "`r?`n" | Where-Object { $_ -match '^- Never use GitHub, CI, Vault, Busy, build/runtime state, or tool reads as a keepalive' })
+if ($pollLine.Count -ne 1) { throw "expected exactly one anti-polling rule; found $($pollLine.Count)" }
 foreach ($required in @(
-    'finite canonical retry-after',
-    'honor that interval without hot-polling',
-    'when it elapses, use one bounded recheck rather than a watcher',
-    'Keep the dependency live across those checks instead of abandoning it after one unchanged observation'
+    'Query external or shared state only when its answer can change the next action or validate the requested result',
+    'reuse the returned state until there is concrete reason it may have changed',
+    'do not issue repeated unchanged checks',
+    'smallest bounded read needed to collect its result'
 )) {
-    if (-not $goLine[0].Contains($required)) { throw "go retry rule missing invariant: $required" }
+    if (-not $pollLine[0].Contains($required)) { throw "anti-polling rule missing invariant: $required" }
 }
 
 $latencyLine = @($text -split "`r?`n" | Where-Object { $_ -match '^- Classify latency by operation semantics' })
@@ -41,7 +41,7 @@ foreach ($required in @(
 
 [ordered]@{
     ok = $true
-    retry_hint_respected = $true
+    unchanged_polling_forbidden = $true
     wait_aware_latency = $true
     bounded_output_is_incomplete = $true
 } | ConvertTo-Json -Compress

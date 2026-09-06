@@ -6,10 +6,10 @@ foreach ($required in @(
     'WORKER REPORTS ARE MANDATORY FOR BOTH TIMED AND MANUAL/ON-DEMAND WORK',
     'MANUAL REPORTS ARE MANDATORY BUT MINIMAL',
     'Do not checkpoint routine progress or duplicate commands, process IDs, Busy claims, GitHub/PR chronology, CI output, validation logs, or other telemetry already owned elsewhere',
-    'automatic Vault investigation learning for substantive technical debugging/investigation, but this is an optimization rather than a per-turn obligation',
-    'Never extend a tool interval or delay a user-visible answer solely to create, sync, repair, or deduplicate a Vault memory',
-    'A slow, failed, or unnecessary Vault write is not a completion gate',
-    'do not use `gh run watch` or an equivalent long-lived CI watcher as a waiting primitive'
+    'Vault investigation learning is subordinate to request scope',
+    'never turn a narrow user request into a separate investigation or remote-publication workflow merely to create memory',
+    'A Vault write failure is a durability gap, not a reason to expand the current request or start repair work unless that repair is itself requested',
+    'reuse the returned state until there is concrete reason it may have changed'
 )) {
     if (-not $text.Contains($required)) { throw "interactive YAGNI invariant missing: $required" }
 }
@@ -20,4 +20,5 @@ foreach ($obsolete in @(
 )) {
     if ($text.Contains($obsolete)) { throw "obsolete mandatory overhead still present: $obsolete" }
 }
-[ordered]@{ok=$true;manual_report_mandatory=$true;manual_report_minimal=$true;memory_nonblocking=$true;gh_watch_forbidden=$true} | ConvertTo-Json -Compress
+[ordered]@{ok=$true;manual_report_mandatory=$true;manual_report_minimal=$true;memory_scope_bounded=$true;unchanged_polling_forbidden=$true} | ConvertTo-Json -Compress
+
