@@ -58,6 +58,20 @@ if ($runtimeRule.Contains('authorizes a live shared-production/control-plane cut
     throw 'scoped live-runtime rule accidentally authorizes shared production cutover'
 }
 
+
+$goLine = @($text -split "`r?`n" | Where-Object { $_ -match '^- `go` means continue the current task' })
+if ($goLine.Count -ne 1) { throw "expected exactly one primary go rule; found $($goLine.Count)" }
+$goRule = $goLine[0]
+foreach ($required in @(
+    'Never invent or infer an internal `tool window`, `tool budget`, `turn budget`',
+    'If another supported tool call can still be issued',
+    'an actual platform/tool limit has not been established',
+    'actually rejects, disables, or prevents further needed execution',
+    'no approved route or independent safe useful work remains'
+)) {
+    if (-not $goRule.Contains($required)) { throw "primary go rule missing anti-slopwall invariant: $required" }
+}
+
 [ordered]@{
     ok = $true
     rule_count = 1
