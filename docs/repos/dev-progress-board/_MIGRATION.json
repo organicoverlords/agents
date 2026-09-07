@@ -1,0 +1,7 @@
+{
+  "repository": "organicoverlords/dev-progress-board",
+  "migrated_from_main": "9c7aae0f1b23d097bfc1544784a47b93ad8350a2",
+  "migrated_document_count": 2,
+  "authority": "organicoverlords/agents",
+  "exceptions": "Code/config/runtime state remains repo-owned; no machine consumers were found for the migrated Markdown files."
+}

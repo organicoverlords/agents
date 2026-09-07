@@ -1,0 +1,7 @@
+{
+  "repository": "organicoverlords/chatgpt-mcp-clean",
+  "migrated_from_main": "6f6bc9de0f422273e0bc88d3d6cda3c50ba798af",
+  "migrated_document_count": 1,
+  "authority": "organicoverlords/agents",
+  "exceptions": "README.md and CHANGELOG.md are machine-parsed; incident workflow Markdown and evidence are execution/artifact contracts and remain repo-owned. AGENTS.md/CLAUDE.md remain pointer surfaces."
+}

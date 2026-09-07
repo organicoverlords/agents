@@ -1,0 +1,7 @@
+{
+  "repository": "organicoverlords/lowvram3d-queue-clean",
+  "migrated_from_main": "c7cba5763f8818505b33c2101ec4140e8ba066f9",
+  "migrated_document_count": 2,
+  "authority": "organicoverlords/agents",
+  "exceptions": "Runtime/config/production manifests, scripts, tests, and frozen identity contracts remain repo-owned. Repo AGENTS.md becomes pointer-only."
+}
