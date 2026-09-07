@@ -1,0 +1,13 @@
+# LowVRAM avian flight lineage and Tiny3D ownership
+
+Tiny3D issue #133 preserves the earlier LowVRAM bird pipelines instead of treating the current portable avian compiler as a blank-slate implementation. The source snapshots and proof receipts are bound by `contracts/lowvram-avian-flight-port-v1.json`; verify them with `uv run --locked --python 3.11 python scripts/verify_lowvram_avian_flight_port.py`.
+
+Three private LowVRAM histories are authoritative historical inputs: Macaw master-unification at `8d22520b02995fb50cf74893c4b8bbcb6185d0e6`, Eagle production animation at `874fa38563181fdd6d4d3d1efedcb2c67b31a9ba`, and Owl/Hummingbird playable flight at `d21a2b5540bd8b860c7ac7f70810653c0c0bc070`. The latter two were explicitly re-anchored under `preserve/rigging-20260828/` before this port so they no longer depend on disposable `agent/*` refs.
+
+The historical references cover different useful regimes. Macaw preserves WingSpread, WingFold, Flap, and Glide motion metrics with zero recorded loop seam, while its own V2 handoff still records user acceptance as pending/rejected until watched. Eagle preserves a 13-bone accepted wide-wing rig with three production actions and `EAGLE_PRODUCTION_ANIMATION=PROVEN`. Owl and Hummingbird preserve species-specific rigs, zero unweighted vertices, zero cross-wing leakage, flight profiles, real-key Unreal flight-state receipts, and controlled secondary-motion A/B captures. Owl uses a 38-bone final reference and Hummingbird 36; those historical skin reports allowed up to six influences.
+
+Current Tiny3D owns the generic avian asset contract through `src/tiny3d/avian.py` and `src/tiny3d/workers/avian_blender.py`. It requires `avian_idle`, `wing_spread`, `flap_loop`, and `glide_loop`, machine deformation QA, zero cross-wing assignments, and a stricter four-influence ceiling. Those generic rig/action/weight/deformation capabilities are therefore recorded as `SUPERSEDED_WITH_PROOF`, not copied back into a second avian compiler.
+
+Species flight tuning and playable controller behavior remain intentionally separate. The Owl/Hummingbird flight profiles are `PRESERVED_REFERENCE`; their historical runtime controller and secondary-motion A/B evidence are `P3_OWNED_HISTORICAL`. `scripts/prepare_flight_locomotion_contract.py` continues to leave `gameplay_flight` NOT_PROVEN until current P3 returns runtime evidence and does not guess consumer flight tuning.
+
+This is an **avian reference family only**. It must not be used to close the still-unproven non-avian winged morphology requirement in #133. Fresh replay of the historical bird binaries is also not claimed by this preservation slice.
