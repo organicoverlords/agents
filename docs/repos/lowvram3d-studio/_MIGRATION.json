@@ -1,7 +1,21 @@
-﻿{
+{
     "repository":  "organicoverlords/lowvram3d-studio",
     "migrated_from_main":  "39aee8f241595a7308b3e31590b70e67b53fb6be",
-    "migrated_document_count":  57,
+    "migrated_document_count":  61,
     "authority":  "organicoverlords/agents",
-    "exceptions":  "Machine-consumed contracts and artifact-bound evidence remain in the product repository."
+    "exceptions":  "Machine-consumed contracts and artifact-bound evidence remain in the product repository.",
+    "additional_migrations":  [
+                                  {
+                                      "source_commit":  "1be474bc19fcfcacc596690da026c8b1ef5d87dc",
+                                      "paths":  [
+                                                    "benchmarks/README.md",
+                                                    "tools/README.md",
+                                                    "memory/RESOURCE_GATES.md",
+                                                    "docs/LICENSE-NOTES.md"
+                                                ],
+                                      "post_import_adjustments":  [
+                                                                      "Normalize canonical internal links to Agents-hosted docs and shared policy; keep production-lanes.yaml linked to the repo-owned machine contract."
+                                                                  ]
+                                  }
+                              ]
 }

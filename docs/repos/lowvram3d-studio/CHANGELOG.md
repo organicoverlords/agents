@@ -8,6 +8,8 @@ The rule this file follows is [`docs/repos/docs/standards/changelog.md`](../docs
 
 ## [Unreleased]
 
+- [2026-09-07] [meta] Centralized the four remaining human-only LowVRAM docs (benchmark guidance, one-command tool guide, resource-gate memory, and license notes); machine-consumed START_HERE and other runtime/evidence contracts remain repo-owned (#157).
+
 - [2026-09-07] [meta] Point the canonical changelog and Traycer policy references directly at Agents, removing legacy standalone-docs and product-pointer indirection (#155).
 
 - [2026-09-06] [producer-manifest] Fail closed the canonical `build-singleflight` handoff when unresolved shared-geometry `SEMANTIC_CONFLICT` relations remain, while preserving the written manifest as repair evidence and allowing provenance-proven intentional aliases (#40).
