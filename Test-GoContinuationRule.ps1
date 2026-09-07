@@ -14,6 +14,10 @@ foreach ($required in @(
     'carry the next coherent contribution through its normal completion path',
     'publication/integration or merge when that is already the established completion path and its gates pass',
     'Do not yield merely because a plan is clear, a commit exists, a PR is open',
+    'A healthy finite serialized blocker with observable owner/progress',
+    'is not an immediate yield boundary',
+    'use one bounded defer/recheck chosen from recent duration/progress evidence',
+    'continue the required step if it clears',
     'Manual `go` does not imply timed-fleet supervision or scheduler work',
     'Timed recurring workers keep their separate utilization contract'
 )) {
@@ -28,7 +32,11 @@ foreach ($required in @(
     'Take one bounded/nonblocking snapshot',
     'advance that ready contribution',
     're-check the gate only when its result can change the next action',
-    'do not babysit its output'
+    'do not babysit its output',
+    'A single bounded defer/recheck explicitly required by the scope-fidelity rule is not keepalive polling',
+    'do not turn it into a recurring watch loop',
+    'If no alternative ready contribution exists',
+    'use the scope-fidelity rule''s one bounded defer/recheck rather than a blocking watcher or repeated polling'
 )) {
     if (-not $pollLine[0].Contains($required)) { throw "anti-polling rule missing invariant: $required" }
 }
@@ -38,6 +46,7 @@ foreach ($obsolete in @(
     'continue across sequential safe useful actions until the task-level objective is complete',
     'keep observing it with that bounded mechanism until it completes',
     'consume one bounded wait/recheck in the same `go` turn',
+    'next required action truly depends on a blocked result',
     'decision-ready checkpoint is a valid yield boundary'
 )) {
     if ($text.Contains($obsolete)) { throw "shared rules retain churn incentive: $obsolete" }
