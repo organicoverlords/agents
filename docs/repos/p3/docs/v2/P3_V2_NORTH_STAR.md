@@ -45,6 +45,117 @@ These are product-intent examples, not a fixed content checklist:
 6. Use abilities, construction and terrain edits as counters to one another so the battlefield evolves instead of settling into one solved layout.
 
 This interaction is the product reason V2 contains Lane War, combat/GAS, construction, Chaos-backed destruction presentation, earthworks, navigation-aware AI and high-mobility traversal in one architecture.
+## Finished-game product roadmap
+
+The North Star must remain useful after the current issue graph is exhausted. The durable product path is therefore **finished game -> major player outcomes -> current milestone**. Issues and PRs are disposable execution decompositions of these outcomes; they are not the roadmap itself.
+
+### Definition of the finished P3 game
+
+The finished P3 release is a **fully authored, polished, replayable, server-authoritative 3D Lane War game**. It is not a prototype with every subsystem technically present. It must look, move, sound, read and play like one intentional game from ordinary launch through repeated completed matches.
+
+A normal player can install/launch it, understand what to do, play against strong-enough AI or another player through a supported real-world session route, make meaningful tactical choices, experience a visually complete battlefield and character roster, finish the match, and immediately play again without developer intervention.
+
+The finished game has all of these properties together:
+
+- **Complete match loop:** enter, choose a playable character/loadout where applicable, defend/attack a Core, fight around creeps and objectives, earn/spend match economy, reshape/build/destroy the battlefield, reach a replicated result, and rematch/return cleanly.
+- **Skillful movement and combat:** momentum/skiing, grapple/high-mobility traversal and readable abilities materially change positioning, attack, escape and rotation; first-person and third-person are both intentional polished playable views.
+- **Custom combat identity:** shipped spells/abilities use authored P3 gameplay behavior, animation, Niagara/VFX, impact/result presentation, sound and readable telegraphing appropriate to their role. Generic debug spheres, stock-template effects, placeholder montages or text-only feedback do not satisfy final content.
+- **Fully animated playable roster:** every shipped character has complete authored gameplay motion for locomotion, starts/stops/turns, skiing, grapple/air/landing, attacks/spells, hit/defeat/respawn and relevant transitions. Animation must preserve the actual generated character identity and look good in real gameplay, not only in an editor preview.
+- **Distinct character/gameplay choices:** shipped characters, abilities, equipment/loadouts and movement differences create understandable strengths, counters or play styles. Content variation must change decisions rather than merely reskin the same behavior.
+- **Battlefield agency:** construction, destruction and map-wide earthworks change real player access, creep navigation, cover, high ground and defensive shape instead of existing as disconnected toys.
+- **Strategic lane pressure:** creeps, Core/base defense, towers/fortifications, economy and upgrades create understandable offensive/defensive choices and counterplay rather than passive timers or cosmetic numbers.
+- **Fully asseted production battlefield:** the released playable world is intentionally dressed and visually coherent across the spaces players actually see and traverse. Bases, lanes, terrain, structures, vegetation/props, landmarks, sky/lighting, materials, effects, destruction states and environmental details use qualified production assets instead of greybox geometry, primitive stand-ins, missing-material repair or obvious test-map leftovers.
+- **World readability and tactical art:** visual dressing reinforces gameplay. Players can read lane direction, team/base identity, Core/shop/defense roles, traversal routes, editable terrain, destructible/constructible space, hazards and important sight lines at gameplay speed. Art may never obscure collision, navigation or objective truth.
+- **Polished construction/destruction/earthworks presentation:** previews, placement, rejection, building completion, damage, fracture/destruction, terrain edits and navigation consequences have clear final-quality visual/audio feedback while authoritative gameplay state remains separate from presentation.
+- **Complete UI/UX:** menus, session flow, HUD, economy/shop, cooldown/resource state, objective state, character/view switching, build/earthwork controls, damage/danger feedback, result/rematch and settings are coherent, readable and styled as one product. Debug/status text is not the final interface unless deliberately retained as player-facing design.
+- **Audio and feedback pass:** attacks, spells, impacts, movement, construction, destruction, objectives, UI and match transitions have coherent audio/visual feedback where it materially improves comprehension and feel. Essential information still has non-audio and non-color support.
+- **Production world and atmosphere:** environmental presentation, lighting, weather/time state when used, effects and soundscape support the game's tactical mood without compromising visibility or performance. The release should not feel like a collection of showcase assets placed around a test arena.
+- **Reliable ordinary use:** normal launch, controls/settings, session flow, defeat/respawn, disconnect/failure handling, match reset and packaged execution are understandable and resilient. No console command, editor repair step or hidden developer ritual is required for ordinary play.
+- **Meaningful solo play:** AI can play the actual Lane War rules well enough to pressure objectives, fight, navigate changed terrain/defenses and exercise the player's core decisions. Solo is a real way to play/test the finished game, not merely a dummy bot connectivity harness.
+- **Balanced replayability:** tuning produces meaningful choices among pressure, upgrades, defense, movement routes, abilities, construction and terrain manipulation. No single unfinished exploit, dominant placeholder strategy or broken economy loop invalidates the intended interaction of systems.
+- **Measured release quality:** the integrated release workload meets declared frame/server/memory/network budgets on named reference hardware/settings; long-running play, repeated matches and save/schema paths do not accumulate broken state.
+- **Content integrity:** every required shipped asset is hydrated, attributable and qualified for its actual role. Wrong skeletons, wrong scale, missing materials, runtime path repair, stock/primitive substitutes and silently degraded fallbacks are release blockers for required player-visible content.
+- **One production authority:** V2 owns the shipped path. V1 and lab/showroom/test surfaces remain explicit reference/proof tools only and cannot be required to make the released match work.
+
+“Finished” means the selected release scope is **coherent, authored, content-complete, polished, stable and genuinely enjoyable enough to stand as the game**, not merely that engineering acceptance boxes are green. Exact roster size, number of custom spells, build pieces, creep/tower variants, maps and tuning values are determined by playtest quality and product coherence rather than arbitrary quotas; workers must expand content until the release no longer reads as sparse, repetitive or placeholder-driven, then stop when additional breadth no longer improves the game.
+
+### Milestone A - friend-playable integrated match (current)
+
+Complete #803/#941 and the current playable-match direction before broad content expansion. The existing solo-AI and LAN 1v1 path must prove the whole identity at once: Lane War pressure, first-/third-person combat, skiing/grapple, generated-character animation, meaningful gold spending, construction/destruction, free map-wide earthworks, navigation response, result and rematch.
+
+**Advance when:** a normal player can complete the declared match sequence on one compatible head with representative two-perspective runtime/visual evidence and no required subsystem is merely “implemented but not composed.”
+
+### Milestone B - repeatable competitive core
+
+Turn the first working match into something worth replaying before making it larger.
+
+- Tune encounter timing, movement routes, creep pressure, Core/base defense, purchase timing, upgrade impact, build value, destruction and earthwork counterplay from observed matches.
+- Make every major choice legible: why a player took damage, why a route is blocked/open, what a purchase changed, which objective matters, how to counter a defense and how to recover from a lost exchange.
+- Finish onboarding-through-play: ordinary UI exposes controls, objectives, shop/economy, character/view switching, build/earthwork use, result and rematch without requiring external instructions or console knowledge.
+- Harden AI enough that solo play exercises the real match and creates useful pressure/counterplay rather than only serving as a connectivity substitute.
+- Establish stable integrated performance/network baselines and fix measured bottlenecks or repeated-match state leaks before increasing simulation/content breadth.
+
+**Advance when:** repeated normal matches produce meaningful different tactical decisions, the dominant failures are balance/content questions rather than broken composition, and a fresh player can understand and complete the loop without developer coaching.
+
+### Milestone C - shippable multiplayer product
+
+Move from “works locally with a friend” to a declared supported multiplayer release route without speculatively building every online-service feature.
+
+- Select and support at least one practical real-world friend-play route beyond developer-only/local-machine testing: for example a supported peer-hosted Internet route or a dedicated-server/session route. The exact online service, NAT/traversal strategy, discovery UX and hosting model are chosen from product need and current platform evidence, not assumed in advance.
+- Preserve the same server-authoritative gameplay semantics under latency/loss, reconnect/failure boundaries and repeated sessions.
+- Package/install/launch the game through the intended player path on supported target hardware; eliminate hidden editor/content-repair prerequisites.
+- Provide clear session creation/join/failure/return behavior and document what is and is not supported. Host migration, public matchmaking, ranking and similar services become requirements only if the chosen release model actually needs them.
+
+**Advance when:** two ordinary machines/users can reliably reach and replay the real game through the declared supported release route, and failure cases return to a usable state without manual repo/editor intervention.
+
+### Milestone D - fully authored content-complete game
+
+Expand only after the core interaction is fun, readable and technically stable. This milestone turns the proven game into the **fully asseted and custom-presented P3 release**, not a larger prototype. Content breadth should multiply decisions already proven by the core systems rather than introduce parallel games.
+
+- Finish the generated playable roster through PawnData/AnimationProfile/content rather than base-framework special cases. Every shipped character needs complete gameplay-state animation, final materials/collision, intentional silhouette/readability and a coherent ability/loadout identity.
+- Replace prototype combat presentation with a coherent set of **custom P3 spells/abilities**: authored cast/action animation, projectile/active-state presentation where relevant, impact/result VFX, sound, cooldown/resource feedback and opponent-readable tells/counters.
+- Build a fully dressed release battlefield using qualified assets across bases, lane/road, structures, fortifications, terrain, traversal landmarks, foliage/props, tactical cover, shops/objectives and environmental presentation. No visible greybox/primitive placeholder or missing-material content remains in ordinary release play unless deliberately part of the art direction.
+- Give construction, destruction and earthworks final presentation: production meshes/material variants, previews/placement feedback, damage states, fracture/destruction effects, terrain-surface response and readable before/after tactical state.
+- Add creep, tower/defense, upgrade, construction and battlefield variants when each creates a new tactical choice or counter rather than a cosmetic duplicate; finish their animation/VFX/audio/readability to the same release bar.
+- Complete UI art/interaction and player guidance across menus, session flow, HUD, shop/economy, abilities, build/earthwork tools, objective state, result/rematch, settings and error/recovery flows.
+- Complete the game-feel pass: camera motion, hit reactions, impact timing, movement feedback, traversal contact, animation transitions, VFX timing, sound cues and response latency should make accepted actions feel deliberate rather than technically functional.
+- Add coherent world/environment variation, landmarks, hazards, lighting/weather presentation and ambient detail where they improve play and atmosphere, while preserving readable lanes, editable-ground rules, navigation correctness and performance.
+- Use persistence for durable player/loadout/world state only where the product actually benefits from it. Version and migration are required once durable release data exists; persistence must not leak transient match state across fresh matches.
+- Keep content production/qualification repeatable through the existing Tiny3D -> P3 boundary so expanding the roster/world does not require runtime repair hacks or unidentified source substitutions.
+
+**Advance when:** ordinary play no longer exposes obvious placeholder art, incomplete animation, generic spell presentation, debug UX, underdressed world areas or unpolished major interactions; the exact release content has enough verified variety, balance and audiovisual coherence to sustain repeated play on the same production architecture.
+
+### Milestone E - final polish, release candidate and finished game
+
+Stop feature expansion and prove the selected release as a product.
+
+- All required release-scope systems are on the normal production path with no shadow implementation required for ordinary play.
+- Required user-visible assets, animations, materials, effects, UI and sounds are final-quality for the declared scope or explicitly accepted release content; no stock/primitive stand-in satisfies a required user/generated-asset role.
+- Clean packaged launch, session flow, repeated matches, failure/recovery, save/schema migration where applicable, and long-running stability pass on supported target configurations.
+- Integrated performance budgets hold under the actual release workload; scalability/settings preserve gameplay readability and authority.
+- Accessibility/usability requirements for essential information, controls and feedback are exercised through the real player path.
+- Open P0/P1 defects that falsify the declared release experience are resolved, superseded by an exact accepted path, or deliberately removed from release scope through explicit product-direction change.
+- V1 retirement is complete for all shipped domains; labs/showroom/proof tooling cannot be hidden runtime dependencies.
+- Final acceptance is played and inspected as the game, not inferred from issue closure, PR count, test volume or subsystem receipts.
+
+When these conditions hold for the declared release scope, the core game is finished. Subsequent work is expansion/maintenance, not retroactive completion of the first release.
+
+### Designed future expansions - not current release gates
+
+The architecture intentionally leaves room for features already explored or designed, but they do not block the first finished core release unless the user explicitly promotes them into release scope:
+
+- **RTS/overhead command view:** later view/input/presentation layer over the same Pawn/PlayerState/world, never a second possession/gameplay framework.
+- **Flight and additional creature/body families:** shared data-driven movement/body contracts, admitted when they create worthwhile Lane War gameplay and have complete animation/network proof.
+- **Broader persistent progression/loadouts/world state:** use the existing player/inventory/persistence contracts when a concrete return-play loop warrants it; do not invent grind or survival upkeep.
+- **Additional maps/world variants and larger simulation/content scale:** expand only when the current integrated performance and navigation budgets can absorb them.
+- **Additional online/social/competitive services:** public matchmaking, ranking, parties, host migration, spectator/replay services or similar features require an explicit product decision and must not appear as infrastructure work merely because a finished multiplayer game could someday use them.
+
+### Roadmap-to-issue rule
+
+Workers own continuity from this roadmap. When the current parent issue is satisfied, exhausted or stale, they reconcile live product evidence against the next unmet milestone above, close/supersede stale work, and populate the smallest useful parent/child issues for real uncovered acceptance gaps. The user is not required to maintain the issue wall. Workers may refine execution issues freely from evidence, but they may change this product roadmap only for explicit user direction or a genuine correction to product authority.
+
+---
+
 ## Immediate product priority - first friend-playable V2 Lane War
 
 The next product milestone is a **visible, fully playable two-player Lane War match** on the V2 production path. Work that directly advances this integrated slice outranks isolated polish or infrastructure that does not unblock it.
