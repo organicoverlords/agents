@@ -21,6 +21,17 @@ foreach ($required in @(
 )) {
     if (-not $rule.Contains($required)) { throw "Busy quiescence rule missing invariant: $required" }
 }
+$gitRefLine = @($text -split "`r?`n" | Where-Object { $_ -match '^- Git ref mutation ownership is per exact ref' })
+if ($gitRefLine.Count -ne 1) { throw "expected exactly one exact Git ref ownership rule; found $($gitRefLine.Count)" }
+foreach ($required in @(
+    'per exact ref, never repo-wide metadata',
+    'repo:git-ref:refs/heads/<branch>',
+    'a claim on one ref must not block mutation of a different ref',
+    'generic scope name `git-ref-metadata` is forbidden as a coordination lock',
+    'turns Busy into a repo-wide gate'
+)) {
+    if (-not $gitRefLine[0].Contains($required)) { throw "Git ref scope rule missing invariant: $required" }
+}
 [ordered]@{
     ok = $true
     rule_count = 1

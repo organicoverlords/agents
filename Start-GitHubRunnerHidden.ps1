@@ -100,11 +100,14 @@ while ($true) {
     }
     $process.WaitForExit()
     $exitCode = $process.ExitCode
-    if ($exitCode -eq 1) {
-        continue
-    }
+    $process.Dispose()
     if ($env:ACTIONS_RUNNER_RETURN_VERSION_DEPRECATED_EXIT_CODE -eq '1' -and $exitCode -eq 7) {
         exit $exitCode
     }
-    exit 0
+
+    # This launcher owns a persistent runner. Any helper exit other than the explicit
+    # version-deprecated handoff is a recoverable loss of service, including exit 0.
+    Write-Warning "GITHUB_RUNNER_HELPER_EXITED=root:$root|exit:$exitCode|restart_seconds:2"
+    Start-Sleep -Seconds 2
+    continue
 }
