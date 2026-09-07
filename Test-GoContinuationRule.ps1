@@ -10,8 +10,11 @@ if ($pollLine.Count -ne 1) { throw "expected exactly one anti-polling rule; foun
 foreach ($required in @(
     'The user''s current explicit request defines the operation and its completion boundary',
     'Availability of another supported tool call is never by itself a reason to continue',
-    '`go` means continue the already-established scope',
-    'returning control to the user is valid',
+    '`go`/`continue` in a manual/on-demand execution chat means resume the already-established unresolved engineering objective',
+    'carry the next coherent contribution through its normal completion path',
+    'publication/integration or merge when that is already the established completion path and its gates pass',
+    'Do not yield merely because a plan is clear, a commit exists, a PR is open',
+    'Manual `go` does not imply timed-fleet supervision or scheduler work',
     'Timed recurring workers keep their separate utilization contract'
 )) {
     if (-not $scopeLine[0].Contains($required)) { throw "scope-fidelity rule missing invariant: $required" }
@@ -29,7 +32,8 @@ foreach ($obsolete in @(
     'actionable work must continue',
     'continue across sequential safe useful actions until the task-level objective is complete',
     'keep observing it with that bounded mechanism until it completes',
-    'consume one bounded wait/recheck in the same `go` turn'
+    'consume one bounded wait/recheck in the same `go` turn',
+    'decision-ready checkpoint is a valid yield boundary'
 )) {
     if ($text.Contains($obsolete)) { throw "shared rules retain churn incentive: $obsolete" }
 }
@@ -38,5 +42,7 @@ foreach ($obsolete in @(
     prompt_scope_is_completion_boundary = $true
     tool_exhaustion_forbidden = $true
     unchanged_polling_forbidden = $true
+    manual_go_lands_coherent_contribution = $true
+    manual_go_not_scheduler_supervision = $true
     timed_worker_contract_separate = $true
 } | ConvertTo-Json -Compress
