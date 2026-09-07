@@ -74,9 +74,11 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
-The rule this file follows is `organicoverlords/docs` ├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇª├óÔé¼┼ô├âãÆ├åÔÇÖ├âÔÇÜ├é┬│├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├é┬Ø├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├é┬í├âãÆ├åÔÇÖ├âÔÇ╣├àÔÇ£├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇÜ├é┬╝├âãÆ├åÔÇÖ├âÔÇÜ├é┬┤├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇª├óÔé¼┼ô├âãÆ├åÔÇÖ├âÔÇÜ├é┬ó├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇÜ├é┬¼├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├à┬í├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇª├óÔé¼┼ô├âãÆ├åÔÇÖ├âÔÇÜ├é┬│├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├é┬Ø├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├é┬í├âãÆ├åÔÇÖ├âÔÇ╣├àÔÇ£├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇÜ├é┬╝├âãÆ├åÔÇÖ├âÔÇÜ├é┬┤├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇª├óÔé¼┼ô├âãÆ├åÔÇÖ├âÔÇÜ├é┬ó├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├é┬Ø├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├é┬í├âãÆ├åÔÇÖ├âÔÇÜ├é┬┐├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇª├óÔé¼┼ô├âãÆ├åÔÇÖ├âÔÇÜ├é┬│├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├é┬Ø├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├é┬í├âãÆ├åÔÇÖ├âÔÇ╣├àÔÇ£├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇÜ├é┬╝├âãÆ├åÔÇÖ├âÔÇÜ├é┬┤├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇª├óÔé¼┼ô├âãÆ├åÔÇÖ├âÔÇÜ├é┬ó├âãÆ├é┬ó├â┬ó├óÔÇÜ┬¼├é┬Ø├âÔÇÜ├é┬¼├âãÆ├åÔÇÖ├â┬ó├óÔÇÜ┬¼├ï┼ô `standards/changelog.md`.
+The rule this file follows is [`docs/repos/docs/standards/changelog.md`](../docs/standards/changelog.md).
 
 ## [Unreleased]
+
+- [2026-09-07] [meta] Point the canonical changelog standard directly at the Agents documentation authority instead of the retired standalone docs repository (#155).
 
 - [2026-09-04] [meta] Fixed P3 policy-cutover bootstrap gates: trusted candidate validation no longer requires the retired local policy injector, the PR contract test list parses on Windows PowerShell, and failure receipts publish UTF-8 JSON.
 
