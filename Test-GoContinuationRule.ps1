@@ -23,7 +23,12 @@ foreach ($required in @(
     'Query external or shared state only when its answer can change the next action or validate the requested result',
     'reuse the returned state until there is concrete reason it may have changed',
     'do not issue repeated unchanged checks',
-    'smallest bounded read needed to collect its result'
+    'smallest bounded read needed to collect its result',
+    'a pending CI/build/process gate must not monopolize the turn through a blocking watcher',
+    'Take one bounded/nonblocking snapshot',
+    'advance that ready contribution',
+    're-check the gate only when its result can change the next action',
+    'do not babysit its output'
 )) {
     if (-not $pollLine[0].Contains($required)) { throw "anti-polling rule missing invariant: $required" }
 }
@@ -42,6 +47,7 @@ foreach ($obsolete in @(
     prompt_scope_is_completion_boundary = $true
     tool_exhaustion_forbidden = $true
     unchanged_polling_forbidden = $true
+    blocking_watcher_monopoly_forbidden = $true
     manual_go_lands_coherent_contribution = $true
     manual_go_not_scheduler_supervision = $true
     timed_worker_contract_separate = $true
