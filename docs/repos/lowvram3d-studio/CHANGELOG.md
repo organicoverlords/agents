@@ -4,9 +4,11 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
-The rule this file follows is `organicoverlords/docs` â†’ `standards/changelog.md`.
+The rule this file follows is [`docs/repos/docs/standards/changelog.md`](../docs/standards/changelog.md).
 
 ## [Unreleased]
+
+- [2026-09-07] [meta] Point the canonical changelog and Traycer policy references directly at Agents, removing legacy standalone-docs and product-pointer indirection (#155).
 
 - [2026-09-06] [producer-manifest] Fail closed the canonical `build-singleflight` handoff when unresolved shared-geometry `SEMANTIC_CONFLICT` relations remain, while preserving the written manifest as repair evidence and allowing provenance-proven intentional aliases (#40).
 - [2026-09-05] [producer-manifest] Bind each completed singleflight views12 artifact into the canonical Tiny3D producer handoff while keeping independent review state in `visual_qa` (#129).
