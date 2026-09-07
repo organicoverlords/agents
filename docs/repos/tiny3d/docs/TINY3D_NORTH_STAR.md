@@ -36,6 +36,26 @@ The target is not "rig everything". The target is to choose the lightest correct
 
 Tiny3D must also improve the mechanisms themselves. Repeatedly retrying the same adapter, rigging recipe, deformation method or animation source after it has already failed is not progress. Hard asset families are explicit research-and-productization targets: Tiny3D should compare distinct plausible techniques, preserve what each attempt taught, promote better methods when evidence supports them, and retire approaches that repeatedly fail their intended assets. The library should therefore become more capable over time rather than merely processing more assets through an unchanged pipeline.
 
+## Finished-product roadmap
+
+Tiny3D is finished as a production product when a new supported source asset can enter the library and move to the strongest appropriate reusable preparation/proof state **without bespoke per-asset orchestration, hidden manual archaeology, or repeated blind retries**, while preserving exact identity and downstream proof boundaries.
+
+The durable path is:
+
+1. **Reusable authoring and dependable proof (current).** Generalize rig/motion/deformation preparation, readable capture, exact packaging and repair feedback on real generated assets required by P3.
+2. **Production-set qualification.** The frozen newest-150 campaign and the live P3-required set reach explicit terminal states: accepted reusable preparation/proof or a precise evidence-backed gap. No asset disappears because it is difficult.
+3. **Continuous incremental operation.** New/changed source assets are detected by provenance/hash, unchanged verified work is reused, only affected preparation/proof reruns, and one failed asset never stalls unrelated production.
+4. **Finished library/catalogue.** Assets are searchable and understandable by identity, category, variants, provenance/licensing, geometry/material facts, rig/deformation/animation capability, previews, package compatibility and strongest proof state. A downstream worker should not need to reverse-engineer raw files to know what can be used.
+5. **Demand-driven consumer expansion.** P3 remains the first real runtime acceptance authority. Additional consumer adapters are added only from demonstrated demand and must reuse the same identity/package/evidence contracts rather than fork Tiny3D into engine-specific products.
+
+The finished product is not "150 assets processed" and not "every mesh rigged." It is an unattended, deterministic and increasingly capable post-generation asset system whose difficult cases improve reusable methods, whose library remains inspectable, and whose handoffs can be trusted by real downstream products.
+
+### Roadmap continuity and issue-wall recovery
+
+Workers own continuity from this North Star. When an active parent/phase issue is satisfied, stale, exhausted or has no ready contribution, the worker reconciles current library/campaign/downstream evidence, closes or supersedes obsolete paths, preserves and retargets useful WIP, and creates the smallest bounded issue only for a real uncovered roadmap gap. The user is not required to maintain the Tiny3D issue wall. A designated orchestrator may optimize convergence, but it is never required to authorize the next documented milestone.
+
+Current explicit user direction or a genuine product-authority correction may change this roadmap. Running out of issues, wanting to keep workers busy, or finding a locally convenient experiment may not.
+
 ## Current animation priority: reusable authoring and dependable proof
 
 The immediate Tiny3D focus is **easier rigging/animation for agents and stable, uniform, readable proof**, while preserving the existing generated library and completed work. The implementation design, researched options, history and acceptance matrix are in [Animation pipeline direction](ANIMATION_PIPELINE_DIRECTION.md).
@@ -250,7 +270,7 @@ Do not seed generic "support every engine" work before a real consumer exists.
 
 ## Roadmap and GitHub maintenance contract
 
-The orchestrator owns continuity between this document and GitHub.
+Workers own continuity between this document and GitHub; a designated orchestrator may optimize convergence but is not a permission gate.
 
 On every orchestration pass for Tiny3D:
 
