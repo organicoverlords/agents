@@ -34,5 +34,6 @@ Every agent uses this same repo-work contract. Local repo `AGENTS.md`/`CLAUDE.md
 
 ## Convergence and proof
 - Verified useful work should converge promptly through the repo's normal branch/PR/integration path. Do not leave finished branches or duplicated implementation paths as shadow backlogs.
+- For `organicoverlords/p3`, merge pull requests to `main` only through `scripts/ci/control/Invoke-P3PrMergeGuard.ps1 -Repository organicoverlords/p3 -PullRequest <number> -Execute`; do not run `gh pr merge`, enable auto-merge, or otherwise merge the PR directly. The guard's exact-head/current-main cohort decision is the merge authority. If GitHub branch protection/rulesets are unavailable under the repository's plan, absence of a server-side required check does not make this advisory.
 - A build/commit/PR is supporting evidence, not the product result. Player/user-visible claims require the repo's existing supported proof/delivery route when such proof is actually needed.
 - If a trap in an owned path is discovered, follow the durable-closure rule in `RULES.md`; do not leave a one-off workaround for the next agent.
