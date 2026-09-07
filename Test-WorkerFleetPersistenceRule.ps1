@@ -10,8 +10,10 @@ foreach ($required in @(
   'same ChatGPT subscription partition',
   'local worker/report cadence evidence identifies as suspect',
   'targeted idempotent is_enabled=true write for that exact same-partition sibling only',
+  'worker_recovery_guard.py --actor-worker-id <own-automation-id> --target-worker-id <sibling-automation-id>',
+  'require `authorized: true`',
   'never cross subscription partitions',
-  'preserve prompt/title/schedule/timezone/stagger',
+  'Preserve prompt/title/schedule/timezone/stagger',
   'never use a broad scheduler read as routine liveness or fleet-health evidence',
   'S2 carrying control while S1 is capacity-limited'
 )) { if (-not $rule.Contains($required)) { throw "worker persistence rule missing invariant: $required" } }
@@ -35,6 +37,7 @@ foreach ($required in @(
   'five in `S1`, five in `S2`',
   'The only ordinary recurring-worker scheduler write is bounded sibling recovery after local report/start evidence identifies the exact suspect',
   'set only that existing same-partition canonical sibling to is_enabled=true',
+  'only after `worker_recovery_guard.py` returns `authorized: true` for that exact actor/target pair',
   'Manual/on-demand execution is a separate non-scheduler population',
   'Do not read/list the scheduler first merely to discover fleet state',
   'Never administer self, cross subscription partitions, create a replacement/non-fleet automation, or change prompt/title/schedule/timezone/stagger'
