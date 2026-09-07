@@ -10,7 +10,14 @@ foreach ($required in @(
     'another already-required non-overlapping contribution',
     'Query the blocked state again only when its answer can change the next action',
     'prefer an immutable commit for coherent WIP',
-    'The collision blocks only that exact mutation'
+    'The collision blocks only that exact mutation',
+    'Historical/WIP evidence narrows duplication, not solution search',
+    'bounded external research on public documentation/web sources',
+    'run isolated experiments/prototypes',
+    'do not treat existing WIP, a prior lesson, or a currently passing path as proof that the design is optimal',
+    'expected information/value toward the user objective',
+    'churn metrics, repeated builds/tests, PR/commit count, worker activity, and report volume are not progress',
+    'converge it through the existing owner and acceptance path'
 )) {
     if (-not $rules.Contains($required)) { throw "RULES missing non-idle swarm invariant: $required" }
 }
@@ -42,4 +49,6 @@ foreach ($forbidden in @(
     immutable_git_checkpoints = $true
     explicit_handoff_contract = $true
     ci_polling_not_work = $true
+    exploration_not_suppressed = $true
+    churn_not_progress = $true
 } | ConvertTo-Json -Compress
