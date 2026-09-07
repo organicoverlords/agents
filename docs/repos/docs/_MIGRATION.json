@@ -1,0 +1,7 @@
+{
+  "repository": "organicoverlords/docs",
+  "migrated_from_main": "2cba723c71fe9eda461a91b045a0365285e723db",
+  "migrated_document_count": 5,
+  "authority": "organicoverlords/agents",
+  "exceptions": "None; the legacy docs repository contains no executable or machine-consumed contracts."
+}
