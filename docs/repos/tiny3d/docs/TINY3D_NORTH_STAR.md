@@ -82,10 +82,10 @@ An agent should submit one generated asset plus semantic motion intent, reuse or
 | Priority | Owner | Concrete next result |
 | --- | --- | --- |
 | First | #372 | Generalize successful #306 authoring into reusable semantic rig/motion recipes; two generated meshes share a recipe without code edits |
-| First | #373 corpus correction | Remove stock Fox from active comparison and freeze eligible generated inputs; the distinct-technique benchmark follows after reusable-authoring/proof baselines are available |
+| Completed foundation | #373 | Stock Fox is excluded and eligible generated inputs/method-comparison evidence are frozen; future method comparisons stay with the smallest active capability owner |
 | First | #13 and P3 #394 | Repeatable readable capture, interrupted-capture safety, complete retained/relocatable proof and exact result reuse |
 | Next | #129, #127, #133 | Close real retarget/contact/motion/gameplay gaps using preserved rigs and source identities |
-| Alongside applicable roles | #19, #11 | Secondary-motion layering, events, physics/LOD and consumer budget requirements |
+| Alongside applicable roles | #11 plus current capability owner | Reuse completed #19 secondary-motion foundation; add work only for an uncovered role-specific events, physics/LOD or consumer-budget gap |
 | Alongside handoff return | #12 | Record exact returned Unreal materialization identities; rig/export round-trip integrity remains with #372 |
 
 Avian cleanup and semantic-local weighting from #371/#374 are merged foundations on current main. Future avian changes must start from that result and the live adapter/file owner; #10 remains the required-P3-asset-catalog issue, while its avian comments are historical implementation evidence. Accepted #306 offline motion remains reusable; it is not P3 gameplay proof. Wyvern's existing generated rig/request remains reusable; Snailbeast source recovery stays in LowVRAM #122. The historical Android capture rejection calls for readable capture, not automatic rerigging.
@@ -165,7 +165,7 @@ Current campaign:
 - classify every asset by runtime role, locomotion, secondary motion/deformation, intended runtime mechanism and proof requirement;
 - preserve explicit ingestion failures and `NEEDS_REVIEW` states rather than substituting easier assets.
 
-Current GitHub authority: issues **#16, #17, #18**.
+Completed foundation: issues **#16, #17, #18** established the frozen intake/classification campaign. Current authority is current main plus the immutable campaign evidence; new intake/classification gaps route through parent **#9** or the smallest active per-asset owner instead of reopening the completed foundation by default.
 
 Exit evidence:
 
@@ -194,7 +194,7 @@ Current contract families include:
 
 Adapter coverage is not a fixed checklist. If a representative asset exposes a failure that the current family cannot solve well, T3D-02 includes researching a materially different approach and productizing the better result. The existence of an adapter does not close the family while that adapter repeatedly produces faulty motion on the assets it is meant to support.
 
-Current GitHub authority: issues **#19, #20, #22**, plus cross-phase reusable-authoring owner **#372** and generated-corpus/research owner **#373**. Merged contract work is represented by current main. Issue **#21** is the campaign-wide adapter/coverage burn-down view.
+Current GitHub authority: issue **#20** with native children **#127, #129, #133**, plus cross-phase reusable-authoring owner **#372** while its remaining selective-repair acceptance is unresolved. Issues **#19, #21, #22, #373** are completed foundations/evidence on current main; they are not open work queues and should be reopened only for a real unmet acceptance gap.
 
 Exit evidence:
 
@@ -217,7 +217,7 @@ Current work:
 - return attributable intended-runtime and rendered proof where the role requires it;
 - expose strongest proof state and exact gaps through Tiny3D library/audit tooling.
 
-Current GitHub authority: issues **#9, #10, #11, #12, #13, #14**. The current animation priority routes reusable authoring through **#372**, generated-corpus/method comparison through **#373**, and repeatable proof through **#13** without changing these phase owners.
+Current GitHub authority: parent **#9** with native children **#10, #11, #12, #13**; completed **#14** remains foundation evidence rather than live work. Reusable-authoring support stays with **#372** while that issue is open, and repeatable runtime/visual proof remains **#13** without changing these phase owners.
 
 Exit evidence:
 
@@ -230,7 +230,7 @@ Exit evidence:
 
 Purpose: prove the product on the complete current campaign rather than on isolated fixtures.
 
-Current GitHub authority: issue **#15** is the closure campaign, with **#21** as the adapter/coverage burn-down view.
+Current GitHub authority: issue **#15** is the closure campaign. Completed **#21** is baseline adapter/coverage evidence, not an active burn-down queue.
 
 Exit evidence:
 
@@ -258,7 +258,7 @@ Required behavior:
 - P3-required coverage refreshes when P3 references or selected Tiny3D identities change;
 - normal operation remains unattended and LLM-free.
 
-This phase must have a dedicated GitHub implementation issue before T3D-04 closure so the queue does not end at the first successful campaign.
+The dedicated T3D-05 foundation already landed through issues **#32/#36** and PRs **#37/#40/#48/#49**. Do not create a replacement continuity ticket merely because T3D-04 closes; create or reconcile the smallest issue only when a live incremental replay exposes an uncovered acceptance gap.
 
 ### T3D-06 — Additional consumer contracts when real demand exists
 
