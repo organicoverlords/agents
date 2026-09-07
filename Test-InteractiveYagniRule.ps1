@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $text = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
 
 foreach ($required in @(
-    'WORKER REPORTS ARE MANDATORY FOR BOTH TIMED AND MANUAL/ON-DEMAND WORK',
+    'WORKER REPORTS ARE FOR WORKER RUNS, NOT ORDINARY CONVERSATION',
     'MANUAL REPORTS ARE MANDATORY BUT MINIMAL',
     'Do not checkpoint routine progress or duplicate commands, process IDs, Busy claims, GitHub/PR chronology, CI output, validation logs, or other telemetry already owned elsewhere',
     'Vault investigation learning is subordinate to request scope',
