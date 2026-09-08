@@ -2,7 +2,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $launcher = Join-Path $PSScriptRoot 'Start-GitHubRunnerHidden.ps1'
 $text = [IO.File]::ReadAllText($launcher)
-$tailStart = $text.IndexOf('    $process.WaitForExit()', [StringComparison]::Ordinal)
+$tailStart = $text.IndexOf('    $exitCode = $process.ExitCode', [StringComparison]::Ordinal)
 if ($tailStart -lt 0) { throw 'GITHUB_RUNNER_PERSISTENCE_TAIL_MISSING' }
 $tail = $text.Substring($tailStart)
 
