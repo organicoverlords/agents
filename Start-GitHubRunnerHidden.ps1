@@ -128,6 +128,59 @@ function Get-CurrentLaunchRepeatedSessionConflict {
     }
 }
 
+function Get-CurrentLaunchRepeatedCancellationStorm {
+    param(
+        [Parameter(Mandatory)][string]$Root,
+        [Parameter(Mandatory)][datetime]$LaunchStartedUtc,
+        [Parameter(Mandatory)][int]$MinimumCount,
+        [Parameter(Mandatory)][int]$MinimumSpanSeconds,
+        [Parameter(Mandatory)][int]$MaximumAgeSeconds
+    )
+    $diagRoot = Join-Path $Root '_diag'
+    if (-not (Test-Path -LiteralPath $diagRoot -PathType Container)) { return $null }
+
+    $cancellationPattern = '^\[(?<observed>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})Z INFO JobDispatcher\] Job cancellation request (?<job>[0-9a-fA-F-]+) received, cancellation timeout \d+ minutes\.$'
+    $byJob = @{}
+    foreach ($log in @(Get-ChildItem -LiteralPath $diagRoot -Filter 'Runner_*.log' -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-1) } |
+        Sort-Object LastWriteTimeUtc -Descending |
+        Select-Object -First 4)) {
+        foreach ($line in @(Get-Content -LiteralPath $log.FullName -Tail 240 -ErrorAction SilentlyContinue)) {
+            $match = [regex]::Match($line, $cancellationPattern)
+            if (-not $match.Success) { continue }
+            $observedAt = [datetime]::ParseExact(
+                $match.Groups['observed'].Value,
+                'yyyy-MM-dd HH:mm:ss',
+                [Globalization.CultureInfo]::InvariantCulture,
+                [Globalization.DateTimeStyles]::AssumeUniversal -bor [Globalization.DateTimeStyles]::AdjustToUniversal
+            )
+            if ($observedAt -lt $LaunchStartedUtc.AddSeconds(-1)) { continue }
+            $jobId = $match.Groups['job'].Value.ToLowerInvariant()
+            if (-not $byJob.ContainsKey($jobId)) { $byJob[$jobId] = @() }
+            $byJob[$jobId] += $observedAt
+        }
+    }
+    foreach ($jobId in @($byJob.Keys)) {
+        $observed = @($byJob[$jobId] | Sort-Object)
+        if ($observed.Count -lt $MinimumCount) { continue }
+        $first = $observed[0]
+        $latest = $observed[-1]
+        $spanSeconds = [int][Math]::Floor(($latest - $first).TotalSeconds)
+        if ($spanSeconds -lt $MinimumSpanSeconds) { continue }
+        $ageSeconds = [int][Math]::Floor(([datetime]::UtcNow - $latest).TotalSeconds)
+        if ($ageSeconds -lt 0 -or $ageSeconds -gt $MaximumAgeSeconds) { continue }
+        return [pscustomobject]@{
+            JobId = $jobId
+            FirstObservedAtUtc = $first
+            LatestObservedAtUtc = $latest
+            Count = $observed.Count
+            SpanSeconds = $spanSeconds
+        }
+    }
+    return $null
+}
+
+
 function Test-ListenerHasLiveLauncher {
     param(
         [Parameter(Mandatory)]$Listener,
@@ -194,6 +247,9 @@ while ($true) {
     $sessionConflictMinimumCount = 3
     $sessionConflictMinimumSpanSeconds = 45
     $sessionConflictMaximumAgeSeconds = 60
+    $cancellationStormMinimumCount = 12
+    $cancellationStormMinimumSpanSeconds = 5
+    $cancellationStormMaximumAgeSeconds = 15
     # Observed server-side session release after an owned recycle took up to 188 seconds on RR-KONE-02.
     # Wait slightly longer before spawning a replacement so recovery does not manufacture its own 409 loop.
     $brokerSessionReleaseSeconds = 210
@@ -201,14 +257,17 @@ while ($true) {
     while (-not $process.WaitForExit(1000)) {
         $backoff = Get-CurrentLaunchLongBrokerBackoff -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumSeconds $brokerBackoffMinimumSeconds
         $sessionConflict = Get-CurrentLaunchRepeatedSessionConflict -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumCount $sessionConflictMinimumCount -MinimumSpanSeconds $sessionConflictMinimumSpanSeconds -MaximumAgeSeconds $sessionConflictMaximumAgeSeconds
-        if ($null -eq $backoff -and $null -eq $sessionConflict) { continue }
+        $cancellationStorm = Get-CurrentLaunchRepeatedCancellationStorm -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumCount $cancellationStormMinimumCount -MinimumSpanSeconds $cancellationStormMinimumSpanSeconds -MaximumAgeSeconds $cancellationStormMaximumAgeSeconds
+        if ($null -eq $backoff -and $null -eq $sessionConflict -and $null -eq $cancellationStorm) { continue }
         $workers = @(Get-RunnerWorkersForRoot -Root $root)
         if ($workers.Count -gt 0) { continue }
 
         if ($null -ne $backoff) {
             Write-Warning "GITHUB_RUNNER_BROKER_BACKOFF_RECOVERY=root:$root|seconds:$($backoff.Seconds)|log:$($backoff.LogPath)|helper_pid:$($process.Id)"
-        } else {
+        } elseif ($null -ne $sessionConflict) {
             Write-Warning "GITHUB_RUNNER_SESSION_CONFLICT_RECOVERY=root:$root|count:$($sessionConflict.Count)|span_seconds:$($sessionConflict.SpanSeconds)|helper_pid:$($process.Id)"
+        } else {
+            Write-Warning "GITHUB_RUNNER_CANCELLATION_STORM_RECOVERY=root:$root|job:$($cancellationStorm.JobId)|count:$($cancellationStorm.Count)|span_seconds:$($cancellationStorm.SpanSeconds)|helper_pid:$($process.Id)"
         }
         & $taskKill /PID ([string]$process.Id) /T /F | Out-Null
         if ($LASTEXITCODE -ne 0 -and -not $process.HasExited) {
