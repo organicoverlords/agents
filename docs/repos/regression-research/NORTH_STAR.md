@@ -33,6 +33,11 @@ The user is responsible for product intent and genuine external decisions—not 
 
 [Stack Atlas](STACK_ATLAS_NORTH_STAR.md) is the derived navigation and safety map for this stack. It makes the existing authorities discoverable and current enough to use; it never becomes another authority, planner, scheduler, issue database or ownership store.
 
+Two load-bearing components have their own refinements:
+
+- [BusyCoordinator](BUSY_COORDINATOR_NORTH_STAR.md) owns exact live shared-mutation collision control and nothing broader.
+- [gh-buffer](GH_BUFFER_NORTH_STAR.md) owns local-first acceleration of safe GitHub reads while GitHub remains remote truth and mutation authority.
+
 ## The anti-regression contract
 
 Known failures must become permanently expensive to repeat.
@@ -91,9 +96,9 @@ The target is a corpus rich enough that a future regression can normally be comp
 - Policy changes are versioned, auditable, migration-safe, and regression-tested before they become relied upon.
 - Rules describe durable invariants and decisions. Volatile product/tool details live at adapter boundaries.
 
-### 2. BUSY/MCP is the single live ownership system
+### 2. BusyCoordinator is the single live ownership system
 
-- The standalone BusyCoordinator defined by current live repo/runtime state is the live ownership authority for shared mutable scope; MCP/plugin/process surfaces are transports, not ownership authorities.
+- The standalone [BusyCoordinator](BUSY_COORDINATOR_NORTH_STAR.md) defined by current live repo/runtime state is the live ownership authority for shared mutable scope; MCP/plugin/process surfaces are transports, not ownership authorities.
 - Before mutating shared scope, read live ownership and claim the exact scope. Read-only work needs no claim.
 - If another live claim owns a scope, yield that scope without treating the entire task as blocked; continue independent work where possible.
 - GitHub issue titles, branches, PRs, processes, receipts, schedules, handoffs, and status markers are projections/evidence, never a second ownership authority.
@@ -197,15 +202,16 @@ Everything else should bias toward completing useful work.
 
 ## Current focus
 
-*Refreshed 2026-09-07: current stack work prioritizes autonomous issue/direction continuity, convergence over duplicate fan-out, mechanically safe recurring-worker recovery, truthful current-WIP projection, and MCP long-run/security stability. The durable finish line above remains broader than these current gaps.*
+*Refreshed 2026-09-09: current stack work prioritizes autonomous issue/direction continuity, convergence over duplicate fan-out, mechanically safe recurring-worker recovery, truthful current-WIP projection, Rust-first coordinator correctness, local-first GitHub read acceleration, and MCP long-run/security stability. The durable finish line above remains broader than these current gaps.*
 
 *Refreshed 2026-08-27 from the live conversation, the recovered #122 good-state boundary, issues #123, #125, and #155, the current repository contract, and the existing regression corpus. Historical PI/memory evidence remains separate from current live account configuration; no ChatGPT memory, Personal Instructions, or other personal-context store was modified by this documentation refresh.*
 
 1. **Ruleset convergence.** Reduce cross-project behaviour to one canonical shared policy with repo-local additions only where genuinely local.
-2. **Coordinator correctness.** Keep the standalone BusyCoordinator as the only ownership authority; treat its exact-scope checkpoint metadata as coordination context rather than workload, queue, priority, or capacity, MCP/plugin/process surfaces as transports, and legacy BUSY surfaces as compatibility evidence, and regression-test stale projections, route failures, claim/release boundaries, and independent-work continuation.
-3. **Cross-surface evidence.** Inventory and provenance local ChatGPT, OpenCode, Claude, Codex, Traycer, and Command-Code logs; normalize common events while preserving disagreement and missing-coverage boundaries.
-4. **Capability routing.** Inventory tools/plugins by capability, define one preferred path plus explicit fallbacks, eliminate duplicate authority/coupling, and make failures local.
-5. **Instruction provenance.** Regression-test user-authored instructions versus repo policy, recalled context, retrieved content, and higher-priority constraints so safe requests are not over-refused or misclassified.
-6. **Memory boundary.** Keep ordinary reads side-effect free, writes explicit/auditable, and analysis snapshots external to the live personal-context store.
-7. **Evidence enforcement.** Map every known recurring failure to evidence + fixture + rule, add positive controls, and make those fixtures mandatory for changes that touch the relevant stack surface.
-8. **End-to-end acceptance.** Build whole-stack replay scenarios covering provenance, BUSY ownership, tool selection, failure recovery, bounded completion, proof, cleanup, and concise reporting. The finish line is a stack that stays predictable as models and integrations change.
+2. **Coordinator correctness.** Keep the standalone [BusyCoordinator](BUSY_COORDINATOR_NORTH_STAR.md) as the only ownership authority; make Rust the preferred production core without forking the canonical store/contract, treat exact-scope checkpoint metadata as coordination context rather than workload/queue/priority/capacity, and regression-test stale projections, route failures, claim/release/recovery boundaries and independent-work continuation.
+3. **Local-first GitHub access.** Use [gh-buffer](GH_BUFFER_NORTH_STAR.md) to remove repeated safe GitHub read/network/process cost through Rust L1/L2 cache, single-flight, bounded freshness and scoped invalidation; keep GitHub authoritative, remote workers read-only by default, and move refs/commit/object questions to local Git mirrors where possible.
+4. **Cross-surface evidence.** Inventory and provenance local ChatGPT, OpenCode, Claude, Codex, Traycer, and Command-Code logs; normalize common events while preserving disagreement and missing-coverage boundaries.
+5. **Capability routing.** Inventory tools/plugins by capability, define one preferred path plus explicit fallbacks, eliminate duplicate authority/coupling, and make failures local.
+6. **Instruction provenance.** Regression-test user-authored instructions versus repo policy, recalled context, retrieved content, and higher-priority constraints so safe requests are not over-refused or misclassified.
+7. **Memory boundary.** Keep ordinary reads side-effect free, writes explicit/auditable, and analysis snapshots external to the live personal-context store.
+8. **Evidence enforcement.** Map every known recurring failure to evidence + fixture + rule, add positive controls, and make those fixtures mandatory for changes that touch the relevant stack surface.
+9. **End-to-end acceptance.** Build whole-stack replay scenarios covering provenance, BUSY ownership, tool selection, failure recovery, bounded completion, proof, cleanup, and concise reporting. The finish line is a stack that stays predictable as models and integrations change.
