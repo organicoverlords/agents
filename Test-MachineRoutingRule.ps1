@@ -4,6 +4,10 @@ $rules = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
 foreach ($required in @(
     'Machine routing is cohort-owned, not worker-local.',
     'swarm_route.py route --work-id <stable-task-id>',
+    'A route assignment is admission evidence, not execution evidence.',
+    'swarm_exec.py --work-id <stable-task-id> --kind <portable|portable-light> --repo-root <repo> -- <command>',
+    'do not continue the assigned command locally on Windows',
+    'A route receipt alone does not satisfy the execution requirement.',
     'OMEN-first is the routing invariant.',
     'LowVRAM stays pinned to the main Windows PC',
     'Windows becomes the general fallback only when the routing cohort has fresh evidence that OMEN is unavailable or saturated',
