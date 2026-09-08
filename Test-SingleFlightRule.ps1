@@ -14,7 +14,7 @@ foreach ($required in @(
     "same-flight followers receive that flight's result",
     'failed flight may be retried only by a later fresh request after the failed flight ends',
     'identity and artifact verification repo-owned',
-    'do not create a global scheduler or queue'
+    'must not duplicate repo-owned heavy-flight queues or acceptance gates'
 )) {
     if ($rule -notlike "*$required*") { throw "single-flight rule missing invariant: $required" }
 }
