@@ -38,6 +38,50 @@ function Get-RunnerListenersForRoot {
     )
 }
 
+function Get-RunnerWorkersForRoot {
+    param([Parameter(Mandatory)][string]$Root)
+    return @(
+        Get-CimInstance Win32_Process -Filter "Name='Runner.Worker.exe'" -ErrorAction SilentlyContinue |
+            Where-Object { Test-CommandLineContains -CommandLine $_.CommandLine -Needle $Root }
+    )
+}
+
+function Get-CurrentLaunchLongBrokerBackoff {
+    param(
+        [Parameter(Mandatory)][string]$Root,
+        [Parameter(Mandatory)][datetime]$LaunchStartedUtc,
+        [Parameter(Mandatory)][int]$MinimumSeconds
+    )
+    $diagRoot = Join-Path $Root '_diag'
+    if (-not (Test-Path -LiteralPath $diagRoot -PathType Container)) { return $null }
+
+    $pattern = '^\[(?<observed>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})Z WARN BrokerServer\] Back off (?<seconds>[\d,]+) seconds before next retry\.'
+    foreach ($log in @(Get-ChildItem -LiteralPath $diagRoot -Filter 'Runner_*.log' -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-1) } |
+        Sort-Object LastWriteTimeUtc -Descending |
+        Select-Object -First 4)) {
+        foreach ($line in @(Get-Content -LiteralPath $log.FullName -Tail 200 -ErrorAction SilentlyContinue)) {
+            $match = [regex]::Match($line, $pattern)
+            if (-not $match.Success) { continue }
+            $observedAt = [datetime]::ParseExact(
+                $match.Groups['observed'].Value,
+                'yyyy-MM-dd HH:mm:ss',
+                [Globalization.CultureInfo]::InvariantCulture,
+                [Globalization.DateTimeStyles]::AssumeUniversal -bor [Globalization.DateTimeStyles]::AdjustToUniversal
+            )
+            if ($observedAt -lt $LaunchStartedUtc.AddSeconds(-1)) { continue }
+            $seconds = [int]($match.Groups['seconds'].Value.Replace(',', ''))
+            if ($seconds -lt $MinimumSeconds) { continue }
+            return [pscustomobject]@{
+                ObservedAtUtc = $observedAt
+                Seconds = $seconds
+                LogPath = $log.FullName
+            }
+        }
+    }
+    return $null
+}
+
 function Test-ListenerHasLiveLauncher {
     param(
         [Parameter(Mandatory)]$Listener,
@@ -95,10 +139,28 @@ while ($true) {
 
     $process = [Diagnostics.Process]::new()
     $process.StartInfo = $startInfo
+    $launchStartedUtc = [datetime]::UtcNow
     if (-not $process.Start()) {
         throw "GITHUB_RUNNER_HIDDEN_START_FAILED=$root"
     }
-    $process.WaitForExit()
+
+    $brokerBackoffMinimumSeconds = 300
+    while (-not $process.WaitForExit(1000)) {
+        $backoff = Get-CurrentLaunchLongBrokerBackoff -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumSeconds $brokerBackoffMinimumSeconds
+        if ($null -eq $backoff) { continue }
+        $workers = @(Get-RunnerWorkersForRoot -Root $root)
+        if ($workers.Count -gt 0) { continue }
+
+        Write-Warning "GITHUB_RUNNER_BROKER_BACKOFF_RECOVERY=root:$root|seconds:$($backoff.Seconds)|log:$($backoff.LogPath)|helper_pid:$($process.Id)"
+        & $taskKill /PID ([string]$process.Id) /T /F | Out-Null
+        if ($LASTEXITCODE -ne 0 -and -not $process.HasExited) {
+            throw "GITHUB_RUNNER_BROKER_RECYCLE_FAILED=root:$root|helper_pid:$($process.Id)|exit:$LASTEXITCODE"
+        }
+        if (-not $process.WaitForExit(10000)) {
+            throw "GITHUB_RUNNER_BROKER_RECYCLE_TIMEOUT=root:$root|helper_pid:$($process.Id)"
+        }
+        break
+    }
     $exitCode = $process.ExitCode
     $process.Dispose()
     if ($env:ACTIONS_RUNNER_RETURN_VERSION_DEPRECATED_EXIT_CODE -eq '1' -and $exitCode -eq 7) {
