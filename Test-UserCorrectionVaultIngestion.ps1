@@ -13,9 +13,15 @@ foreach ($required in @(
   'Do not wait for the user to separately ask for memory ingestion',
   'The literal user signal `slopwall` always qualifies as a correction incident',
   'record it before returning control',
-  'continue the inherited task with the missing substance'
+  'continue the inherited task with the missing substance',
+  'The literal user signal `asshole`',
+  'lightweight correction event',
+  'tag `asshole`',
+  'add `regression` only when recurrence is evidenced',
+  'smaller than `slopwall`'
 )) {
   if (-not $line[0].Contains($required)) { throw "user-correction ingestion rule missing invariant: $required" }
 }
 if ($rules -notmatch '(?m)^- `slopwall` is a response-quality failure:') { throw 'canonical RULES.md slopwall definition missing' }
-[ordered]@{ok=$true; correction_ingestion_rule_present=$true; literal_slopwall_trigger_present=$true; canonical_slopwall_definition_present=$true; local_only=$true; scope_expansion_forbidden=$true} | ConvertTo-Json -Compress
+if ($rules -notmatch '(?m)^- `asshole`, when the user uses it as a direct correction') { throw 'canonical RULES.md asshole correction definition missing' }
+[ordered]@{ok=$true; correction_ingestion_rule_present=$true; literal_slopwall_trigger_present=$true; canonical_slopwall_definition_present=$true; asshole_trigger_present=$true; canonical_asshole_definition_present=$true; local_only=$true; scope_expansion_forbidden=$true} | ConvertTo-Json -Compress
