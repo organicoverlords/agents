@@ -3,14 +3,15 @@ $ErrorActionPreference = 'Stop'
 $rules = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
 $agents = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'AGENTS.md'))
 
-
 foreach ($required in @(
     'workers can enter without user dispatch',
-    'Checkpoint current coherent WIP',
-    'another already-required non-overlapping contribution',
+    'No issue, PR, branch, worktree, or objective is a worker-owned lane or assignment',
+    'select the next highest-value ready canonical contribution from the owning repo''s open issues / North Star',
+    'A worker has no issue lane to defend',
+    'move to a different ready issue/North-Star contribution',
+    'repair the blocking owner when that is the best safe supported contribution',
+    'select another ready canonical contribution from open issues / North Star, even when it belongs to a different issue',
     'Query the blocked state again only when its answer can change the next action',
-    'prefer an immutable commit for coherent WIP',
-    'The collision blocks only that exact mutation',
     'Historical/WIP evidence narrows duplication, not solution search',
     'bounded external research on public documentation/web sources',
     'run isolated experiments/prototypes',
@@ -36,16 +37,21 @@ foreach ($required in @(
 }
 
 foreach ($forbidden in @(
+    'inside the same established issue/objective',
+    'another required same-objective contribution',
+    'another already-required non-overlapping contribution',
     'otherwise yield at a decision-ready blocker',
     'or yield at a decision-ready blocker'
 )) {
-    if ($rules.Contains($forbidden) -or $agents.Contains($forbidden)) { throw "blocking-idle wording remains: $forbidden" }
+    if ($rules.Contains($forbidden)) { throw "issue-lane/blocking-idle wording remains in RULES: $forbidden" }
 }
 
 [ordered]@{
     ok = $true
+    no_issue_lane_ownership = $true
+    cross_issue_north_star_fallback = $true
+    blocker_repair_or_switch = $true
     no_idle_on_local_contention = $true
-    swarm_issue_parallel_boundaries = $true
     immutable_git_checkpoints = $true
     explicit_handoff_contract = $true
     ci_polling_not_work = $true
