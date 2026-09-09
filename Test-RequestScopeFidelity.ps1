@@ -14,7 +14,11 @@ foreach ($required in @(
     'Never use GitHub, CI, Vault, Busy, build/runtime state, or tool reads as a keepalive or progress-polling surface',
     'A worker has no issue lane to defend',
     'Manual `go` does not imply timed-fleet supervision or scheduler work',
-    'remote publication must be separately explicit'
+    'remote publication must be separately explicit',
+    'acquire the exact Busy mutation scope with atomic `claim`',
+    'Do not pre-`inspect` a normal claim',
+    'A queued check that repository policy does not require for merge or the requested proof is not a wait gate',
+    'Do not reread long issue/comment history per subtask'
 )) {
     if (-not $rules.Contains($required)) { throw "RULES missing request-scope invariant: $required" }
 }
@@ -34,7 +38,8 @@ foreach ($forbidden in @(
 foreach ($required in @(
     'Follow the prompt-local request-fidelity rule in `RULES.md`',
     'Do not poll unchanged state',
-    'follow the `go`/`continue` completion and yield semantics in `RULES.md`'
+    'follow the `go`/`continue` completion and yield semantics in `RULES.md`',
+    'Do not run `inspect` before a normal claim'
 )) {
     if (-not $agents.Contains($required)) { throw "AGENTS missing request-scope invariant: $required" }
 }

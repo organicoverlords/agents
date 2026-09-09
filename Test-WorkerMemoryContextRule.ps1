@@ -6,36 +6,40 @@ foreach ($doc in @($rules, $agents)) {
 }
 
 $requiredRules = @(
-    'Task memory is part of work startup, not optional archaeology',
+    'Task memory is conditional evidence, not a universal startup tax',
     'memory_bank.py context <query>',
-    'even when the task appears new',
+    'Ordinary owner-known isolated work with current repo/runtime evidence does not require a memory lookup',
+    'never rerun it per subtask/tool',
     'memory_bank.py timeline <query>',
-    'This work-context read is distinct from bootstrap/live-swarm orientation',
+    'Stack/MCP/infra retains its separate hard understanding gate',
     'Stack/MCP/infra understanding is a hard mutation gate',
     'run both the task-scoped memory `context` and `timeline` reads',
-    'owner, entrypoint, dependents/resources, relevant current topology, recovery/rollback path, and relevant historical commits/incidents/lessons',
     'A worker that understands only the local component must not touch the stack'
 )
 foreach ($needle in $requiredRules) {
-    if (-not $rules.Contains($needle)) { throw "RULES.md missing worker memory/stack gate: $needle" }
+    if (-not $rules.Contains($needle)) { throw "RULES.md missing conditional-memory/stack gate: $needle" }
 }
 
 $requiredAgents = @(
-    'Every substantive worker task starts with task-scoped memory context',
+    'Task-scoped memory is conditional evidence, not startup ceremony',
     'memory_bank.py context <query>',
-    'even when the task appears new',
+    'Ordinary owner-known isolated work with current repo/runtime evidence goes directly to the owner without a memory round trip',
+    'never make memory/timeline a per-tool or per-subtask ritual',
     'memory_bank.py timeline <query>',
-    'worker work-context, not bootstrap expansion',
+    'Stack/MCP/infra work retains the hard understanding gate below',
     'No partial-understanding stack mutation',
-    'component owner, entrypoint, dependents/resources, current topology, recovery/rollback path, and relevant historical commits/incidents/lessons',
     'Understanding one local file/service is not sufficient stack understanding'
 )
 foreach ($needle in $requiredAgents) {
-    if (-not $agents.Contains($needle)) { throw "AGENTS.md missing worker memory/stack gate: $needle" }
+    if (-not $agents.Contains($needle)) { throw "AGENTS.md missing conditional-memory/stack gate: $needle" }
 }
 
-if ($rules -match 'memory_bank\.py (recent|recent-titles).*Before the first substantive') {
-    throw 'worker startup regressed to broad/recent memory instead of task-scoped context'
+foreach ($forbidden in @(
+    'Every substantive worker task starts with task-scoped memory context',
+    'even when the task appears new',
+    'Task memory is part of work startup, not optional archaeology'
+)) {
+    if ($rules.Contains($forbidden) -or $agents.Contains($forbidden)) { throw "shared policy retains universal memory ceremony: $forbidden" }
 }
 
 Write-Output 'WORKER_MEMORY_CONTEXT_RULE_PASS'
