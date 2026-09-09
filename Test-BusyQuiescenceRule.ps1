@@ -1,44 +1,32 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$rules = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
+$owner = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'docs\repos\regression-research\BUSY_COORDINATOR_NORTH_STAR.md'))
 
-$rulesPath = Join-Path $PSScriptRoot 'RULES.md'
-$text = [IO.File]::ReadAllText($rulesPath)
-$line = @($text -split "`r?`n" | Where-Object { $_ -match '^- At designated-orchestrator coordination checkpoints' })
-if ($line.Count -ne 1) { throw "expected exactly one orchestrator Busy quiescence rule; found $($line.Count)" }
-$rule = $line[0]
 foreach ($required in @(
-    'before treating an exact Busy collision as active',
-    'live MCP/runtime evidence',
-    'no live child process',
-    'at least 60 seconds',
-    'actor/scope/claim timestamp',
-    'BusyCoordinator CAS `recover`',
-    'timestamp mismatch cancels recovery',
-    'Unmapped or ambiguous claims keep ordinary lease/manual-recovery semantics',
-    'Claim age alone is never stale proof',
-    'MCP must remain transport/evidence rather than owning Busy lifecycle',
-    'bounded demand-driven reconciliation, not a daemon, queue, scheduler, or second ownership store'
-)) {
-    if (-not $rule.Contains($required)) { throw "Busy quiescence rule missing invariant: $required" }
-}
-$gitRefLine = @($text -split "`r?`n" | Where-Object { $_ -match '^- Git ref mutation ownership is per exact ref' })
-if ($gitRefLine.Count -ne 1) { throw "expected exactly one exact Git ref ownership rule; found $($gitRefLine.Count)" }
+  'BusyCoordinator is exact shared-mutation collision control only',
+  '%LOCALAPPDATA%\BusyCoordinator\coordinator-contract.json',
+  'BUSY_COORDINATOR_NORTH_STAR.md',
+  'never repo-wide metadata',
+  'evidence-backed compare-and-swap',
+  'age alone',
+  'incoming change',
+  'collision blocks only that exact mutation'
+)) { if (-not $rules.Contains($required)) { throw "global Busy invariant/pointer missing: $required" } }
+
 foreach ($required in @(
-    'per exact ref, never repo-wide metadata',
-    'repo:git-ref:refs/heads/<branch>',
-    'a claim on one ref must not block mutation of a different ref',
-    'generic scope name `git-ref-metadata` is forbidden as a coordination lock',
-    'turns Busy into a repo-wide gate'
-)) {
-    if (-not $gitRefLine[0].Contains($required)) { throw "Git ref scope rule missing invariant: $required" }
-}
-[ordered]@{
-    ok = $true
-    rule_count = 1
-    owner = 'designated-orchestrator/shared-policy'
-    mcp_role = 'transport-evidence-only'
-    stale_threshold_seconds = 60
-    recovery = 'exact-timestamp-cas'
-    age_only_takeover = $false
-    background_daemon = $false
-} | ConvertTo-Json -Compress
+  'Git ref mutation claims the exact ref',
+  '<repo>:git-ref:refs/heads/<branch>',
+  'never repo-wide `git-ref-metadata`',
+  'no MCP process start/read/kill/output activity has occurred for at least 60 seconds',
+  'still-identical actor/scope/claim timestamp through CAS',
+  'Any newer activity, heartbeat, renewal, replacement, or timestamp mismatch cancels recovery',
+  'ambiguous/unmapped claims keep ordinary lease/manual-recovery semantics',
+  'claimant WIP already subsumes the intended mutation',
+  'one structured `incoming change` comment',
+  'Hold a claim only while that exact mutation needs exclusivity',
+  'If the exact lease is absent/expired',
+  'before issue closure, record each note''s resulting commit/PR/runtime evidence or explicit supersession'
+)) { if (-not $owner.Contains($required)) { throw "Busy owner missing mechanic: $required" } }
+
+[ordered]@{ok=$true; global_policy_compact=$true; owner='BUSY_COORDINATOR_NORTH_STAR.md'; recovery='evidence-backed-cas'; stale_threshold_seconds=60; age_only_takeover=$false} | ConvertTo-Json -Compress
