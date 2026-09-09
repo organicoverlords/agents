@@ -22,6 +22,6 @@ foreach ($required in @(
 )) {
   if (-not $line[0].Contains($required)) { throw "user-correction ingestion rule missing invariant: $required" }
 }
-if ($rules -notmatch '(?m)^- `slopwall` is a response-quality failure:') { throw 'canonical RULES.md slopwall definition missing' }
+if ($rules -notmatch '(?m)^- `slopwall` is a user correction marker\.') { throw 'canonical RULES.md slopwall correction marker missing' }
 if ($rules -notmatch '(?m)^- `asshole`, when the user uses it as a direct correction') { throw 'canonical RULES.md asshole correction definition missing' }
-[ordered]@{ok=$true; correction_ingestion_rule_present=$true; literal_slopwall_trigger_present=$true; canonical_slopwall_definition_present=$true; asshole_trigger_present=$true; canonical_asshole_definition_present=$true; local_only=$true; scope_expansion_forbidden=$true} | ConvertTo-Json -Compress
+[ordered]@{ok=$true; correction_ingestion_rule_present=$true; literal_slopwall_trigger_present=$true; canonical_slopwall_marker_present=$true; asshole_trigger_present=$true; canonical_asshole_definition_present=$true; local_only=$true; scope_expansion_forbidden=$true} | ConvertTo-Json -Compress

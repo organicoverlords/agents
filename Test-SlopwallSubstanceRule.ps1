@@ -1,36 +1,51 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$rulesPath = Join-Path $PSScriptRoot 'RULES.md'
-$text = [IO.File]::ReadAllText($rulesPath)
-$lines = @($text -split "`r?`n" | Where-Object { $_ -match '^- `slopwall` is a response-quality failure:' })
-if ($lines.Count -ne 1) { throw "expected exactly one slopwall substance rule; found $($lines.Count)" }
-$rule = $lines[0]
+$rules = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
+$agents = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'AGENTS.md'))
+
+$markerLines = @($rules -split "`r?`n" | Where-Object { $_ -match '^- `slopwall` is a user correction marker\.' })
+if ($markerLines.Count -ne 1) { throw "expected exactly one compact slopwall correction marker; found $($markerLines.Count)" }
+$marker = $markerLines[0]
 foreach ($required in @(
-    'too little user-relevant substance',
-    'Length is not the definition',
-    'a one-line acknowledgement can be a slopwall',
-    'a long answer is not one when its detail is necessary and substantive',
-    'silently integrate that correction into response/action selection',
-    'return to the inherited task with new substance',
-    'do not make `slopwall` the topic by defining it, apologizing, paraphrasing the correction',
-    'lead with the answer and default to one short paragraph',
-    'diagnosis/status/policy/reporting is not a substitute for performing the bounded requested work'
+    'Apply the correction and continue the inherited task',
+    'durable correction handling is defined in `AGENTS.md`'
 )) {
-    if (-not $rule.Contains($required)) { throw "slopwall substance rule missing invariant: $required" }
+    if (-not $marker.Contains($required)) { throw "slopwall marker missing invariant: $required" }
 }
-foreach ($forbidden in @(
-    'slopwall means a long answer',
-    'slopwall means too many words',
-    'always keep answers short'
+
+$outputLines = @($rules -split "`r?`n" | Where-Object { $_ -match '^- \*\*For direct replies to the user only:\*\*' })
+if ($outputLines.Count -ne 1) { throw "expected exactly one direct user reply contract; found $($outputLines.Count)" }
+$outputRule = $outputLines[0]
+foreach ($required in @(
+    'answer/result first',
+    'only necessary evidence',
+    'one next action only if the user actually owns it',
+    'does not constrain worker reports, issue/PR records, handoffs, durable artifacts, or other work records'
 )) {
-    if ($rule.Contains($forbidden)) { throw "slopwall rule contains length-only heuristic: $forbidden" }
+    if (-not $outputRule.Contains($required)) { throw "direct user reply contract missing invariant: $required" }
+}
+
+$correctionLines = @($agents -split "`r?`n" | Where-Object { $_ -match '^- User-corrected assistant missteps are mandatory local Vault learning\.' })
+if ($correctionLines.Count -ne 1) { throw "expected exactly one durable user-correction owner; found $($correctionLines.Count)" }
+$correctionRule = $correctionLines[0]
+foreach ($required in @(
+    'The literal user signal `slopwall` always qualifies as a correction incident',
+    'record it before returning control',
+    'continue the inherited task with the missing substance',
+    'Do not turn the reply into response-style discussion'
+)) {
+    if (-not $correctionRule.Contains($required)) { throw "durable slopwall correction owner missing invariant: $required" }
+}
+
+if ($rules -match '(?m)^- `slopwall` is a response-quality failure:') {
+    throw 'obsolete inline slopwall response-style mini-contract returned to RULES.md'
 }
 
 [ordered]@{
     ok = $true
-    substance_not_length = $true
-    short_regurgitation_can_fail = $true
-    correction_resumes_inherited_task = $true
-    execution_not_replaced_by_meta = $true
+    compact_marker_in_rules = $true
+    durable_correction_owner_in_agents = $true
+    direct_user_reply_contract_present = $true
+    obsolete_inline_response_contract_absent = $true
 } | ConvertTo-Json -Compress
