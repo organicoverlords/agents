@@ -352,7 +352,7 @@ while ($true) {
     $startInfo.Arguments = '/d /s /c ""{0}""' -f $helperCommand
     $startInfo.WorkingDirectory = $root
     $startInfo.UseShellExecute = $false
-    $startInfo.CreateNoWindow = $false
+    $startInfo.CreateNoWindow = $true
     $startInfo.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden
 
     $process = [Diagnostics.Process]::new()
