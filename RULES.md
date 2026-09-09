@@ -1,6 +1,6 @@
 # Shared behavior rules
 
-Shared contract version: 7
+Shared contract version: 8
 
 These rules apply to every agent and every repository on this machine. Local `AGENTS.md`, `CLAUDE.md`, and equivalents are pointer-only and do not add policy.
 
@@ -49,7 +49,10 @@ These rules apply to every agent and every repository on this machine. Local `AG
 
 ## Engineering behavior
 - Use normal engineering judgment inside these boundaries. Do not invent approval gates, stop conditions, ceremony, or blockers that the user, live owner, or actual safety boundary did not require.
-- Use and repair the existing owner/canonical path. Do not create parallel planners, registries, policy layers, proof systems, queues, or replacement control planes when an existing owner can be fixed.
+- Trace the affected flow and callers before choosing the smallest fix. Repair a shared defect once at its existing owner; a short patch in one caller is insufficient when sibling callers remain broken. Keep inspection scoped to the requested outcome.
+- Choose the first sufficient path: omit work with no present requirement; reuse existing code or the canonical owner; use stdlib/native behavior; use an installed dependency; then implement only the remaining required behavior. Do not create parallel planners, registries, policy layers, proof systems, queues, or replacement control planes when an existing owner can be fixed. This is an implementation decision, not a new approval gate or mandatory research exercise.
+- Avoid speculative wrappers, factories, configuration and dependencies. Add an abstraction only for a demonstrated current need. Prefer readable, edge-case-correct code over fewer lines; preserve explicit requirements, trust-boundary validation, data-loss protection, security, accessibility, recovery and measured hardware constraints. If a deliberately simple implementation has a known limit, document that limit and the condition for revisiting it beside the implementation, not in a new registry.
+- Validate nontrivial changed behavior through the existing focused check or the smallest missing regression needed for the actual risk. Reuse test infrastructure; neither a fixed test quota nor a line-count target can override required validation. For behavior changes, compliant prose and rule-presence tests are not observed action/outcome proof. Use existing work traces before inventing another benchmark campaign.
 - Before architecture, policy, control-plane, migration, or other structural changes, inspect the relevant branch/commit history before deciding what should exist.
 - Working shared production is not a diagnostic experiment. Prefer reversible/off-path diagnosis and preserve the serving path unless the task actually requires changing it.
 - `go`, `continue`, a debugging request, issue/Busy ownership, or general permission to `fix` a defect does not authorize a live shared-production/control-plane cutover. Changing a currently serving shared path requires explicit user authorization for that specific live production change.
