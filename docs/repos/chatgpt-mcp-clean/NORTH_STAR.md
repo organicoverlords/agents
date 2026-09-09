@@ -16,13 +16,14 @@ This section is the human-facing current topology contract. The machine-readable
 - **Connector URL:** `https://91-159-12-133.sslip.io/mcp`.
 - **Serving path:** GPT1/ChatGPT -> local HTTPS Caddy -> `127.0.0.1:3022`. The pinned runtime is `%LOCALAPPDATA%\ChatGPTMcpV4HomeDirectStable` on `chatgpt/home-direct-stable-runtime`, supervised by `McpV4HomeDirect3022`; local Caddy is supervised by `McpV4HomeDirectCaddy`.
 - **OAuth:** discovery and authorization use the same local public origin, with `https://91-159-12-133.sslip.io/authorize` and backend owner-auth mode `local-edge`. Authentication repair must not introduce a second network topology.
-- **ChatGPT action surface:** exactly three tools: `start_process`, `read_output`, `kill_process`. No fourth image tool exists on this connector.
-- **Image/file delivery:** `CHATGPT_LIBRARY_UPLOAD=<absolute path>` is interpreted from process results and carried through a resource link, `structuredContent`, `_meta.chatgpt_library_upload`, and `ui://process/library-upload-v2.html`. This is output metadata/resource behavior, not an additional action.
+- **ChatGPT action surface (current production):** exactly three tools: `start_process`, `read_output`, `kill_process`. This remains the live contract until the isolated issue #235 successor is reviewed and explicitly promoted.
+- **Image/file delivery (current production):** the legacy `CHATGPT_LIBRARY_UPLOAD=<absolute path>` process-result metadata bridge remains active only as a transition path while issue #235 is not deployed. It is not the finished file-transfer design.
+- **Reviewed successor contract (issue #235, not yet production until explicit promotion):** five worker-visible tools: `start_process`, `read_output`, `kill_process`, `upload_local_file`, `download_chatgpt_file`. Ordinary process tools carry process text/evidence only and no upload widget. `upload_local_file` owns local -> ChatGPT/Library exact-byte delivery through `ui://process/file-transfer-v1.html`; `download_chatgpt_file` owns ChatGPT/Library -> local exact-byte delivery through native file parameters. Both directions preserve original stored bytes and verify byte count plus SHA-256; already-compressed media is not transcoded, while optional lossless in-transit encoding may be used only when it reconstructs and verifies the exact original bytes.
 - **Excluded from the GPT1 connector:** `view_image`, `busy_*`, `open_visual_proof`, `open_visual_proof_run`, `record_visual_proof_review`, and other full/visual-profile actions. Internal code may retain those capabilities for explicit non-GPT1 testing, but `MCP_TOOL_PROFILE=process` must not advertise them.
 - **Not in the GPT1 path:** `5-61-91-127.sslip.io`, VPS Caddy, WireGuard, and Tailscale owner authorization. Those may exist as separate historical/recovery infrastructure, but they are not the current GPT1 serving or auth route.
 - **Independent control/recovery:** local `clone-a` on `127.0.0.1:3011` remains an independent control route. `mcp-recovery-state.json` is historical rollback/recovery state only and must never be projected as the current GPT1 topology.
 
-Diagnostic invariant: if ChatGPT discovers anything other than the three process actions, or an authorization browser opens `5-61-91-127.sslip.io`, treat the ChatGPT connector binding/metadata as stale or wrong before changing MCP. Recreate/rebind the connector to the canonical URL; do not repair the obsolete route or widen the server tool surface to accommodate stale client state.
+Diagnostic invariant: before issue #235 is explicitly promoted, the current production connector remains the three-process-tool surface; after that reviewed cutover, the canonical topology must advertise exactly the five issue-#235 tools and ordinary process calls must not mount the file-transfer widget. At either generation, an authorization browser opening `5-61-91-127.sslip.io` is stale/wrong route evidence. Recreate/rebind against the canonical URL; do not repair the obsolete route or widen the server tool surface outside the generation declared by `mcp-current-topology.json`.
 
 ## Reproducible local package contract
 
@@ -35,13 +36,13 @@ The supported external-install target is the same **single-Windows-host home-dir
 - the PlanOnly interoperability profile;
 - per-user autostart/supervision for MCP, Caddy and rules sync.
 
-The package must preserve the GPT1 action contract exactly: `start_process`, `read_output`, and `kill_process`, with no Busy, image, proof or orchestration action added. `CHATGPT_LIBRARY_UPLOAD` remains metadata/resource-widget delivery attached to process results and therefore does not increase the tool count.
+The package must preserve the exact GPT1 action contract declared by `mcp-current-topology.json`, not freeze an obsolete generation forever. Before issue #235 promotion that is the current three process tools plus the transition-only `CHATGPT_LIBRARY_UPLOAD` bridge. After explicit issue #235 cutover it is the five-tool surface with `upload_local_file` and `download_chatgpt_file`, no upload widget on ordinary process calls, and no Busy, image-viewer, proof, or orchestration action added.
 
 The install is agentless-compatible by default. `-WithAgentEntrypoints` may add supported Codex/OpenCode pointer files, but no private GigStack code or agent implementation is required for the base package. PlanOnly is distributed as an agent-neutral permission/profile contract.
 
 The installer owns only the Windows host. It does not provision a VPS, WireGuard, reverse SSH, Tailscale owner authorization, DNS, or router configuration. For Internet-facing ChatGPT use, the operator's own DNS/router must deliver public HTTPS to the local Caddy listener; that external edge prerequisite must never be disguised as a packaged remote dependency.
 
-Acceptance for this package is install-plan immutability, frozen three-tool contract verification, local-edge OAuth behavior, pinned Caddy integrity/config validation, Busy contract validation, doctor checks, and reversible uninstall.
+Acceptance for this package is install-plan immutability, exact canonical tool-surface verification for the deployed generation, local-edge OAuth behavior, pinned Caddy integrity/config validation, Busy contract validation, doctor checks, reversible uninstall, and—once issue #235 is promoted—lossless upload/download proof with byte-count and SHA-256 equality plus confirmation that ordinary process calls expose no file-transfer widget.
 
 ## Finished-product outcome
 
@@ -69,7 +70,7 @@ The user should not need to know which backend generation, tunnel, port, supervi
 
 ## Current priority
 
-Preserve the currently serving contract while closing the remaining evidence gaps around security reroute elimination/reduction, replacement safety and long-run stability. Do not create new transport layers, supervisors or routing schemes unless a reproduced failure cannot be solved through an existing owner.
+Preserve the currently serving contract while issue #235 develops the explicit lossless file-transfer successor off-path. Do not mutate live 3022 merely because the successor branch exists. Promote only after branch proof/review demonstrates the five-tool schema, exact-byte upload/download semantics, no ordinary process widget, and a reversible cutover; then update the machine-readable topology and all derived routes in the same convergence. Continue closing the remaining evidence gaps around security reroute elimination/reduction, replacement safety and long-run stability. Do not create extra transport layers, supervisors or routing schemes unless a reproduced failure cannot be solved through an existing owner.
 
 ## Roadmap continuity and issue-wall recovery
 
