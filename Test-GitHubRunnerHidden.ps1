@@ -2,6 +2,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $launcher = Join-Path $PSScriptRoot 'Start-GitHubRunnerHidden.ps1'
 $text = [IO.File]::ReadAllText($launcher)
+if (-not $text.Contains('$startInfo.CreateNoWindow = $true')) { throw 'GITHUB_RUNNER_CREATE_NO_WINDOW_NOT_ENABLED' }
+if ($text.Contains('$startInfo.CreateNoWindow = $false')) { throw 'GITHUB_RUNNER_CREATE_NO_WINDOW_DISABLED' }
 $tailStart = $text.IndexOf('    $exitCode = $process.ExitCode', [StringComparison]::Ordinal)
 if ($tailStart -lt 0) { throw 'GITHUB_RUNNER_PERSISTENCE_TAIL_MISSING' }
 $tail = $text.Substring($tailStart)
