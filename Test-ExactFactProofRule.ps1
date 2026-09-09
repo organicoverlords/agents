@@ -42,7 +42,13 @@ foreach ($required in @(
     'Do not convert `read_output` disconnect into process exit',
     'an empty search into nonexistence',
     'if no independent proof is available, answer `UNKNOWN` and distinguish the failed observation channel from the target state',
-    'Repeating the same failed probe does not strengthen the target-state claim'
+    'Repeating the same failed probe does not strengthen the target-state claim',
+    'Quantifiers determine the required proof coverage',
+    'A single authoritative witness inside the requested domain/interval is sufficient to prove an existential positive',
+    'a negative existential (`never`, `none`, `did not happen at any point`), a universal (`all`/`every`), or an exact count requires coverage of the entire relevant domain/interval',
+    'Partial enumeration may support only `at least N`',
+    'If exhaustive coverage needed by the quantifier is unavailable, answer `UNKNOWN`',
+    'Never use a short current sample to answer `ever/never`'
 )) {
     if ($rules.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "RULES missing exact-fact proof invariant: $required" }
 }
@@ -67,7 +73,11 @@ foreach ($required in @(
     'For stronger yes/no propositions that remain unproved, answer `UNKNOWN` first',
     'Keep **observation-channel state separate from target state**',
     'Tool/transport/query failure is `OBSERVATION_FAILED`, not evidence that the target is dead/missing/absent',
-    'Never use repeated identical probe failures as accumulating proof'
+    'Never use repeated identical probe failures as accumulating proof',
+    'Preserve **quantifier coverage**',
+    'One authoritative witness proves an existential positive (`ever`, `at least one`)',
+    'Universal/negative/exact-total claims (`all`, `every`, `none`, `never`, `exactly N`, `how many`) require exhaustive relevant coverage',
+    'Incomplete coverage yields `UNKNOWN` for the total/universal/negative claim'
 )) {
     if ($agents.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "AGENTS missing exact-fact proof invariant: $required" }
 }
