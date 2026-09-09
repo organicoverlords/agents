@@ -6,28 +6,28 @@ $agentsPath = Join-Path $PSScriptRoot 'AGENTS.md'
 $text = [IO.File]::ReadAllText($rulesPath)
 $agentsText = [IO.File]::ReadAllText($agentsPath)
 $lines = $text -split "`r?`n"
-$scopeLine = @($lines | Where-Object { $_ -match '^- Scope fidelity is a hard completion rule\.' })
+$requestLine = @($lines | Where-Object { $_ -match '^- Request fidelity constrains relevance and blast radius; it is not a completion or yield rule\.' })
 $yieldAuditLine = @($lines | Where-Object { $_ -match '^- \*\*MANUAL GO IS NOT A TIMEBOX\.\*\*' })
 $pollLine = @($lines | Where-Object { $_ -match '^- Never use GitHub, CI, Vault, Busy, build/runtime state, or tool reads as a keepalive' })
 $identityLine = @($lines | Where-Object { $_ -match '^- The issue/task is a \*\*shared convergence identity\*\*' })
 $wipLine = @($lines | Where-Object { $_ -match '^- Existing coherent WIP wins by default' })
 $blockerLine = @($lines | Where-Object { $_ -match '^- A constrained tool, build, CI job, lane, checkout, worktree, or exact Busy scope blocks only that exact action;' })
 $manualLine = @($lines | Where-Object { $_ -match '^- For manual/on-demand chats, especially `go`/`continue`,' })
-foreach ($pair in @(@('scope',$scopeLine),@('yield-audit',$yieldAuditLine),@('poll',$pollLine),@('identity',$identityLine),@('wip',$wipLine),@('blocker',$blockerLine),@('manual',$manualLine))) {
+foreach ($pair in @(@('request-fidelity',$requestLine),@('yield-audit',$yieldAuditLine),@('poll',$pollLine),@('identity',$identityLine),@('wip',$wipLine),@('blocker',$blockerLine),@('manual',$manualLine))) {
     if ($pair[1].Count -ne 1) { throw "expected exactly one $($pair[0]) rule; found $($pair[1].Count)" }
 }
 foreach ($required in @(
-    'the inherited scope is the user''s established project/product engineering goal',
-    'not the currently open issue/PR/branch/worktree',
-    'the next highest-value safe supported contribution from canonical open issues or the repo North Star',
-    'Fix the blocker itself when that is the highest-value safe action; otherwise switch work rather than wait',
-    'no ready canonical issue/North-Star contribution and no safe supported blocker repair/preparation remains'
-)) { if (-not $scopeLine[0].Contains($required)) { throw "scope rule missing invariant: $required" } }
+    'rather than treating the currently open issue/PR/branch/worktree, repository, project, or any inferred "scope" as a lane or stop boundary',
+    'the highest-value safe supported work that materially advances the same user goal',
+    'Absence of ready work inside any chosen issue/repo/project/scope is never a stop condition by itself',
+    'broaden by relevance to the user goal before concluding execution is blocked'
+)) { if (-not $requestLine[0].Contains($required)) { throw "request-fidelity rule missing invariant: $required" } }
 foreach ($required in @(
     'Before sending a final answer in any manual/on-demand `go`/`continue` turn',
     'Elapsed wall time, number of tool calls, amount of work already done',
     'an open/clean/mergeable PR',
     'an exact-scope Busy collision',
+    'Scope exhaustion, `no ready in scope`, no ready issue/North-Star work, or a decision-ready blocker are never stop evidence',
     'A final answer is allowed only when live evidence supports one of',
     'If the audit cannot name one of those conditions and its live evidence, do not final-answer'
 )) { if (-not $yieldAuditLine[0].Contains($required)) { throw "yield audit rule missing invariant: $required" } }
@@ -68,6 +68,9 @@ foreach ($required in @(
     'do not wait on that contribution merely to preserve narrative continuity'
 )) { if (-not $manualLine[0].Contains($required)) { throw "manual rule missing invariant: $required" } }
 foreach ($forbidden in @(
+    'no ready canonical issue/North-Star contribution and no safe supported blocker repair/preparation remains',
+    'A decision-ready blocker is a valid yield only when no ready in-scope contribution remains',
+    'Yield for the failure only when no approved route, no safe blocker repair, and no ready canonical contribution can advance',
     'inside the same established issue/objective',
     'another required same-objective contribution',
     'another ready non-conflicting contribution already required by the established issue/objective',
@@ -84,4 +87,5 @@ foreach ($forbidden in @(
     unrelated_busywork_forbidden = $true
     manual_go_pre_final_yield_audit_required = $true
     elapsed_time_never_stop_evidence = $true
+    scope_exhaustion_stop_forbidden = $true
 } | ConvertTo-Json -Compress
