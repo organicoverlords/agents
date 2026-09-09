@@ -34,6 +34,18 @@ A finished coordinator is boring and cheap enough that every worker can use it c
 5. **Fail closed on ambiguity.** Unknown or malformed ownership, alias ambiguity, failed canonicalization or unavailable coordinator state must not be converted into permission to mutate contested scope.
 6. **Independent work continues.** A collision or coordinator outage affects only the contested mutation; safe reads and unrelated work continue.
 
+## Operational collision and handoff protocol
+
+The runtime contract at `%LOCALAPPDATA%\BusyCoordinator\coordinator-contract.json` owns commands/store semantics. The shared work protocol around those exact claims is:
+
+- **Canonical scopes.** Equivalent file/resource scopes must normalize to one identity. Filesystem scopes are absolute or namespaced logical identifiers; Git ref mutation claims the exact ref, for example `<repo>:git-ref:refs/heads/<branch>`, never repo-wide `git-ref-metadata`. Do not mint an alias to evade an equivalent claim.
+- **Evidence-backed recovery.** At a designated coordination checkpoint, and before treating an exact collision as active, caller/process evidence may support recovery only when the claim is positively attributable, the caller has no live child process, and no MCP process start/read/kill/output activity has occurred for at least 60 seconds. Recover only the still-identical actor/scope/claim timestamp through CAS. Any newer activity, heartbeat, renewal, replacement, or timestamp mismatch cancels recovery; ambiguous/unmapped claims keep ordinary lease/manual-recovery semantics.
+- **Collision reconciliation.** First determine whether claimant WIP already subsumes the intended mutation; if so, consume/review/prove/integrate it rather than duplicating it. When distinct conflicting work genuinely must reach the claimant before its next mutation, leave one structured `incoming change` comment on the existing issue with the exact conflicting scopes, claimant actor, intended change, and whether any mutation occurred. This is coordination context, not queue/assignment/approval state.
+- **Claim lifetime.** Hold a claim only while that exact mutation needs exclusivity and release it promptly once protection is no longer required, including after commit/PR convergence; CI/review/unrelated bookkeeping does not justify retaining it.
+- **Incoming-change lifetime.** An `incoming change` is unresolved work, not ownership. If the exact lease is absent/expired, a worker may claim the scope and resolve the note without waiting for the former claimant. On issue entry, resolve or explicitly supersede outstanding notes before avoidable new conflicting WIP; before issue closure, record each note's resulting commit/PR/runtime evidence or explicit supersession.
+
+A Busy collision constrains only the exact mutation. Broader task continuation/yield behavior is outside BusyCoordinator and is intentionally not restated here.
+
 ## Rust-first implementation direction
 
 The coordinator hot/runtime path should be native Rust.
