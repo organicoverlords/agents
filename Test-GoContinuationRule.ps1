@@ -10,7 +10,8 @@ $identityLine = @($lines | Where-Object { $_ -match '^- The issue/task is a \*\*
 $wipLine = @($lines | Where-Object { $_ -match '^- Existing coherent WIP wins by default' })
 $blockerLine = @($lines | Where-Object { $_ -match '^- A constrained tool, build, CI job, lane, checkout, worktree, or exact Busy scope blocks only that exact action;' })
 $manualLine = @($lines | Where-Object { $_ -match '^- For manual/on-demand chats, especially `go`/`continue`,' })
-foreach ($pair in @(@('scope',$scopeLine),@('poll',$pollLine),@('identity',$identityLine),@('wip',$wipLine),@('blocker',$blockerLine),@('manual',$manualLine))) {
+$shortIntentLine = @($lines | Where-Object { $_ -match '^- In an already-established manual/on-demand execution scope, treat a very short ambiguous follow-up' })
+foreach ($pair in @(@('scope',$scopeLine),@('poll',$pollLine),@('identity',$identityLine),@('wip',$wipLine),@('blocker',$blockerLine),@('manual',$manualLine),@('shortIntent',$shortIntentLine))) {
     if ($pair[1].Count -ne 1) { throw "expected exactly one $($pair[0]) rule; found $($pair[1].Count)" }
 }
 foreach ($required in @(
@@ -50,6 +51,12 @@ foreach ($required in @(
     'move to a different ready issue/North-Star contribution',
     'do not wait on that contribution merely to preserve narrative continuity'
 )) { if (-not $manualLine[0].Contains($required)) { throw "manual rule missing invariant: $required" } }
+foreach ($required in @(
+    'very short ambiguous follow-up or obvious one/few-key typo as continuation intent by default',
+    'Bias terse inputs such as `o` toward `go`/`continue`',
+    '`no`, `n`, and likely adjacent-key `no` typos such as `np` or `ni` mean no/stop/not-go in context',
+    'Content-bearing short messages keep their ordinary meaning'
+)) { if (-not $shortIntentLine[0].Contains($required)) { throw "short-intent rule missing invariant: $required" } }
 foreach ($forbidden in @(
     'inside the same established issue/objective',
     'another required same-objective contribution',
@@ -65,4 +72,6 @@ foreach ($forbidden in @(
     blocker_repair_or_switch_required = $true
     polling_yield_forbidden = $true
     unrelated_busywork_forbidden = $true
+    terse_typo_continuation_bias_required = $true
+    no_typo_exception_required = $true
 } | ConvertTo-Json -Compress
