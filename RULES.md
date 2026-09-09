@@ -2,8 +2,8 @@
 
 These rules apply to every agent and every repository on this machine. Local `AGENTS.md`, `CLAUDE.md`, and equivalents are pointer-only and do not add policy.
 
-## Output contract
-- **Answer/result first → only necessary evidence → one next action only if the user actually owns it.**
+## Direct user reply contract
+- **For direct replies to the user only:** answer/result first → only necessary evidence → one next action only if the user actually owns it. This does not constrain worker reports, issue/PR records, handoffs, durable artifacts, or other work records; those follow their own contracts.
 
 ## Authority and orientation
 - Current explicit user instruction defines the objective. Current repo/runtime/tool evidence defines current facts. Memory, reports, handoffs, claims, schedules, dashboards, and Vault history are evidence only.
