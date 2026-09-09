@@ -79,6 +79,15 @@ try {
     Invoke-Git $live @('config','user.name','agents-sync-test') | Out-Null
     Invoke-Git $live @('config','user.email','agents-sync-test@example.invalid') | Out-Null
 
+    $taskShapeSync = Join-Path $live 'Sync-AgentRulesCheckout.ps1'
+    Copy-Item -LiteralPath $sync -Destination $taskShapeSync
+    Add-Content -LiteralPath (Join-Path $live '.git\info\exclude') -Value "`nSync-AgentRulesCheckout.ps1"
+    $taskShapeOutput = @(& powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $taskShapeSync -SkipFetch 2>&1)
+    $taskShapeCode = $LASTEXITCODE
+    $taskShapeJson = @($taskShapeOutput | ForEach-Object { [string]$_ } | Where-Object { $_.TrimStart().StartsWith('{') }) | Select-Object -Last 1
+    if ($taskShapeCode -ne 0 -or -not $taskShapeJson) { throw "fresh-process default RepoRoot failed: $($taskShapeOutput -join "`n")" }
+    $taskShape = $taskShapeJson | ConvertFrom-Json
+    if ($taskShape.status -ne 'CURRENT') { throw "fresh-process default RepoRoot status=$($taskShape.status)" }
     $current = Invoke-Sync $live
     if ($current.Code -ne 0 -or $current.Data.status -ne 'CURRENT') { throw "current case failed: $($current.Output -join "`n")" }
 

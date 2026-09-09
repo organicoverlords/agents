@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$RepoRoot = $PSScriptRoot,
+    [string]$RepoRoot,
     [string]$Remote = 'origin',
     [string]$Branch = 'main',
     [switch]$Repair,
@@ -9,6 +9,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($RepoRoot)) { $RepoRoot = $PSScriptRoot }
 
 function Invoke-GitText {
     param(
