@@ -7,6 +7,7 @@ foreach ($required in @(
     'function Get-CurrentLaunchRepeatedSessionConflict',
     'function Get-CurrentLaunchRepeatedCancellationStorm',
     '$brokerBackoffMinimumSeconds = 300',
+    '$brokerBackoffPostJobGraceSeconds = 15',
     '$sessionConflictMinimumCount = 3',
     '$sessionConflictMinimumSpanSeconds = 45',
     '$sessionConflictMaximumAgeSeconds = 60',
@@ -36,6 +37,12 @@ $sample = '[2026-09-08 03:17:42Z WARN BrokerServer] Back off 12,261 seconds befo
 $sampleMatch = [regex]::Match($sample, $patternMatch.Groups['pattern'].Value)
 if (-not $sampleMatch.Success) { throw 'broker backoff regex does not match a real runner log shape' }
 if ([int]($sampleMatch.Groups['seconds'].Value.Replace(',', '')) -ne 12261) { throw 'broker backoff seconds parse changed' }
+$jobCompletionPatternLine = @($wrapper -split "`r?`n" | Where-Object { $_ -match '^\s*\$jobCompletionPattern\s*=' })
+if ($jobCompletionPatternLine.Count -ne 1) { throw 'expected exactly one completed-job regex' }
+$jobCompletionPatternMatch = [regex]::Match($jobCompletionPatternLine[0], "^\s*\`$jobCompletionPattern\s*=\s*'(?<pattern>.*)'\s*$")
+if (-not $jobCompletionPatternMatch.Success) { throw 'could not extract completed-job regex literal' }
+$completionSample = '[2026-09-09 03:51:33Z INFO JobDispatcher] finish job request for job b8133c62-323b-5741-bdc0-e41cf73d527c with result: Succeeded'
+if (-not [regex]::Match($completionSample, $jobCompletionPatternMatch.Groups['pattern'].Value).Success) { throw 'completed-job regex does not match observed RR-KONE-02 log shape' }
 $sessionPatternLine = @($wrapper -split "`r?`n" | Where-Object { $_ -match '^\s*\$sessionConflictPattern\s*=' })
 if ($sessionPatternLine.Count -ne 1) { throw 'expected exactly one session conflict regex' }
 $sessionPatternMatch = [regex]::Match($sessionPatternLine[0], "^\s*\`$sessionConflictPattern\s*=\s*'(?<pattern>.*)'\s*$")
@@ -57,6 +64,13 @@ $tokens = $null
 $parseErrors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseInput($wrapper, [ref]$tokens, [ref]$parseErrors)
 if ($parseErrors.Count -gt 0) { throw "runner launcher parse failed: $($parseErrors[0].Message)" }
+$backoffDetector = $ast.Find({
+    param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Get-CurrentLaunchLongBrokerBackoff'
+}, $true)
+if (-not $backoffDetector) { throw 'broker backoff detector AST missing' }
+Invoke-Expression $backoffDetector.Extent.Text
 $detector = $ast.Find({
     param($node)
     $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
@@ -71,6 +85,41 @@ $cancellationDetector = $ast.Find({
 }, $true)
 if (-not $cancellationDetector) { throw 'cancellation storm detector AST missing' }
 Invoke-Expression $cancellationDetector.Extent.Text
+
+$backoffFixtureRoot = Join-Path $env:TEMP ('github-runner-backoff-test-' + [guid]::NewGuid().ToString('N'))
+$backoffDiagRoot = Join-Path $backoffFixtureRoot '_diag'
+New-Item -ItemType Directory -Path $backoffDiagRoot -Force | Out-Null
+$backoffLogPath = Join-Path $backoffDiagRoot 'Runner_fixture.log'
+function Write-BackoffFixture([string[]]$Lines) {
+    [IO.File]::WriteAllLines($backoffLogPath, $Lines, [Text.UTF8Encoding]::new($false))
+    (Get-Item -LiteralPath $backoffLogPath).LastWriteTimeUtc = [datetime]::UtcNow
+}
+try {
+    $now = [datetime]::UtcNow
+    $completedAt = $now.AddSeconds(-2).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
+    $backoffAt = $now.AddSeconds(-1).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
+    Write-BackoffFixture @(
+        "[$completedAt`Z INFO JobDispatcher] finish job request for job b8133c62-323b-5741-bdc0-e41cf73d527c with result: Succeeded",
+        "[$backoffAt`Z WARN BrokerServer] Back off 11,784 seconds before next retry. 4 attempt left."
+    )
+    $postJob = Get-CurrentLaunchLongBrokerBackoff -Root $backoffFixtureRoot -LaunchStartedUtc $now.AddSeconds(-30) -MinimumSeconds 300 -PostJobTransitionGraceSeconds 15
+    if ($postJob) { throw 'normal immediate post-job broker backoff must not trigger runner recycle' }
+
+    Write-BackoffFixture @("[$backoffAt`Z WARN BrokerServer] Back off 11,784 seconds before next retry. 4 attempt left.")
+    $isolated = Get-CurrentLaunchLongBrokerBackoff -Root $backoffFixtureRoot -LaunchStartedUtc $now.AddSeconds(-30) -MinimumSeconds 300 -PostJobTransitionGraceSeconds 15
+    if (-not $isolated -or $isolated.Seconds -ne 11784) { throw 'isolated long broker backoff must remain actionable' }
+
+    $oldCompletionAt = $now.AddSeconds(-30).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
+    Write-BackoffFixture @(
+        "[$oldCompletionAt`Z INFO JobDispatcher] finish job request for job b8133c62-323b-5741-bdc0-e41cf73d527c with result: Succeeded",
+        "[$backoffAt`Z WARN BrokerServer] Back off 14,663 seconds before next retry. 4 attempt left."
+    )
+    $lateFailure = Get-CurrentLaunchLongBrokerBackoff -Root $backoffFixtureRoot -LaunchStartedUtc $now.AddSeconds(-60) -MinimumSeconds 300 -PostJobTransitionGraceSeconds 15
+    if (-not $lateFailure -or $lateFailure.Seconds -ne 14663) { throw 'backoff beyond post-job grace must remain actionable' }
+}
+finally {
+    Remove-Item -LiteralPath $backoffFixtureRoot -Recurse -Force -ErrorAction SilentlyContinue
+}
 
 $fixtureRoot = Join-Path $env:TEMP ('github-runner-session-conflict-test-' + [guid]::NewGuid().ToString('N'))
 $diagRoot = Join-Path $fixtureRoot '_diag'
