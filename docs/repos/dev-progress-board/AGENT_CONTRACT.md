@@ -1,17 +1,15 @@
-# Dev Progress Board ? Agent Contract
+# Nexus agent contract
 
-This board is a read-only user/operator reporting cockpit, not worker coordination and not task authority. GitHub/repos own delivery work. BusyCoordinator owns only exact live mutation collision control. The board may display those facts, but coordinator state never becomes goals, priority, workload pressure, or proof of progress.
+Follow the canonical [North Star](NORTH_STAR.md), shared RULES.md/AGENTS.md and the current [Nexus #16 plan](https://github.com/organicoverlords/nexus/issues/16). Reconcile linked WIP before starting an uncovered contribution. The existing issues own work; Nexus is not worker assignment, scheduling or admission.
 
-## Normal operation
+## Native interactions and external facts
 
-Workers do not maintain this board. State is derived from live GitHub, Git, runtime/process, CI, proof, scheduler, worker-report, and exact coordinator ownership evidence. A claim alone never makes work active.
+HTTP and MCP share one durable Nexus-native store for layout, append-only comments/questions, attachments and explicit annotations. Native interaction writes are intentional. The old Python board's read-only implementation is not a prohibition on these Nexus features.
 
-`state/snapshot.json` is the board's only live generated state and is intentionally Git-ignored. Retired status/event snapshots are not current repository surfaces. The board exposes no mutation endpoints: it does not create GitHub work, edit Vault memory, accept worker event POSTs, or provide manual progress writes.
+Delivery state, authoritative acceptance, runtime activity and topology retain their owning sources and provenance. Card movement, local status/evidence labels, decisions and focus reports cannot silently update those authorities. Apply the North Star's revision/conflict, retry, acceptance-source, reviewer-lineage, transitive-readiness, freshness and privacy requirements to the actual write/read paths.
 
-## Progress rule
+An acceptance_ledger binding reads the owning issue/protocol and identified revision. The legacy P3 configuration referenced issue #611 and `p3-acceptance-row:v1`; verify the current binding and owning protocol before use. A local evidence-set operation is not an alternative acceptance ledger.
 
-Never invent percentages. A milestone is 100% only when supported by the configured evidence/state; otherwise it contributes 0% unless a real measured progress value is available from an authoritative source.
+## Proof and deployment
 
-## Product acceptance ledgers
-
-When a project config names a GitHub `acceptance_ledger`, that GitHub issue owns product-readiness rows. For P3, #611 is the current ledger. Integration workers update rows on GitHub using the structured `p3-acceptance-row:v1` comment protocol documented on that issue. The board only reads and validates those receipts.
+Use existing issue #23 for integrated candidate proof. Preserve accepted implementation and exact PR/commit/artifact checkpoints. New acceptance gaps do not erase previously delivered work, and prior test success does not prove new acceptance. No deployment follows automatically from this contract, issue closure or merge; the existing specific production-change authorization remains required.
