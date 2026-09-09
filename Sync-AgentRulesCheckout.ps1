@@ -58,11 +58,40 @@ try {
     $statusBefore = Git-Text @('status','--porcelain=v1','--untracked-files=normal')
     $dirtyBefore = -not [string]::IsNullOrWhiteSpace($statusBefore)
 
+    $wrongBranchBefore = $null
+    $wrongBranchHeadBefore = $null
+    $wrongBranchRepaired = $false
     if ($branchName -ne $Branch) {
-        Write-ResultAndExit -Result ([ordered]@{
-            ok = $false; status = 'WRONG_BRANCH'; branch = $branchName; expected_branch = $Branch
-            head = $headBefore; dirty = $dirtyBefore; action = 'none'
-        }) -Code 4
+        if (-not $Repair) {
+            Write-ResultAndExit -Result ([ordered]@{
+                ok = $false; status = 'WRONG_BRANCH'; branch = $branchName; expected_branch = $Branch
+                head = $headBefore; dirty = $dirtyBefore; action = 'none'; repair = 'rerun with -Repair after attribution/authorization'
+            }) -Code 4
+        }
+        if ($dirtyBefore) {
+            Write-ResultAndExit -Result ([ordered]@{
+                ok = $false; status = 'WRONG_BRANCH_DIRTY_BLOCKED'; branch = $branchName; expected_branch = $Branch
+                head = $headBefore; dirty = $true; action = 'none'; repair = 'preserve/finish dirty branch work before serving-checkout switch'
+            }) -Code 4
+        }
+        $expectedLocal = Invoke-GitText -GitArgs @('rev-parse','--verify',"refs/heads/$Branch") -AllowFailure
+        if ($expectedLocal.Code -ne 0) {
+            Write-ResultAndExit -Result ([ordered]@{
+                ok = $false; status = 'EXPECTED_BRANCH_MISSING'; branch = $branchName; expected_branch = $Branch
+                head = $headBefore; dirty = $false; action = 'none'
+            }) -Code 4
+        }
+        $wrongBranchBefore = $branchName
+        $wrongBranchHeadBefore = $headBefore
+        [void](Git-Text @('switch',$Branch))
+        $branchName = Git-Text @('rev-parse','--abbrev-ref','HEAD')
+        $headBefore = Git-Text @('rev-parse','HEAD')
+        $statusBefore = Git-Text @('status','--porcelain=v1','--untracked-files=normal')
+        $dirtyBefore = -not [string]::IsNullOrWhiteSpace($statusBefore)
+        if ($branchName -ne $Branch -or $dirtyBefore) {
+            throw "wrong-branch repair failed to establish clean $Branch; branch=$branchName dirty=$dirtyBefore"
+        }
+        $wrongBranchRepaired = $true
     }
 
     if (-not $SkipFetch) {
@@ -77,9 +106,12 @@ try {
     $behind = [int]$counts[1]
 
     if (-not $dirtyBefore -and $ahead -eq 0 -and $behind -eq 0) {
+        $status = if ($wrongBranchRepaired) { 'WRONG_BRANCH_REPAIRED' } else { 'CURRENT' }
+        $action = if ($wrongBranchRepaired) { 'switch-to-expected-branch' } else { 'none' }
         Write-ResultAndExit -Result ([ordered]@{
-            ok = $true; status = 'CURRENT'; branch = $branchName; head = $headBefore
-            remote_head = $remoteHead; ahead = 0; behind = 0; dirty = $false; action = 'none'
+            ok = $true; status = $status; branch = $branchName; head = $headBefore
+            remote_head = $remoteHead; ahead = 0; behind = 0; dirty = $false; action = $action
+            wrong_branch_before = $wrongBranchBefore; wrong_branch_head_before = $wrongBranchHeadBefore
         }) -Code 0
     }
 
@@ -88,10 +120,13 @@ try {
         $headAfter = Git-Text @('rev-parse','HEAD')
         $dirtyAfter = -not [string]::IsNullOrWhiteSpace((Git-Text @('status','--porcelain=v1','--untracked-files=normal')))
         if ($headAfter -ne $remoteHead -or $dirtyAfter) { throw 'clean fast-forward did not converge exactly' }
+        $status = if ($wrongBranchRepaired) { 'WRONG_BRANCH_REPAIRED_FAST_FORWARDED' } else { 'FAST_FORWARDED' }
+        $action = if ($wrongBranchRepaired) { 'switch-to-expected-branch+ff-only' } else { 'ff-only' }
         Write-ResultAndExit -Result ([ordered]@{
-            ok = $true; status = 'FAST_FORWARDED'; branch = $branchName; head_before = $headBefore
+            ok = $true; status = $status; branch = $branchName; head_before = $headBefore
             head = $headAfter; remote_head = $remoteHead; ahead_before = $ahead; behind_before = $behind
-            dirty = $false; action = 'ff-only'
+            dirty = $false; action = $action; wrong_branch_before = $wrongBranchBefore
+            wrong_branch_head_before = $wrongBranchHeadBefore
         }) -Code 0
     }
 
