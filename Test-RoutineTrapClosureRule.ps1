@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $rules = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
 $agents = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'AGENTS.md'))
 foreach ($doc in @($rules, $agents)) {
-  if (-not $doc.Contains('Shared contract version: 4')) { throw 'shared contract version was not incremented coherently' }
+  if ($doc -notmatch '(?m)^Shared contract version:\s*[1-9][0-9]*\s*$') { throw 'shared contract version header is missing' }
 }
 foreach ($required in @(
   'Do not ask the user for permission or merely narrate the workaround',

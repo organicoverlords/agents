@@ -2,15 +2,18 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $rulesPath = Join-Path $PSScriptRoot 'RULES.md'
+$agentsPath = Join-Path $PSScriptRoot 'AGENTS.md'
 $text = [IO.File]::ReadAllText($rulesPath)
+$agentsText = [IO.File]::ReadAllText($agentsPath)
 $lines = $text -split "`r?`n"
 $scopeLine = @($lines | Where-Object { $_ -match '^- Scope fidelity is a hard completion rule\.' })
+$yieldAuditLine = @($lines | Where-Object { $_ -match '^- \*\*MANUAL GO IS NOT A TIMEBOX\.\*\*' })
 $pollLine = @($lines | Where-Object { $_ -match '^- Never use GitHub, CI, Vault, Busy, build/runtime state, or tool reads as a keepalive' })
 $identityLine = @($lines | Where-Object { $_ -match '^- The issue/task is a \*\*shared convergence identity\*\*' })
 $wipLine = @($lines | Where-Object { $_ -match '^- Existing coherent WIP wins by default' })
 $blockerLine = @($lines | Where-Object { $_ -match '^- A constrained tool, build, CI job, lane, checkout, worktree, or exact Busy scope blocks only that exact action;' })
 $manualLine = @($lines | Where-Object { $_ -match '^- For manual/on-demand chats, especially `go`/`continue`,' })
-foreach ($pair in @(@('scope',$scopeLine),@('poll',$pollLine),@('identity',$identityLine),@('wip',$wipLine),@('blocker',$blockerLine),@('manual',$manualLine))) {
+foreach ($pair in @(@('scope',$scopeLine),@('yield-audit',$yieldAuditLine),@('poll',$pollLine),@('identity',$identityLine),@('wip',$wipLine),@('blocker',$blockerLine),@('manual',$manualLine))) {
     if ($pair[1].Count -ne 1) { throw "expected exactly one $($pair[0]) rule; found $($pair[1].Count)" }
 }
 foreach ($required in @(
@@ -20,6 +23,20 @@ foreach ($required in @(
     'Fix the blocker itself when that is the highest-value safe action; otherwise switch work rather than wait',
     'no ready canonical issue/North-Star contribution and no safe supported blocker repair/preparation remains'
 )) { if (-not $scopeLine[0].Contains($required)) { throw "scope rule missing invariant: $required" } }
+foreach ($required in @(
+    'Before sending a final answer in any manual/on-demand `go`/`continue` turn',
+    'Elapsed wall time, number of tool calls, amount of work already done',
+    'an open/clean/mergeable PR',
+    'an exact-scope Busy collision',
+    'A final answer is allowed only when live evidence supports one of',
+    'If the audit cannot name one of those conditions and its live evidence, do not final-answer'
+)) { if (-not $yieldAuditLine[0].Contains($required)) { throw "yield audit rule missing invariant: $required" } }
+foreach ($required in @(
+    'Immediately before final-answering a manual `go`/`continue` turn, apply the `RULES.md` pre-final yield audit',
+    'if no permitted stop condition is supported by live evidence, continue execution',
+    'Never treat elapsed wall time, tool-call count, work already completed, handoff/PR state, or an exact-scope collision as stop evidence'
+)) { if (-not $agentsText.Contains($required)) { throw "AGENTS missing manual-go yield audit invariant: $required" } }
+
 foreach ($required in @(
     'shared convergence identity',
     'not a worker assignment, lane, reservation, or ownership boundary',
@@ -65,4 +82,6 @@ foreach ($forbidden in @(
     blocker_repair_or_switch_required = $true
     polling_yield_forbidden = $true
     unrelated_busywork_forbidden = $true
+    manual_go_pre_final_yield_audit_required = $true
+    elapsed_time_never_stop_evidence = $true
 } | ConvertTo-Json -Compress
