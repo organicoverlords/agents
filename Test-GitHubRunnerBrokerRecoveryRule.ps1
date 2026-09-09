@@ -6,6 +6,7 @@ foreach ($required in @(
     'function Get-CurrentLaunchLongBrokerBackoff',
     'function Get-CurrentLaunchRepeatedSessionConflict',
     'function Get-CurrentLaunchRepeatedCancellationStorm',
+    'function Get-CurrentLaunchDisconnectedReadyListener',
     '$brokerBackoffMinimumSeconds = 300',
     '$brokerBackoffPostJobGraceSeconds = 15',
     '$sessionConflictMinimumCount = 3',
@@ -14,12 +15,16 @@ foreach ($required in @(
     '$cancellationStormMinimumCount = 12',
     '$cancellationStormMinimumSpanSeconds = 5',
     '$cancellationStormMaximumAgeSeconds = 15',
+    '$disconnectedReadyMinimumAgeSeconds = 120',
+    '$disconnectedReadyProbeIntervalSeconds = 30',
     '$brokerSessionReleaseSeconds = 210',
     'if ($observedAt -lt $LaunchStartedUtc.AddSeconds(-1)) { continue }',
     'if ($workers.Count -gt 0) { continue }',
     'GITHUB_RUNNER_BROKER_BACKOFF_RECOVERY=',
     'GITHUB_RUNNER_SESSION_CONFLICT_RECOVERY=',
     'GITHUB_RUNNER_CANCELLATION_STORM_RECOVERY=',
+    'GITHUB_RUNNER_DISCONNECTED_READY_RECOVERY=',
+    'MSFT_NetTCPConnection',
     'GITHUB_RUNNER_BROKER_SESSION_RELEASE_WAIT=',
     'Start-Sleep -Seconds $brokerSessionReleaseSeconds',
     '$taskKill /PID ([string]$process.Id) /T /F',
@@ -85,6 +90,13 @@ $cancellationDetector = $ast.Find({
 }, $true)
 if (-not $cancellationDetector) { throw 'cancellation storm detector AST missing' }
 Invoke-Expression $cancellationDetector.Extent.Text
+$disconnectedReadyDetector = $ast.Find({
+    param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Get-CurrentLaunchDisconnectedReadyListener'
+}, $true)
+if (-not $disconnectedReadyDetector) { throw 'disconnected-ready detector AST missing' }
+Invoke-Expression $disconnectedReadyDetector.Extent.Text
 
 $backoffFixtureRoot = Join-Path $env:TEMP ('github-runner-backoff-test-' + [guid]::NewGuid().ToString('N'))
 $backoffDiagRoot = Join-Path $backoffFixtureRoot '_diag'
@@ -199,6 +211,60 @@ try {
 }
 finally {
     Remove-Item -LiteralPath $cancellationFixtureRoot -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+
+$disconnectedFixtureRoot = Join-Path $env:TEMP ('github-runner-disconnected-ready-test-' + [guid]::NewGuid().ToString('N'))
+$disconnectedDiagRoot = Join-Path $disconnectedFixtureRoot '_diag'
+New-Item -ItemType Directory -Path $disconnectedDiagRoot -Force | Out-Null
+$disconnectedLogPath = Join-Path $disconnectedDiagRoot 'Runner_fixture.log'
+$script:disconnectedReadyListeners = @([pscustomobject]@{ ProcessId = 4242 })
+function Get-RunnerListenersForRoot {
+    param([Parameter(Mandatory)][string]$Root)
+    return @($script:disconnectedReadyListeners)
+}
+function Write-DisconnectedReadyFixture([datetime]$ReadyAt) {
+    $outer = $ReadyAt.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
+    $inner = $ReadyAt.AddSeconds(-1).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
+    [IO.File]::WriteAllLines(
+        $disconnectedLogPath,
+        @("[$outer`Z INFO Terminal] WRITE LINE: $inner`Z: Listening for Jobs"),
+        [Text.UTF8Encoding]::new($false)
+    )
+    (Get-Item -LiteralPath $disconnectedLogPath).LastWriteTimeUtc = [datetime]::UtcNow
+}
+try {
+    $now = [datetime]::UtcNow
+    Write-DisconnectedReadyFixture $now.AddSeconds(-130)
+    $disconnected = Get-CurrentLaunchDisconnectedReadyListener -Root $disconnectedFixtureRoot -LaunchStartedUtc $now.AddSeconds(-180) -MinimumReadyAgeSeconds 120 -ConnectionProbe { param([int]$ListenerPid) @() }
+    if (-not $disconnected -or $disconnected.ListenerPid -ne 4242 -or $disconnected.ReadyAgeSeconds -lt 120) {
+        throw 'current-launch ready listener without an established broker socket was not detected'
+    }
+
+    $healthy = Get-CurrentLaunchDisconnectedReadyListener -Root $disconnectedFixtureRoot -LaunchStartedUtc $now.AddSeconds(-180) -MinimumReadyAgeSeconds 120 -ConnectionProbe {
+        param([int]$ListenerPid)
+        @([pscustomobject]@{ RemotePort = 443 })
+    }
+    if ($healthy) { throw 'ready listener with an established broker socket must remain healthy' }
+
+    Write-DisconnectedReadyFixture $now.AddSeconds(-30)
+    $withinGrace = Get-CurrentLaunchDisconnectedReadyListener -Root $disconnectedFixtureRoot -LaunchStartedUtc $now.AddSeconds(-60) -MinimumReadyAgeSeconds 120 -ConnectionProbe { param([int]$ListenerPid) @() }
+    if ($withinGrace) { throw 'recent ready listener must not trigger disconnected-ready recovery inside grace' }
+
+    Write-DisconnectedReadyFixture $now.AddSeconds(-180)
+    $preLaunchReady = Get-CurrentLaunchDisconnectedReadyListener -Root $disconnectedFixtureRoot -LaunchStartedUtc $now.AddSeconds(-120) -MinimumReadyAgeSeconds 60 -ConnectionProbe { param([int]$ListenerPid) @() }
+    if ($preLaunchReady) { throw 'pre-launch ready line must not count toward current-launch recovery' }
+
+    Write-DisconnectedReadyFixture $now.AddSeconds(-130)
+    $probeFailure = Get-CurrentLaunchDisconnectedReadyListener -Root $disconnectedFixtureRoot -LaunchStartedUtc $now.AddSeconds(-180) -MinimumReadyAgeSeconds 120 -ConnectionProbe { param([int]$ListenerPid) throw 'probe unavailable' }
+    if ($probeFailure) { throw 'transport probe failure must fail open without runner recycle' }
+
+    $script:disconnectedReadyListeners = @()
+    $missingListener = Get-CurrentLaunchDisconnectedReadyListener -Root $disconnectedFixtureRoot -LaunchStartedUtc $now.AddSeconds(-180) -MinimumReadyAgeSeconds 120 -ConnectionProbe { param([int]$ListenerPid) @() }
+    if ($missingListener) { throw 'missing current listener must not trigger helper-tree recycle' }
+}
+finally {
+    Remove-Item -LiteralPath $disconnectedFixtureRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 if ($wrapper.Contains('taskkill /IM Runner.Listener.exe')) {

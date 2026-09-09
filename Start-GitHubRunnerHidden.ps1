@@ -199,6 +199,76 @@ function Get-CurrentLaunchRepeatedCancellationStorm {
 }
 
 
+function Get-CurrentLaunchDisconnectedReadyListener {
+    param(
+        [Parameter(Mandatory)][string]$Root,
+        [Parameter(Mandatory)][datetime]$LaunchStartedUtc,
+        [Parameter(Mandatory)][int]$MinimumReadyAgeSeconds,
+        [scriptblock]$ConnectionProbe = $null
+    )
+    $diagRoot = Join-Path $Root '_diag'
+    if (-not (Test-Path -LiteralPath $diagRoot -PathType Container)) { return $null }
+
+    $readyPattern = '^\[(?<observed>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})Z INFO Terminal\] WRITE LINE: .*: Listening for Jobs$'
+    $readyAt = $null
+    $readyLogPath = $null
+    foreach ($log in @(Get-ChildItem -LiteralPath $diagRoot -Filter 'Runner_*.log' -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-1) } |
+        Sort-Object LastWriteTimeUtc -Descending |
+        Select-Object -First 4)) {
+        foreach ($line in @(Get-Content -LiteralPath $log.FullName -Tail 240 -ErrorAction SilentlyContinue)) {
+            $match = [regex]::Match($line, $readyPattern)
+            if (-not $match.Success) { continue }
+            $observedAt = [datetime]::ParseExact(
+                $match.Groups['observed'].Value,
+                'yyyy-MM-dd HH:mm:ss',
+                [Globalization.CultureInfo]::InvariantCulture,
+                [Globalization.DateTimeStyles]::AssumeUniversal -bor [Globalization.DateTimeStyles]::AdjustToUniversal
+            )
+            if ($observedAt -lt $LaunchStartedUtc.AddSeconds(-1)) { continue }
+            if ($null -eq $readyAt -or $observedAt -gt $readyAt) {
+                $readyAt = $observedAt
+                $readyLogPath = $log.FullName
+            }
+        }
+    }
+    if ($null -eq $readyAt) { return $null }
+
+    $readyAgeSeconds = [int][Math]::Floor(([datetime]::UtcNow - $readyAt).TotalSeconds)
+    if ($readyAgeSeconds -lt $MinimumReadyAgeSeconds) { return $null }
+
+    $listeners = @(Get-RunnerListenersForRoot -Root $Root)
+    if ($listeners.Count -ne 1) { return $null }
+    $listener = $listeners[0]
+
+    if ($null -eq $ConnectionProbe) {
+        $ConnectionProbe = {
+            param([int]$ListenerPid)
+            return @(
+                Get-CimInstance -Namespace root/StandardCimv2 -ClassName MSFT_NetTCPConnection -Filter "OwningProcess = $ListenerPid AND State = 5" -ErrorAction Stop |
+                    Where-Object { $_.RemotePort -eq 443 }
+            )
+        }
+    }
+
+    try {
+        $establishedBrokerConnections = @(& $ConnectionProbe ([int]$listener.ProcessId))
+    }
+    catch {
+        # Transport introspection is a recovery hint, not authority to disrupt a runner.
+        return $null
+    }
+    if ($establishedBrokerConnections.Count -gt 0) { return $null }
+
+    return [pscustomobject]@{
+        ReadyAtUtc = $readyAt
+        ReadyAgeSeconds = $readyAgeSeconds
+        ListenerPid = [int]$listener.ProcessId
+        LogPath = $readyLogPath
+    }
+}
+
+
 function Test-ListenerHasLiveLauncher {
     param(
         [Parameter(Mandatory)]$Listener,
@@ -269,6 +339,9 @@ while ($true) {
     $cancellationStormMinimumCount = 12
     $cancellationStormMinimumSpanSeconds = 5
     $cancellationStormMaximumAgeSeconds = 15
+    $disconnectedReadyMinimumAgeSeconds = 120
+    $disconnectedReadyProbeIntervalSeconds = 30
+    $nextDisconnectedReadyProbeUtc = $launchStartedUtc.AddSeconds($disconnectedReadyMinimumAgeSeconds)
     # Observed server-side session release after an owned recycle took up to 188 seconds on RR-KONE-02.
     # Wait slightly longer before spawning a replacement so recovery does not manufacture its own 409 loop.
     $brokerSessionReleaseSeconds = 210
@@ -277,7 +350,13 @@ while ($true) {
         $backoff = Get-CurrentLaunchLongBrokerBackoff -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumSeconds $brokerBackoffMinimumSeconds -PostJobTransitionGraceSeconds $brokerBackoffPostJobGraceSeconds
         $sessionConflict = Get-CurrentLaunchRepeatedSessionConflict -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumCount $sessionConflictMinimumCount -MinimumSpanSeconds $sessionConflictMinimumSpanSeconds -MaximumAgeSeconds $sessionConflictMaximumAgeSeconds
         $cancellationStorm = Get-CurrentLaunchRepeatedCancellationStorm -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumCount $cancellationStormMinimumCount -MinimumSpanSeconds $cancellationStormMinimumSpanSeconds -MaximumAgeSeconds $cancellationStormMaximumAgeSeconds
-        if ($null -eq $backoff -and $null -eq $sessionConflict -and $null -eq $cancellationStorm) { continue }
+        $disconnectedReady = $null
+        $probeNowUtc = [datetime]::UtcNow
+        if ($probeNowUtc -ge $nextDisconnectedReadyProbeUtc) {
+            $disconnectedReady = Get-CurrentLaunchDisconnectedReadyListener -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumReadyAgeSeconds $disconnectedReadyMinimumAgeSeconds
+            $nextDisconnectedReadyProbeUtc = $probeNowUtc.AddSeconds($disconnectedReadyProbeIntervalSeconds)
+        }
+        if ($null -eq $backoff -and $null -eq $sessionConflict -and $null -eq $cancellationStorm -and $null -eq $disconnectedReady) { continue }
         $workers = @(Get-RunnerWorkersForRoot -Root $root)
         if ($workers.Count -gt 0) { continue }
 
@@ -285,8 +364,10 @@ while ($true) {
             Write-Warning "GITHUB_RUNNER_BROKER_BACKOFF_RECOVERY=root:$root|seconds:$($backoff.Seconds)|log:$($backoff.LogPath)|helper_pid:$($process.Id)"
         } elseif ($null -ne $sessionConflict) {
             Write-Warning "GITHUB_RUNNER_SESSION_CONFLICT_RECOVERY=root:$root|count:$($sessionConflict.Count)|span_seconds:$($sessionConflict.SpanSeconds)|helper_pid:$($process.Id)"
-        } else {
+        } elseif ($null -ne $cancellationStorm) {
             Write-Warning "GITHUB_RUNNER_CANCELLATION_STORM_RECOVERY=root:$root|job:$($cancellationStorm.JobId)|count:$($cancellationStorm.Count)|span_seconds:$($cancellationStorm.SpanSeconds)|helper_pid:$($process.Id)"
+        } else {
+            Write-Warning "GITHUB_RUNNER_DISCONNECTED_READY_RECOVERY=root:$root|listener_pid:$($disconnectedReady.ListenerPid)|ready_age_seconds:$($disconnectedReady.ReadyAgeSeconds)|log:$($disconnectedReady.LogPath)|helper_pid:$($process.Id)"
         }
         & $taskKill /PID ([string]$process.Id) /T /F | Out-Null
         if ($LASTEXITCODE -ne 0 -and -not $process.HasExited) {
