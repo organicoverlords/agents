@@ -45,7 +45,9 @@ if (-not $patternMatch.Success) { throw 'could not extract broker backoff regex 
 $sample = '[2026-09-08 03:17:42Z WARN BrokerServer] Back off 12,261 seconds before next retry. 4 attempt left.'
 $sampleMatch = [regex]::Match($sample, $patternMatch.Groups['pattern'].Value)
 if (-not $sampleMatch.Success) { throw 'broker backoff regex does not match a real runner log shape' }
-if ([int]($sampleMatch.Groups['seconds'].Value.Replace(',', '')) -ne 12261) { throw 'broker backoff seconds parse changed' }
+if ($sampleMatch.Groups['seconds'].Value -ne '12,261') { throw 'broker backoff decimal token changed' }
+$dotSample = '[2026-09-08 03:17:42Z WARN BrokerServer] Back off 12.261 seconds before next retry. 4 attempt left.'
+if (-not [regex]::Match($dotSample, $patternMatch.Groups['pattern'].Value).Success) { throw 'broker backoff regex must accept dot-decimal logs' }
 $jobCompletionPatternLine = @($wrapper -split "`r?`n" | Where-Object { $_ -match '^\s*\$jobCompletionPattern\s*=' })
 if ($jobCompletionPatternLine.Count -ne 1) { throw 'expected exactly one completed-job regex' }
 $jobCompletionPatternMatch = [regex]::Match($jobCompletionPatternLine[0], "^\s*\`$jobCompletionPattern\s*=\s*'(?<pattern>.*)'\s*$")
@@ -123,22 +125,30 @@ try {
     $backoffAt = $now.AddSeconds(-1).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
     Write-BackoffFixture @(
         "[$completedAt`Z INFO JobDispatcher] finish job request for job b8133c62-323b-5741-bdc0-e41cf73d527c with result: Succeeded",
-        "[$backoffAt`Z WARN BrokerServer] Back off 11,784 seconds before next retry. 4 attempt left."
+        "[$backoffAt`Z WARN BrokerServer] Back off 311,784 seconds before next retry. 4 attempt left."
     )
     $postJob = Get-CurrentLaunchLongBrokerBackoff -Root $backoffFixtureRoot -LaunchStartedUtc $now.AddSeconds(-30) -MinimumSeconds 300 -PostJobTransitionGraceSeconds 15
     if ($postJob) { throw 'normal immediate post-job broker backoff must not trigger runner recycle' }
 
-    Write-BackoffFixture @("[$backoffAt`Z WARN BrokerServer] Back off 11,784 seconds before next retry. 4 attempt left.")
+    Write-BackoffFixture @("[$backoffAt`Z WARN BrokerServer] Back off 7,139 seconds before next retry. 4 attempt left.")
+    $shortLocalized = Get-CurrentLaunchLongBrokerBackoff -Root $backoffFixtureRoot -LaunchStartedUtc $now.AddSeconds(-30) -MinimumSeconds 300 -PostJobTransitionGraceSeconds 15
+    if ($shortLocalized) { throw 'short decimal-comma broker backoff must not trigger runner recycle' }
+
+    Write-BackoffFixture @("[$backoffAt`Z WARN BrokerServer] Back off 301.250 seconds before next retry. 4 attempt left.")
+    $dotDecimal = Get-CurrentLaunchLongBrokerBackoff -Root $backoffFixtureRoot -LaunchStartedUtc $now.AddSeconds(-30) -MinimumSeconds 300 -PostJobTransitionGraceSeconds 15
+    if (-not $dotDecimal -or [math]::Abs([double]$dotDecimal.Seconds - 301.25) -gt 0.001) { throw 'long dot-decimal broker backoff must remain actionable' }
+
+    Write-BackoffFixture @("[$backoffAt`Z WARN BrokerServer] Back off 311,784 seconds before next retry. 4 attempt left.")
     $isolated = Get-CurrentLaunchLongBrokerBackoff -Root $backoffFixtureRoot -LaunchStartedUtc $now.AddSeconds(-30) -MinimumSeconds 300 -PostJobTransitionGraceSeconds 15
-    if (-not $isolated -or $isolated.Seconds -ne 11784) { throw 'isolated long broker backoff must remain actionable' }
+    if (-not $isolated -or [math]::Abs([double]$isolated.Seconds - 311.784) -gt 0.001) { throw 'isolated long decimal-comma broker backoff must remain actionable' }
 
     $oldCompletionAt = $now.AddSeconds(-30).ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
     Write-BackoffFixture @(
         "[$oldCompletionAt`Z INFO JobDispatcher] finish job request for job b8133c62-323b-5741-bdc0-e41cf73d527c with result: Succeeded",
-        "[$backoffAt`Z WARN BrokerServer] Back off 14,663 seconds before next retry. 4 attempt left."
+        "[$backoffAt`Z WARN BrokerServer] Back off 314,663 seconds before next retry. 4 attempt left."
     )
     $lateFailure = Get-CurrentLaunchLongBrokerBackoff -Root $backoffFixtureRoot -LaunchStartedUtc $now.AddSeconds(-60) -MinimumSeconds 300 -PostJobTransitionGraceSeconds 15
-    if (-not $lateFailure -or $lateFailure.Seconds -ne 14663) { throw 'backoff beyond post-job grace must remain actionable' }
+    if (-not $lateFailure -or [math]::Abs([double]$lateFailure.Seconds - 314.663) -gt 0.001) { throw 'backoff beyond post-job grace must remain actionable' }
 }
 finally {
     Remove-Item -LiteralPath $backoffFixtureRoot -Recurse -Force -ErrorAction SilentlyContinue
