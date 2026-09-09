@@ -15,7 +15,10 @@ foreach ($required in @(
     'Historical or continuity claims require interval or lifecycle evidence spanning the relevant window',
     'Causal claims require evidence of the mechanism or transition, not merely temporal correlation',
     'Negative claims require coverage evidence that the authoritative source would have recorded the event',
-    'Answer the exact fact before explanation or retrospective commentary'
+    'Answer the exact fact before explanation or retrospective commentary',
+    'Verify **proposition-appropriate evidence** before status claims',
+    'historical, continuity, outage, restart, or “at any point” claims require lifecycle/interval evidence covering the requested window',
+    'Never answer a historical-status question from a current snapshot'
 )) {
     if ($rules.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "RULES missing exact-fact proof invariant: $required" }
 }
