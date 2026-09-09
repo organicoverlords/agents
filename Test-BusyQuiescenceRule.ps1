@@ -11,7 +11,11 @@ foreach ($required in @(
   'evidence-backed compare-and-swap',
   'age alone',
   'incoming change',
-  'collision blocks only that exact mutation'
+  'collision blocks only that exact mutation',
+  'only MCP caller/process activity can support worker-liveness or current-execution claims',
+  'progress claims require task evidence such as repo/runtime/CI/artifact results',
+  'Busy owners/scopes describe exact mutation claims/collision state only',
+  'never count, label, or summarize Busy-only owners/lanes as live workers'
 )) { if (-not $rules.Contains($required)) { throw "global Busy invariant/pointer missing: $required" } }
 
 foreach ($required in @(
