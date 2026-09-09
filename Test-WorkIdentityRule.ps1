@@ -7,7 +7,8 @@ $bootstrap = @($text -split "`r?`n" | Where-Object { $_ -match '^- On every fres
 if ($bootstrap.Count -ne 1) { throw "expected exactly one fresh-chat bootstrap rule; found $($bootstrap.Count)" }
 foreach ($required in @(
     'MCPv4 `read_output`',
-    '231b7e74-4cc8-43d0-9702-fd6dfa2215b3',
+    'process_id="bootstrap"',
+    'Never hard-code or persist a runtime process UUID for bootstrap',
     'max_chars=32000',
     'wait_ms=0',
     'fall back once',
@@ -40,6 +41,7 @@ foreach ($required in @(
 )) {
     if (-not $identityLine[0].Contains($required)) { throw "shared work identity rule missing invariant: $required" }
 }
+if ($bootstrap[0] -match '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}') { throw 'fresh-chat bootstrap rule hard-codes a runtime process UUID' }
 if ($text.Contains('The issue/task is the work identity.')) { throw 'legacy issue-as-worker-lane identity remains' }
 [ordered]@{
     ok = $true
@@ -48,4 +50,5 @@ if ($text.Contains('The issue/task is the work identity.')) { throw 'legacy issu
     targeted_issue_identity_when_needed = $true
     cross_issue_north_star_selection = $true
     disjoint_contributions_remain_parallel = $true
+    bootstrap_uses_stable_alias_not_runtime_uuid = $true
 } | ConvertTo-Json -Compress
