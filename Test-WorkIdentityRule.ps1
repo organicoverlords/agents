@@ -40,7 +40,7 @@ foreach ($required in @(
 )) {
     if (-not $identityLine[0].Contains($required)) { throw "shared work identity rule missing invariant: $required" }
 }
-if ($bootstrap[0] -match '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}') { throw 'fresh-chat bootstrap rule hard-codes a runtime process UUID' }
+if ($bootstrap[0].Contains('process_id="bootstrap"') -or $bootstrap[0].Contains('Never hard-code or persist a runtime process UUID for bootstrap')) { throw 'fresh-chat bootstrap rule reverted to obsolete alias semantics' }
 if ($text.Contains('The issue/task is the work identity.')) { throw 'legacy issue-as-worker-lane identity remains' }
 [ordered]@{
     ok = $true
@@ -49,5 +49,5 @@ if ($text.Contains('The issue/task is the work identity.')) { throw 'legacy issu
     targeted_issue_identity_when_needed = $true
     cross_issue_north_star_selection = $true
     disjoint_contributions_remain_parallel = $true
-    bootstrap_uses_stable_alias_not_runtime_uuid = $true
+    bootstrap_uses_persistent_process_id = $true
 } | ConvertTo-Json -Compress
