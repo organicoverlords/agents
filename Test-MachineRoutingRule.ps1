@@ -23,8 +23,28 @@ foreach ($required in @(
     'Release the assignment when the work leaves that machine',
     'machine admission only'
 )) { if (-not $routing.Contains($required)) { throw "routing owner contract missing mechanic: $required" } }
-foreach ($required in @('the Linux OMEN is the default build, runtime, test, and proof machine','Keep a supervised hot P3 runtime available there for immediate proof use','Normal filesystem/process/Git/GitHub work uses the machine route','stack_atlas.py live-swarm','use local `git`/`gh` through MCPv4 and do not require a direct GitHub plugin','When MCPv4 is genuinely unavailable, fall back in order to MCPv3')) {
+foreach ($required in @('the Linux OMEN is the default build, runtime, test, and proof machine','Keep a supervised hot P3 runtime available there for immediate proof use','Normal filesystem/process/Git/GitHub work uses the machine route','stack_atlas.py live-swarm','use local `git`/`gh` through MCPv4 and do not require a direct GitHub plugin','`DEGRADED` is fallback-worthy exactly like unavailability')) {
     if (-not ($agents.Contains($required) -or $rules.Contains($required))) { throw "execution routing invariant missing: $required" }
 }
+foreach ($required in @(
+    'prefer MCPv4 only while it is **usable for the requested operation**',
+    'known-lightweight local operation that is normally sub-second remains above 5 seconds on one bounded confirmation',
+    '`DEGRADED` is fallback-worthy exactly like unavailability',
+    'do not keep work on MCPv4 merely because the service is alive',
+    'Start-DesktopCommanderFallbackHidden.ps1 -ReadyProbe',
+    '`READY` permits a connection attempt but does not itself prove route usability',
+    'Missing/invalid persisted authorization is `UNAVAILABLE` for unattended recovery',
+    'never poll it as a recovery loop'
+)) { if (-not $rules.Contains($required)) { throw "degraded-route invariant missing: $required" } }
+foreach ($required in @(
+    'Machine-route choice follows **operation usability**, not service existence',
+    'A live listener or HTTP 200 does not pin work to MCPv4',
+    '`-ReadyProbe` proves only persisted authorization readiness',
+    'never trigger browser authorization during unattended fallback'
+)) { if (-not $agents.Contains($required)) { throw "AGENTS degraded-route invariant missing: $required" } }
+foreach ($forbidden in @(
+    'When MCPv4 is genuinely unavailable, fall back',
+    'a healthy route is a usable route'
+)) { if ($rules.Contains($forbidden) -or $agents.Contains($forbidden)) { throw "stale route-liveness substitution remains: $forbidden" } }
 if (($rules -split "`r?`n" | Where-Object { $_ -match '^- Machine-route precedence: prefer MCPv4' }).Count -ne 1) { throw 'expected exactly one MCPv4 route precedence rule' }
 Write-Output 'PASS machine routing owner-bound rule'
