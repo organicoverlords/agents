@@ -8,12 +8,17 @@ foreach ($required in @(
   '& python.exe',
   'make one materially normalized retry',
   'preserve the rejected and successful command shapes as a `tooling` finding',
+  'If the user corrected the command-shape failure, apply the answer-first correction rule',
+  'do not create a separate Vault write merely for this tooling finding',
   'repeated recurrence is an owned tooling defect',
   'fix the command-producing guidance/helper',
   'add the narrowest available regression check',
   'do not infer a platform-security cause'
 )) {
-  if (-not $line[0].Contains($required)) { throw "command-shape rule missing invariant: $required" }
+  if ($line[0].IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "command-shape rule missing invariant: $required" }
+}
+if ($line[0].Contains('required compact Vault correction when user-corrected')) {
+  throw 'command-shape rule retains stale logging-first correction requirement'
 }
 if ($line[0].Contains('retry an unchanged preflight-rejected command')) {
   if (-not $line[0].Contains('Do not retry an unchanged preflight-rejected command')) { throw 'unchanged retry must remain forbidden' }
