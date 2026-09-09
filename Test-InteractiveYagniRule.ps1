@@ -4,7 +4,12 @@ $text = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
 
 foreach ($required in @(
     'WORKER REPORTS ARE FOR WORKER RUNS, NOT ORDINARY CONVERSATION',
-    'MANUAL REPORTS ARE MANDATORY BUT MINIMAL',
+    'MANUAL REPORTS ARE REQUIRED BUT NON-BLOCKING FOR ACTUAL EXECUTION RUNS',
+    'one final durable update/archive after its last execution action',
+    'Do not perform a dedicated report write before the first execution tool call',
+    'optional start/open record may be coalesced into an already-required coordination checkpoint only when it adds no extra tool round trip',
+    'deliver the corrected result first under the answer-first correction rule',
+    'reporting never delays requested work',
     'Do not checkpoint routine progress or duplicate commands, process IDs, Busy claims, GitHub/PR chronology, CI output, validation logs, or other telemetry already owned elsewhere',
     'Vault investigation learning is subordinate to request scope',
     'never turn a narrow user request into a separate investigation or remote-publication workflow merely to create memory',
@@ -14,11 +19,13 @@ foreach ($required in @(
     if (-not $text.Contains($required)) { throw "interactive YAGNI invariant missing: $required" }
 }
 foreach ($obsolete in @(
+    'MANUAL REPORTS ARE MANDATORY BUT MINIMAL FOR ACTUAL EXECUTION RUNS',
+    'writes one start record before its first execution tool call',
     'TIMED WORKER REPORTS ARE MANDATORY; ORDINARY INTERACTIVE CHATS ARE NOT WORKERS BY DEFAULT',
     'WHEN A MANUAL REPORT IS ACTUALLY REQUIRED, USE THE CANONICAL FORMAT',
     'preserve one compact assistant-authored record through the canonical `memory_bank.py record` path before closing the interval'
 )) {
     if ($text.Contains($obsolete)) { throw "obsolete mandatory overhead still present: $obsolete" }
 }
-[ordered]@{ok=$true;manual_report_mandatory=$true;manual_report_minimal=$true;memory_scope_bounded=$true;unchanged_polling_forbidden=$true} | ConvertTo-Json -Compress
+[ordered]@{ok=$true;manual_report_required=$true;manual_report_nonblocking=$true;manual_report_minimal=$true;memory_scope_bounded=$true;unchanged_polling_forbidden=$true} | ConvertTo-Json -Compress
 
