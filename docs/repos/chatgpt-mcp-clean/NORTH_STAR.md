@@ -9,6 +9,21 @@ MCP is **boring authenticated execution transport** between ChatGPT workers and 
 
 MCP is not the ownership system, scheduler, worker registry, backlog, product authority or orchestration brain. BusyCoordinator owns exact live mutation collisions; GitHub/issues/repos own work truth; MCP only transports supported capabilities and their evidence.
 
+## Current GPT1 serving contract
+
+This section is the human-facing current topology contract. The machine-readable authority is `C:\Users\Lauri\Desktop\vault\04 Operating Contracts\mcp-current-topology.json`, surfaced directly by Stack Atlas/bootstrap as `mcp_current_topology`. Historical recovery records must not override it.
+
+- **Connector URL:** `https://91-159-12-133.sslip.io/mcp`.
+- **Serving path:** GPT1/ChatGPT -> local HTTPS Caddy -> `127.0.0.1:3022`. The pinned runtime is `%LOCALAPPDATA%\ChatGPTMcpV4HomeDirectStable` on `chatgpt/home-direct-stable-runtime`, supervised by `McpV4HomeDirect3022`; local Caddy is supervised by `McpV4HomeDirectCaddy`.
+- **OAuth:** discovery and authorization use the same local public origin, with `https://91-159-12-133.sslip.io/authorize` and backend owner-auth mode `local-edge`. Authentication repair must not introduce a second network topology.
+- **ChatGPT action surface:** exactly three tools: `start_process`, `read_output`, `kill_process`. No fourth image tool exists on this connector.
+- **Image/file delivery:** `CHATGPT_LIBRARY_UPLOAD=<absolute path>` is interpreted from process results and carried through a resource link, `structuredContent`, `_meta.chatgpt_library_upload`, and `ui://process/library-upload-v2.html`. This is output metadata/resource behavior, not an additional action.
+- **Excluded from the GPT1 connector:** `view_image`, `busy_*`, `open_visual_proof`, `open_visual_proof_run`, `record_visual_proof_review`, and other full/visual-profile actions. Internal code may retain those capabilities for explicit non-GPT1 testing, but `MCP_TOOL_PROFILE=process` must not advertise them.
+- **Not in the GPT1 path:** `5-61-91-127.sslip.io`, VPS Caddy, WireGuard, and Tailscale owner authorization. Those may exist as separate historical/recovery infrastructure, but they are not the current GPT1 serving or auth route.
+- **Independent control/recovery:** local `clone-a` on `127.0.0.1:3011` remains an independent control route. `mcp-recovery-state.json` is historical rollback/recovery state only and must never be projected as the current GPT1 topology.
+
+Diagnostic invariant: if ChatGPT discovers anything other than the three process actions, or an authorization browser opens `5-61-91-127.sslip.io`, treat the ChatGPT connector binding/metadata as stale or wrong before changing MCP. Recreate/rebind the connector to the canonical URL; do not repair the obsolete route or widen the server tool surface to accommodate stale client state.
+
 ## Finished-product outcome
 
 A finished MCP service is something workers can normally forget exists:
