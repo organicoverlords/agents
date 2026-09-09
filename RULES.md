@@ -1,5 +1,7 @@
 # Shared behavior rules
 
+Shared contract version: 1
+
 These rules apply to every agent and every repository on this machine. Local `AGENTS.md`, `CLAUDE.md`, and equivalents are pointer-only and do not add policy.
 
 ## Direct user reply contract

@@ -1,8 +1,11 @@
 # Shared agent work contract
 
+Shared contract version: 1
+
 Every agent uses this same repo-work contract. Local repo `AGENTS.md`/`CLAUDE.md` files only point here and to `RULES.md`.
 
 ## Entering a repo
+- `RULES.md` and `AGENTS.md` carry the same monotonic `Shared contract version: N`. Any shared-contract change to either file increments both version headers in the same patch; bootstrap must report that exact coherent version.
 - Fresh chats perform the required read-first bootstrap from `RULES.md` once: consume the persistent MCPv4 bootstrap stream with `read_output` before using `start_process` fallback. Follow-ups reuse that snapshot unless the request materially depends on changed live machine/route state; do not make bootstrap, GitHub, Busy, or repo enumeration a per-subtask ritual. Follow the prompt-local scope-fidelity rule in `RULES.md`.
 - Immediately before the first mutation in a target repo, inspect that repo's branch/HEAD and dirty state, resolve the known matching issue/PR or do one targeted lookup if none is known, and inspect only the exact Busy scopes needed for the mutation. If relevant dirty work already exists, attribute and preserve it rather than piling unowned edits onto it. Do not use broad issue/PR history listings or repo fetches as startup ritual.
 - `C:\Users\Lauri\.agents` is the serving checkout for shared behavior, not a worker WIP surface. Before mutating `organicoverlords/agents`, run `Sync-AgentRulesCheckout.ps1`: a clean behind `main` fast-forwards to current `origin/main`, while dirty/ahead/diverged state fails closed. Do implementation in a separate worktree based on current `origin/main`; never copy partial merged policy/files back into the serving checkout. When serving convergence is explicitly required, `Sync-AgentRulesCheckout.ps1 -Repair` first preserves the exact index/worktree on a local `preserve/agents-live-*` branch, then converges to `origin/main`; do not hard-reset or clean the serving checkout by hand.
