@@ -24,6 +24,25 @@ This section is the human-facing current topology contract. The machine-readable
 
 Diagnostic invariant: if ChatGPT discovers anything other than the three process actions, or an authorization browser opens `5-61-91-127.sslip.io`, treat the ChatGPT connector binding/metadata as stale or wrong before changing MCP. Recreate/rebind the connector to the canonical URL; do not repair the obsolete route or widen the server tool surface to accommodate stale client state.
 
+## Reproducible local package contract
+
+The supported external-install target is the same **single-Windows-host home-direct shape**, not a second production architecture. A clean clone can run `install.ps1` to install the complete local stack together:
+
+- loopback MCP backend with `MCP_TOOL_PROFILE=process`;
+- local Caddy HTTPS edge, pinned to Caddy 2.11.3 and SHA-256 verified before promotion;
+- standalone BusyCoordinator beside MCP, never exposed as an MCP action;
+- public shared base-rules checkout;
+- the PlanOnly interoperability profile;
+- per-user autostart/supervision for MCP, Caddy and rules sync.
+
+The package must preserve the GPT1 action contract exactly: `start_process`, `read_output`, and `kill_process`, with no Busy, image, proof or orchestration action added. `CHATGPT_LIBRARY_UPLOAD` remains metadata/resource-widget delivery attached to process results and therefore does not increase the tool count.
+
+The install is agentless-compatible by default. `-WithAgentEntrypoints` may add supported Codex/OpenCode pointer files, but no private GigStack code or agent implementation is required for the base package. PlanOnly is distributed as an agent-neutral permission/profile contract.
+
+The installer owns only the Windows host. It does not provision a VPS, WireGuard, reverse SSH, Tailscale owner authorization, DNS, or router configuration. For Internet-facing ChatGPT use, the operator's own DNS/router must deliver public HTTPS to the local Caddy listener; that external edge prerequisite must never be disguised as a packaged remote dependency.
+
+Acceptance for this package is install-plan immutability, frozen three-tool contract verification, local-edge OAuth behavior, pinned Caddy integrity/config validation, Busy contract validation, doctor checks, and reversible uninstall.
+
 ## Finished-product outcome
 
 A finished MCP service is something workers can normally forget exists:
