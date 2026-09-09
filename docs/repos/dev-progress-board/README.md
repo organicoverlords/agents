@@ -1,34 +1,15 @@
-# Dev Progress Board
+# Nexus
 
-A local operator cockpit for the development stack. It is built for the user to read and steer from one screen; workers do not coordinate through it:
+Nexus is the operator workspace for the development stack. Its primary experience is an infinite canvas with a synchronized Trello delivery board, topology inspectors, source-backed activity, evidence and collaboration.
 
-`LowVRAM 3D Pipeline -> Asset Library + TinyLab -> P3`
+The [North Star](NORTH_STAR.md) is the canonical product direction. [Nexus #16](https://github.com/organicoverlords/nexus/issues/16) owns the current implementation plan, linked WIP and acceptance handoffs. [The agent contract](AGENT_CONTRACT.md) explains the operating boundary.
 
-## What updates automatically
+## Names and implementation state
 
-The local board service reconciles every 15 seconds. GitHub probes are cached for 120 seconds so local activity stays near-live without hammering the API. It reads:
+The canonical repository is [organicoverlords/nexus](https://github.com/organicoverlords/nexus). Dev Progress Board, DevProgressBoard and devboard remain compatibility/search aliases. This directory remains stable for existing documentation links.
 
-- local Git branch, HEAD, recent commits, and dirty-file count for configured repos;
-- file activity for the non-Git asset library workspace;
-- open GitHub PRs and workflow runs for configured repos;
-- recent shared MCP process receipts mapped to configured project paths;
+The legacy Python board is a read-only reporting implementation. Its historical local entrypoint is `OPEN DEV PROGRESS BOARD.cmd` through `Start-Board.ps1`, using `http://127.0.0.1:8765/` and generated `state/snapshot.json`. Its documented reconciliation/cache intervals are 15/120 seconds. These are legacy implementation details, not claims about current service liveness or the Rust state store.
 
-The browser is one deliberately simple control surface: four large project rows with prominent progress bars, finish lines, current/next milestones, current direction, worker/lane aim, and real milestone evidence. Recent wins/goals are compact; worker-direction and technical activity detail stays folded away until opened.
+Rust Nexus is the shared Canvas/Board target. It deliberately supports bounded native layout, comments and annotations while projecting delivery, runtime and acceptance from their owners. Inspect the current executable/configuration and #16/#23 before making a deployment claim. This documentation does not authorize a production cutover.
 
-## Source of truth
-
-GitHub/repository state owns delivery work, BusyCoordinator owns exact live mutation collision control, and this board is a read-only operator view over them. Coordinator backlog/ready records are never promoted into product goals or workload pressure. AI summaries are optional and never replace live evidence.
-
-MCP activity ingest is metadata-only: the board keeps the project, process class, short workspace label, action count, and timestamp. Network addresses, authentication fields, request payloads, and command bodies are never copied into the board snapshot.
-
-`/api/health` separates service liveness from data freshness. It exposes reconciliation duration, consecutive failures, and stale-snapshot age. The board service owns reconciliation retries while it is running. It is intentionally on-demand: `OPEN DEV PROGRESS BOARD.cmd` starts it through `Start-Board.ps1`, and the UI exposes degraded or stale data instead of hiding it behind a second supervisor.
-
-Milestone completion is conservative: a milestone contributes 100% when marked `done`; partial completion is counted only when a worker explicitly supplies `progress=0..100`. Merely saying `active` does not invent a percentage.
-
-`state/snapshot.json` is the single live generated board state and is intentionally Git-ignored. Retired status/event snapshots are not current repository surfaces; historical versions remain available through Git history.
-
-## Open locally
-
-Run `OPEN DEV PROGRESS BOARD.cmd` on the Desktop. The service is not started automatically at Windows login.
-
-Local URL: `http://127.0.0.1:8765/`
+GitHub owns delivery; current runtime observations own activity; Busy owns exact mutation collisions. Nexus-native writes cannot promote themselves into external status or acceptance.
