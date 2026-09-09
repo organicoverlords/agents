@@ -7,6 +7,10 @@ $agents = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'AGENTS.md'))
 foreach ($required in @(
     'serving checkout for shared behavior, not a worker WIP surface',
     '`Sync-AgentRulesCheckout.ps1`',
+    '`source_freshness.canonical_checkout`',
+    '`head_matches_remote_main` is false or `coherent` is false',
+    'once before selecting repo work or relying on the serving checkout for current shared behavior',
+    'Do not add Git fetch/convergence work inside bootstrap itself, create a watcher/scheduler',
     'separate worktree based on current `origin/main`',
     'preserves the exact index/worktree on a local `preserve/agents-live-*` branch')) {
     if (-not $agents.Contains($required)) { throw "AGENTS serving-checkout rule missing invariant: $required" }
