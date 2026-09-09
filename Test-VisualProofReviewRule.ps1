@@ -2,10 +2,13 @@ $ErrorActionPreference='Stop'
 $rules = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'RULES.md') -Raw
 $p3Proof = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'docs\repos\p3\docs\P3_PROOF_PHASES_AND_BATCHING.md') -Raw
 $required = @(
-  'Visual proof review is **native-image/video-first, with MCP process-result metadata as the default retrieval route**',
-  'every worker/project defaults to the existing MCP process-result metadata bridge',
-  'CHATGPT_LIBRARY_UPLOAD=<absolute path>',
-  'does not add an MCP action',
+  'Visual proof review is **native-image/video-first, with explicit lossless MCP file transfer as the default retrieval route whenever that tool surface is exposed**',
+  'every worker/project defaults to `upload_local_file`',
+  'Use `download_chatgpt_file` for ChatGPT/Library -> local exact-byte delivery',
+  'report byte count plus SHA-256',
+  'do not recompress or transcode media/artifacts as stored content',
+  '`start_process`/`read_output` are process tools only',
+  'legacy `CHATGPT_LIBRARY_UPLOAD=<absolute path>` process-result metadata bridge is transition fallback only',
   'Do not prefer',
   'Drive/Library',
   'actual inspection of the rendered pixels or video frames',
@@ -21,7 +24,8 @@ $forbiddenRoutes = @(
   'must first exist in ChatGPT Library',
   'opened through the native Files surface',
   ('Google Drive' + ' -> ChatGPT Library'),
-  ('record the Library consumer gate as unmet' + ' rather than substituting another transport')
+  ('record the Library consumer gate as unmet' + ' rather than substituting another transport'),
+  'every worker/project defaults to the existing MCP process-result metadata bridge'
 )
 foreach ($forbidden in $forbiddenRoutes) {
   if ($rules.Contains($forbidden) -or $p3Proof.Contains($forbidden)) { throw "visual proof policy has transport-specific acceptance dependency: $forbidden" }
