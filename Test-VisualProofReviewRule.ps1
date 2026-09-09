@@ -2,8 +2,12 @@ $ErrorActionPreference='Stop'
 $rules = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'RULES.md') -Raw
 $p3Proof = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'docs\repos\p3\docs\P3_PROOF_PHASES_AND_BATCHING.md') -Raw
 $required = @(
-  'Visual proof review is **native-image/video-first**',
-  'Do not route media through MCP, PowerShell, base64, OCR, Drive/Library, custom HTTP, or file materialization merely to make it reviewable',
+  'Visual proof review is **native-image/video-first, with MCP process-result metadata as the default retrieval route**',
+  'every worker/project defaults to the existing MCP process-result metadata bridge',
+  'CHATGPT_LIBRARY_UPLOAD=<absolute path>',
+  'does not add an MCP action',
+  'Do not prefer',
+  'Drive/Library',
   'actual inspection of the rendered pixels or video frames',
   'paths, storage surfaces, transport metadata, hashes, or pixel gates alone are not acceptance',
   'must inspect its own captured pixels/video',
