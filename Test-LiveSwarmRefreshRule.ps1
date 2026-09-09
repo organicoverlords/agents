@@ -5,7 +5,7 @@ $line = @($rules -split "`r?`n" | Where-Object { $_ -like '*stack_atlas.py live-
 if ($line.Count -ne 1) { throw "expected exactly one live-swarm rule; found $($line.Count)" }
 $rule = $line[0]
 foreach ($required in @(
-    'mandatory fresh-chat `bootstrap-glance` is the shared swarm starting point',
+    'mandatory fresh-chat bootstrap snapshot is the shared swarm starting point',
     'only as a refresh',
     'already-held bootstrap/live-swarm snapshot is stale or insufficient',
     'Do not turn it into per-turn, per-tool, or lane-selection ceremony',

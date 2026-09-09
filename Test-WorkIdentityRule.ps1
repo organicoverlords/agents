@@ -3,7 +3,19 @@ $ErrorActionPreference = 'Stop'
 
 $rulesPath = Join-Path $PSScriptRoot 'RULES.md'
 $text = [IO.File]::ReadAllText($rulesPath)
-$orientation = @($text -split "`r?`n" | Where-Object { $_ -match '^- After the mandatory fresh-chat `bootstrap-glance`' })
+$bootstrap = @($text -split "`r?`n" | Where-Object { $_ -match '^- On every fresh chat, the first machine action is' })
+if ($bootstrap.Count -ne 1) { throw "expected exactly one fresh-chat bootstrap rule; found $($bootstrap.Count)" }
+foreach ($required in @(
+    'MCPv4 `read_output`',
+    '231b7e74-4cc8-43d0-9702-fd6dfa2215b3',
+    'max_chars=32000',
+    'wait_ms=0',
+    'fall back once',
+    'stack_atlas.py bootstrap-glance'
+)) {
+    if (-not $bootstrap[0].Contains($required)) { throw "fresh-chat bootstrap rule missing invariant: $required" }
+}
+$orientation = @($text -split "`r?`n" | Where-Object { $_ -match '^- After the mandatory fresh-chat bootstrap' })
 if ($orientation.Count -ne 1) { throw "expected exactly one follow-up orientation rule; found $($orientation.Count)" }
 foreach ($required in @(
     'do not automatically rerun bootstrap for every follow-up or subtask',
