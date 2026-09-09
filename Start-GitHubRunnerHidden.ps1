@@ -50,17 +50,31 @@ function Get-CurrentLaunchLongBrokerBackoff {
     param(
         [Parameter(Mandatory)][string]$Root,
         [Parameter(Mandatory)][datetime]$LaunchStartedUtc,
-        [Parameter(Mandatory)][int]$MinimumSeconds
+        [Parameter(Mandatory)][int]$MinimumSeconds,
+        [Parameter(Mandatory)][int]$PostJobTransitionGraceSeconds
     )
     $diagRoot = Join-Path $Root '_diag'
     if (-not (Test-Path -LiteralPath $diagRoot -PathType Container)) { return $null }
 
     $pattern = '^\[(?<observed>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})Z WARN BrokerServer\] Back off (?<seconds>[\d,]+) seconds before next retry\.'
+    $jobCompletionPattern = '^\[(?<observed>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})Z INFO JobDispatcher\] finish job request for job [0-9a-fA-F-]+ with result: .+$'
     foreach ($log in @(Get-ChildItem -LiteralPath $diagRoot -Filter 'Runner_*.log' -File -ErrorAction SilentlyContinue |
         Where-Object { $_.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-1) } |
         Sort-Object LastWriteTimeUtc -Descending |
         Select-Object -First 4)) {
+        $lastJobCompletionAt = $null
         foreach ($line in @(Get-Content -LiteralPath $log.FullName -Tail 200 -ErrorAction SilentlyContinue)) {
+            $completionMatch = [regex]::Match($line, $jobCompletionPattern)
+            if ($completionMatch.Success) {
+                $completionAt = [datetime]::ParseExact(
+                    $completionMatch.Groups['observed'].Value,
+                    'yyyy-MM-dd HH:mm:ss',
+                    [Globalization.CultureInfo]::InvariantCulture,
+                    [Globalization.DateTimeStyles]::AssumeUniversal -bor [Globalization.DateTimeStyles]::AdjustToUniversal
+                )
+                if ($completionAt -ge $LaunchStartedUtc.AddSeconds(-1)) { $lastJobCompletionAt = $completionAt }
+                continue
+            }
             $match = [regex]::Match($line, $pattern)
             if (-not $match.Success) { continue }
             $observedAt = [datetime]::ParseExact(
@@ -72,6 +86,10 @@ function Get-CurrentLaunchLongBrokerBackoff {
             if ($observedAt -lt $LaunchStartedUtc.AddSeconds(-1)) { continue }
             $seconds = [int]($match.Groups['seconds'].Value.Replace(',', ''))
             if ($seconds -lt $MinimumSeconds) { continue }
+            if ($null -ne $lastJobCompletionAt) {
+                $secondsSinceJobCompletion = ($observedAt - $lastJobCompletionAt).TotalSeconds
+                if ($secondsSinceJobCompletion -ge 0 -and $secondsSinceJobCompletion -le $PostJobTransitionGraceSeconds) { continue }
+            }
             return [pscustomobject]@{
                 ObservedAtUtc = $observedAt
                 Seconds = $seconds
@@ -244,6 +262,7 @@ while ($true) {
     }
 
     $brokerBackoffMinimumSeconds = 300
+    $brokerBackoffPostJobGraceSeconds = 15
     $sessionConflictMinimumCount = 3
     $sessionConflictMinimumSpanSeconds = 45
     $sessionConflictMaximumAgeSeconds = 60
@@ -255,7 +274,7 @@ while ($true) {
     $brokerSessionReleaseSeconds = 210
     $brokerRecycleTriggered = $false
     while (-not $process.WaitForExit(1000)) {
-        $backoff = Get-CurrentLaunchLongBrokerBackoff -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumSeconds $brokerBackoffMinimumSeconds
+        $backoff = Get-CurrentLaunchLongBrokerBackoff -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumSeconds $brokerBackoffMinimumSeconds -PostJobTransitionGraceSeconds $brokerBackoffPostJobGraceSeconds
         $sessionConflict = Get-CurrentLaunchRepeatedSessionConflict -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumCount $sessionConflictMinimumCount -MinimumSpanSeconds $sessionConflictMinimumSpanSeconds -MaximumAgeSeconds $sessionConflictMaximumAgeSeconds
         $cancellationStorm = Get-CurrentLaunchRepeatedCancellationStorm -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumCount $cancellationStormMinimumCount -MinimumSpanSeconds $cancellationStormMinimumSpanSeconds -MaximumAgeSeconds $cancellationStormMaximumAgeSeconds
         if ($null -eq $backoff -and $null -eq $sessionConflict -and $null -eq $cancellationStorm) { continue }
