@@ -58,12 +58,18 @@ foreach ($required in @(
     'One coherent outcome gets one issue',
     'observations, hypotheses, measurements, sub-findings, and implementation notes stay inside that issue unless they become independently actionable outcomes',
     'Do not turn this into broad GitHub enumeration, startup ceremony, or issue spam',
-    'initial shaping through diagnosis/design, patch/PR, validation, integration, and live proof or explicit disproval/supersession'
+    'initial shaping through diagnosis/design, patch/PR, validation, integration, and live proof or explicit disproval/supersession',
+    'Creating or reusing that issue must not serialize the swarm',
+    'multiple workers may concurrently enter/review/prove/integrate genuinely non-overlapping contributions',
+    'exact mutation boundaries and serialization points'
 )) { if (-not $issueFirstLine[0].Contains($required)) { throw "issue-first rule missing invariant: $required" } }
 foreach ($required in @(
     'Material work gets a durable owner early',
     'This is not issue-per-observation',
-    'idea/problem through design/diagnosis, patch/PR, validation, integration, and live proof or explicit disproval/supersession'
+    'idea/problem through design/diagnosis, patch/PR, validation, integration, and live proof or explicit disproval/supersession',
+    'Durable ownership is not worker ownership',
+    'preserve simultaneous entry, disjoint mutation scopes, review/proof/integration by other workers',
+    'never make issue-first lifecycle a single-worker lane or queue'
 )) { if (-not $agentsText.Contains($required)) { throw "AGENTS issue lifecycle missing invariant: $required" } }
 if ($text.Contains('The issue/task is the work identity.')) { throw 'legacy issue-as-worker-lane identity remains' }
 [ordered]@{
@@ -74,6 +80,8 @@ if ($text.Contains('The issue/task is the work identity.')) { throw 'legacy issu
     material_swarm_work_issue_first = $true
     issue_spam_forbidden = $true
     lifecycle_reaches_live_proof = $true
+    issue_first_preserves_concurrent_entry = $true
+    issue_first_never_serializes_workers = $true
     cross_issue_north_star_selection = $true
     disjoint_contributions_remain_parallel = $true
     bootstrap_uses_persistent_process_id = $true
