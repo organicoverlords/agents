@@ -56,7 +56,7 @@ function Get-CurrentLaunchLongBrokerBackoff {
     $diagRoot = Join-Path $Root '_diag'
     if (-not (Test-Path -LiteralPath $diagRoot -PathType Container)) { return $null }
 
-    $pattern = '^\[(?<observed>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})Z WARN BrokerServer\] Back off (?<seconds>[\d,]+) seconds before next retry\.'
+    $pattern = '^\[(?<observed>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})Z WARN BrokerServer\] Back off (?<seconds>\d+(?:[.,]\d+)?) seconds before next retry\.'
     $jobCompletionPattern = '^\[(?<observed>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})Z INFO JobDispatcher\] finish job request for job [0-9a-fA-F-]+ with result: .+$'
     foreach ($log in @(Get-ChildItem -LiteralPath $diagRoot -Filter 'Runner_*.log' -File -ErrorAction SilentlyContinue |
         Where-Object { $_.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-1) } |
@@ -84,8 +84,10 @@ function Get-CurrentLaunchLongBrokerBackoff {
                 [Globalization.DateTimeStyles]::AssumeUniversal -bor [Globalization.DateTimeStyles]::AdjustToUniversal
             )
             if ($observedAt -lt $LaunchStartedUtc.AddSeconds(-1)) { continue }
-            $seconds = [int]($match.Groups['seconds'].Value.Replace(',', ''))
-            if ($seconds -lt $MinimumSeconds) { continue }
+            [double]$seconds = 0
+            $secondsText = $match.Groups['seconds'].Value.Replace(',', '.')
+            if (-not [double]::TryParse($secondsText, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$seconds)) { continue }
+            if ($seconds -lt [double]$MinimumSeconds) { continue }
             if ($null -ne $lastJobCompletionAt) {
                 $secondsSinceJobCompletion = ($observedAt - $lastJobCompletionAt).TotalSeconds
                 if ($secondsSinceJobCompletion -ge 0 -and $secondsSinceJobCompletion -le $PostJobTransitionGraceSeconds) { continue }
