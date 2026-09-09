@@ -1,6 +1,6 @@
 # Shared agent work contract
 
-Shared contract version: 12
+Shared contract version: 13
 
 Every agent uses this same repo-work contract. Local repo `AGENTS.md`/`CLAUDE.md` files only point here and to `RULES.md`.
 
