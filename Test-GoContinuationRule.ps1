@@ -38,6 +38,12 @@ foreach ($required in @(
 )) { if (-not $agentsText.Contains($required)) { throw "AGENTS missing manual-go yield audit invariant: $required" } }
 
 foreach ($required in @(
+    'prefer local branch/commit/worktree evidence before remote GitHub when it can answer the question',
+    'query remote issue/PR state only when the remote fact itself is decision-relevant',
+    'Fresh chat/session status alone is not a reason to query GitHub'
+)) { if (-not $agentsText.Contains($required)) { throw "AGENTS WIP lookup rule missing invariant: $required" } }
+
+foreach ($required in @(
     'shared convergence identity',
     'not a worker assignment, lane, reservation, or ownership boundary',
     'Workers may enter, leave, review, integrate, or return to an issue as value and exact-collision safety dictate',
@@ -46,6 +52,10 @@ foreach ($required in @(
 )) { if (-not $identityLine[0].Contains($required)) { throw "identity rule missing invariant: $required" } }
 
 foreach ($required in @(
+    'On a fresh entry, inspect the local target repo branch/HEAD/dirty state and already-provided task/WIP references first',
+    'Query remote issue/PR/current-plan state only when whether matching WIP exists or materially changed is a real decision-relevant unknown',
+    'do not query GitHub merely because the chat is fresh',
+    'do not fetch issue + PR + branch state as a bundle when one source is sufficient',
     'No issue, PR, branch, worktree, or objective is a worker-owned lane or assignment',
     'Busy owns only exact mutation collision',
     'select the next highest-value ready canonical contribution from the owning repo''s open issues / North Star',
@@ -68,6 +78,7 @@ foreach ($required in @(
     'do not wait on that contribution merely to preserve narrative continuity'
 )) { if (-not $manualLine[0].Contains($required)) { throw "manual rule missing invariant: $required" } }
 foreach ($forbidden in @(
+    'on a fresh entry do one bounded reconciliation of the targeted issue/PR/branch/dirty state',
     'no ready canonical issue/North-Star contribution and no safe supported blocker repair/preparation remains',
     'A decision-ready blocker is a valid yield only when no ready in-scope contribution remains',
     'Yield for the failure only when no approved route, no safe blocker repair, and no ready canonical contribution can advance',
