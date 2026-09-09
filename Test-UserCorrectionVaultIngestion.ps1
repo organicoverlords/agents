@@ -1,27 +1,45 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$text = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'AGENTS.md'))
+$agents = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'AGENTS.md'))
 $rules = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
-$line = @($text -split "`r?`n" | Where-Object { $_ -match '^- User-corrected assistant missteps are mandatory local Vault learning\.' })
-if ($line.Count -ne 1) { throw "expected exactly one user-correction Vault ingestion rule; found $($line.Count)" }
+
+$agentLine = @($agents -split "`r?`n" | Where-Object { $_ -match '^- \*\*User corrections are answer-first, not logging-first\.\*\*' })
+if ($agentLine.Count -ne 1) { throw "expected exactly one answer-first user-correction rule; found $($agentLine.Count)" }
 foreach ($required in @(
-  'memory_bank.py record --kind correction',
-  'verbatim correction',
-  'rejected behavior/design',
-  'bounded local durability action only',
-  'do not start a new investigation, GitHub/CI work, remote publication, or adjacent cleanup',
-  'Do not wait for the user to separately ask for memory ingestion',
-  'The literal user signal `slopwall` always qualifies as a correction incident',
-  'record it before returning control',
-  'continue the inherited task with the missing substance',
-  'The literal user signal `asshole`',
-  'lightweight correction event',
-  'tag `asshole`',
-  'add `regression` only when recurrence is evidenced',
-  'smaller than `slopwall`'
+  'immediately reduce the corrected request to the exact proposition/action',
+  'give or execute the corrected result before retrospective explanation or durability work',
+  'Never perform `memory_bank.py record`, Vault writes, issue updates, incident analysis, or similar learning/coordination work merely as a prerequisite to answering the correction',
+  'The literal signals `slopwall` and `asshole` do not change this ordering',
+  'If direct proof is unavailable, report `UNKNOWN`',
+  'optional secondary durability only',
+  'it must not create an extra tool round trip, delay the corrected answer, broaden scope, or replace the inherited task'
 )) {
-  if (-not $line[0].Contains($required)) { throw "user-correction ingestion rule missing invariant: $required" }
+  if (-not $agentLine[0].Contains($required)) { throw "answer-first correction rule missing invariant: $required" }
 }
-if ($rules -notmatch '(?m)^- `slopwall` is a user correction marker\.') { throw 'canonical RULES.md slopwall correction marker missing' }
-if ($rules -notmatch '(?m)^- `asshole`, when the user uses it as a direct correction') { throw 'canonical RULES.md asshole correction definition missing' }
-[ordered]@{ok=$true; correction_ingestion_rule_present=$true; literal_slopwall_trigger_present=$true; canonical_slopwall_marker_present=$true; asshole_trigger_present=$true; canonical_asshole_definition_present=$true; local_only=$true; scope_expansion_forbidden=$true} | ConvertTo-Json -Compress
+foreach ($required in @(
+  '`slopwall` is a user correction marker. **Correction handling is answer-first:**',
+  'give/execute the corrected result before any retrospective explanation, learning record, or process commentary',
+  'Never make correction logging a prerequisite to returning the corrected answer',
+  'Treat the user''s corrected proposition/request as the immediate objective',
+  'Prove or execute that objective first',
+  'Do not lead with self-analysis, apology, incident narrative, or a description of why the prior answer failed',
+  'it must never block, precede, or replace the corrected result'
+)) {
+  if ($rules.IndexOf($required, [StringComparison]::Ordinal) -lt 0) { throw "RULES answer-first correction invariant missing: $required" }
+}
+foreach ($forbidden in @(
+  'mandatory local Vault learning',
+  'record one compact `memory_bank.py record --kind correction` entry before returning control',
+  'record it before returning control',
+  'save one compact Vault correction containing the verbatim user signal'
+)) {
+  if ($agents.Contains($forbidden) -or $rules.Contains($forbidden)) { throw "stale logging-first correction behavior remains: $forbidden" }
+}
+[ordered]@{
+  ok = $true
+  corrected_result_precedes_retrospective = $true
+  correction_logging_not_prerequisite = $true
+  unknown_required_when_unproved = $true
+  slopwall_answer_first = $true
+  asshole_answer_first = $true
+} | ConvertTo-Json -Compress
