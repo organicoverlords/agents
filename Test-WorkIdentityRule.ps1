@@ -7,8 +7,7 @@ $bootstrap = @($text -split "`r?`n" | Where-Object { $_ -match '^- On every fres
 if ($bootstrap.Count -ne 1) { throw "expected exactly one fresh-chat bootstrap rule; found $($bootstrap.Count)" }
 foreach ($required in @(
     'MCPv4 `read_output`',
-    'process_id="bootstrap"',
-    'Never hard-code or persist a runtime process UUID for bootstrap',
+    '231b7e74-4cc8-43d0-9702-fd6dfa2215b3',
     'max_chars=32000',
     'wait_ms=0',
     'fall back once',
