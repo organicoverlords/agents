@@ -7,6 +7,7 @@ foreach ($required in @(
     'function Get-CurrentLaunchRepeatedSessionConflict',
     'function Get-CurrentLaunchRepeatedCancellationStorm',
     'function Get-CurrentLaunchDisconnectedReadyListener',
+    'function Get-CurrentLaunchPreReadyNoLogStall',
     '$brokerBackoffMinimumSeconds = 300',
     '$brokerBackoffPostJobGraceSeconds = 15',
     '$sessionConflictMinimumCount = 3',
@@ -17,6 +18,8 @@ foreach ($required in @(
     '$cancellationStormMaximumAgeSeconds = 15',
     '$disconnectedReadyMinimumAgeSeconds = 120',
     '$disconnectedReadyProbeIntervalSeconds = 30',
+    '$preReadyNoLogMinimumAgeSeconds = 300',
+    '$preReadyNoLogProbeIntervalSeconds = 30',
     '$brokerSessionReleaseSeconds = 210',
     'if ($observedAt -lt $LaunchStartedUtc.AddSeconds(-1)) { continue }',
     'if ($workers.Count -gt 0) { continue }',
@@ -24,6 +27,7 @@ foreach ($required in @(
     'GITHUB_RUNNER_SESSION_CONFLICT_RECOVERY=',
     'GITHUB_RUNNER_CANCELLATION_STORM_RECOVERY=',
     'GITHUB_RUNNER_DISCONNECTED_READY_RECOVERY=',
+    'GITHUB_RUNNER_PRE_READY_NO_LOG_RECOVERY=',
     'MSFT_NetTCPConnection',
     'GITHUB_RUNNER_BROKER_SESSION_RELEASE_WAIT=',
     'Start-Sleep -Seconds $brokerSessionReleaseSeconds',
@@ -97,6 +101,13 @@ $disconnectedReadyDetector = $ast.Find({
 }, $true)
 if (-not $disconnectedReadyDetector) { throw 'disconnected-ready detector AST missing' }
 Invoke-Expression $disconnectedReadyDetector.Extent.Text
+$preReadyNoLogDetector = $ast.Find({
+    param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Get-CurrentLaunchPreReadyNoLogStall'
+}, $true)
+if (-not $preReadyNoLogDetector) { throw 'pre-ready no-log detector AST missing' }
+Invoke-Expression $preReadyNoLogDetector.Extent.Text
 
 $backoffFixtureRoot = Join-Path $env:TEMP ('github-runner-backoff-test-' + [guid]::NewGuid().ToString('N'))
 $backoffDiagRoot = Join-Path $backoffFixtureRoot '_diag'
@@ -265,6 +276,53 @@ try {
 }
 finally {
     Remove-Item -LiteralPath $disconnectedFixtureRoot -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+
+$preReadyFixtureRoot = Join-Path $env:TEMP ('github-runner-pre-ready-no-log-test-' + [guid]::NewGuid().ToString('N'))
+$preReadyDiagRoot = Join-Path $preReadyFixtureRoot '_diag'
+New-Item -ItemType Directory -Path $preReadyDiagRoot -Force | Out-Null
+$script:disconnectedReadyListeners = @([pscustomobject]@{ ProcessId = 5252; ParentProcessId = 6060 })
+try {
+    $now = [datetime]::UtcNow
+    $stalled = Get-CurrentLaunchPreReadyNoLogStall -Root $preReadyFixtureRoot -LaunchStartedUtc $now.AddSeconds(-320) -MinimumLaunchAgeSeconds 300 -HelperPid 6060
+    if (-not $stalled -or $stalled.ListenerPid -ne 5252 -or $stalled.HelperPid -ne 6060 -or $stalled.LaunchAgeSeconds -lt 300) {
+        throw 'current-helper listener with no current-launch runner log after grace was not detected'
+    }
+
+    $withinPreReadyGrace = Get-CurrentLaunchPreReadyNoLogStall -Root $preReadyFixtureRoot -LaunchStartedUtc $now.AddSeconds(-120) -MinimumLaunchAgeSeconds 300 -HelperPid 6060
+    if ($withinPreReadyGrace) { throw 'pre-ready listener inside startup grace must not trigger recovery' }
+
+    $currentLog = Join-Path $preReadyDiagRoot 'Runner_current.log'
+    [IO.File]::WriteAllLines($currentLog, @('[fixture] current launch made diagnostic progress'), [Text.UTF8Encoding]::new($false))
+    (Get-Item -LiteralPath $currentLog).LastWriteTimeUtc = [datetime]::UtcNow
+    $withCurrentLog = Get-CurrentLaunchPreReadyNoLogStall -Root $preReadyFixtureRoot -LaunchStartedUtc $now.AddSeconds(-320) -MinimumLaunchAgeSeconds 300 -HelperPid 6060
+    if ($withCurrentLog) { throw 'any current-launch Runner diagnostic log must suppress pre-ready no-log recovery' }
+    Remove-Item -LiteralPath $currentLog -Force
+
+    $historicalLog = Join-Path $preReadyDiagRoot 'Runner_historical.log'
+    [IO.File]::WriteAllLines($historicalLog, @('[fixture] historical runner log'), [Text.UTF8Encoding]::new($false))
+    (Get-Item -LiteralPath $historicalLog).LastWriteTimeUtc = $now.AddSeconds(-600)
+    $withHistoricalOnly = Get-CurrentLaunchPreReadyNoLogStall -Root $preReadyFixtureRoot -LaunchStartedUtc $now.AddSeconds(-320) -MinimumLaunchAgeSeconds 300 -HelperPid 6060
+    if (-not $withHistoricalOnly) { throw 'historical runner logs must not hide a current pre-ready no-log stall' }
+
+    $script:disconnectedReadyListeners = @([pscustomobject]@{ ProcessId = 5252; ParentProcessId = 9999 })
+    $foreignHelper = Get-CurrentLaunchPreReadyNoLogStall -Root $preReadyFixtureRoot -LaunchStartedUtc $now.AddSeconds(-320) -MinimumLaunchAgeSeconds 300 -HelperPid 6060
+    if ($foreignHelper) { throw 'listener not owned by the current helper must not trigger recovery' }
+
+    $script:disconnectedReadyListeners = @()
+    $missingPreReadyListener = Get-CurrentLaunchPreReadyNoLogStall -Root $preReadyFixtureRoot -LaunchStartedUtc $now.AddSeconds(-320) -MinimumLaunchAgeSeconds 300 -HelperPid 6060
+    if ($missingPreReadyListener) { throw 'missing current listener must not trigger pre-ready no-log recovery' }
+
+    $script:disconnectedReadyListeners = @(
+        [pscustomobject]@{ ProcessId = 5252; ParentProcessId = 6060 },
+        [pscustomobject]@{ ProcessId = 5253; ParentProcessId = 6060 }
+    )
+    $multiplePreReadyListeners = Get-CurrentLaunchPreReadyNoLogStall -Root $preReadyFixtureRoot -LaunchStartedUtc $now.AddSeconds(-320) -MinimumLaunchAgeSeconds 300 -HelperPid 6060
+    if ($multiplePreReadyListeners) { throw 'multiple same-root listeners must fail open without pre-ready no-log recycle' }
+}
+finally {
+    Remove-Item -LiteralPath $preReadyFixtureRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 if ($wrapper.Contains('taskkill /IM Runner.Listener.exe')) {
