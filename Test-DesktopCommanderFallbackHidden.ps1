@@ -8,6 +8,9 @@ foreach ($needle in @(
     '$startInfo.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden',
     '@wonderwhy-er/desktop-commander@latest remote',
     '[switch]$ReadyProbe',
+    '[switch]$TreeCleanupProbe',
+    'JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE',
+    '[DesktopCommanderProcessJob]::Assign',
     '[switch]$AllowInteractiveAuthorization',
     'DESKTOP_COMMANDER_PERSISTED_SESSION_REQUIRED'
 )) {
@@ -28,6 +31,55 @@ if (@($result.visible_processes).Count -ne 0) {
     throw "DESKTOP_COMMANDER_HIDDEN_PROBE_VISIBLE=$output"
 }
 Write-Output "PASS DesktopCommanderFallback hidden probe processes=$($result.observed_process_count)"
+$treeProbeOut = Join-Path ([IO.Path]::GetTempPath()) ("desktop-commander-tree-probe-" + [Guid]::NewGuid().ToString('N') + '.out')
+$treeProbeErr = $treeProbeOut + '.err'
+$treeProbe = $null
+$treeChildPid = $null
+try {
+    $treeProbe = Start-Process powershell.exe -ArgumentList @(
+        '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden',
+        '-File', ('"' + $launcher + '"'), '-TreeCleanupProbe'
+    ) -RedirectStandardOutput $treeProbeOut -RedirectStandardError $treeProbeErr -WindowStyle Hidden -PassThru
+
+    $deadline = (Get-Date).AddSeconds(10)
+    $probePayload = $null
+    do {
+        Start-Sleep -Milliseconds 100
+        if (Test-Path -LiteralPath $treeProbeOut) {
+            $rawContent = Get-Content -LiteralPath $treeProbeOut -Raw -ErrorAction SilentlyContinue
+            $raw = if ($null -eq $rawContent) { '' } else { ([string]$rawContent).Trim() }
+            if ($raw) {
+                try { $probePayload = $raw | ConvertFrom-Json } catch {}
+            }
+        }
+    } while (-not $probePayload -and (Get-Date) -lt $deadline -and -not $treeProbe.HasExited)
+
+    if (-not $probePayload -or $probePayload.status -ne 'RUNNING') {
+        $errText = if (Test-Path $treeProbeErr) { Get-Content -Raw $treeProbeErr } else { '' }
+        throw "DESKTOP_COMMANDER_TREE_PROBE_START_FAILED out=$raw err=$errText exit=$($treeProbe.ExitCode)"
+    }
+    $treeChildPid = [int]$probePayload.child_pid
+    if (-not (Get-Process -Id $treeChildPid -ErrorAction SilentlyContinue)) {
+        throw "DESKTOP_COMMANDER_TREE_PROBE_CHILD_MISSING=$treeChildPid"
+    }
+
+    Stop-Process -Id $treeProbe.Id -Force
+    $treeProbe.WaitForExit(5000) | Out-Null
+    $childDeadline = (Get-Date).AddSeconds(5)
+    do {
+        Start-Sleep -Milliseconds 100
+        $childAlive = Get-Process -Id $treeChildPid -ErrorAction SilentlyContinue
+    } while ($childAlive -and (Get-Date) -lt $childDeadline)
+    if ($childAlive) {
+        throw "DESKTOP_COMMANDER_TREE_CLEANUP_FAILED child_pid=$treeChildPid"
+    }
+}
+finally {
+    if ($treeProbe -and -not $treeProbe.HasExited) { Stop-Process -Id $treeProbe.Id -Force -ErrorAction SilentlyContinue }
+    if ($treeChildPid) { Stop-Process -Id $treeChildPid -Force -ErrorAction SilentlyContinue }
+    Remove-Item -LiteralPath $treeProbeOut,$treeProbeErr -Force -ErrorAction SilentlyContinue
+}
+Write-Output "PASS DesktopCommanderFallback forced wrapper termination cleans child tree"
 
 
 $originalProfile = $env:USERPROFILE
