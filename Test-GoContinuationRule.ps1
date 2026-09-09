@@ -13,7 +13,8 @@ $identityLine = @($lines | Where-Object { $_ -match '^- The issue/task is a \*\*
 $wipLine = @($lines | Where-Object { $_ -match '^- Existing coherent WIP wins by default' })
 $blockerLine = @($lines | Where-Object { $_ -match '^- A constrained tool, build, CI job, lane, checkout, worktree, or exact Busy scope blocks only that exact action;' })
 $manualLine = @($lines | Where-Object { $_ -match '^- For manual/on-demand chats, especially `go`/`continue`,' })
-foreach ($pair in @(@('request-fidelity',$requestLine),@('yield-audit',$yieldAuditLine),@('poll',$pollLine),@('identity',$identityLine),@('wip',$wipLine),@('blocker',$blockerLine),@('manual',$manualLine))) {
+$rebootLine = @($lines | Where-Object { $_ -match '^- \*\*MACHINE REBOOT/RESTART IS EXPLICIT-ONLY\.\*\*' })
+foreach ($pair in @(@('request-fidelity',$requestLine),@('yield-audit',$yieldAuditLine),@('poll',$pollLine),@('identity',$identityLine),@('wip',$wipLine),@('blocker',$blockerLine),@('manual',$manualLine),@('reboot',$rebootLine))) {
     if ($pair[1].Count -ne 1) { throw "expected exactly one $($pair[0]) rule; found $($pair[1].Count)" }
 }
 foreach ($required in @(
@@ -77,6 +78,12 @@ foreach ($required in @(
     'move to a different ready issue/North-Star contribution',
     'do not wait on that contribution merely to preserve narrative continuity'
 )) { if (-not $manualLine[0].Contains($required)) { throw "manual rule missing invariant: $required" } }
+foreach ($required in @(
+    '`go`, `continue`, debugging permission, issue/Busy ownership, generic `fix`, update installation, or a reboot-required state never authorizes rebooting or restarting a machine',
+    'requires explicit user wording that unambiguously authorizes restarting that specific machine now',
+    'if the current machine routes depend on an interactive login or otherwise cannot recover unattended, that is a restart safety constraint, not implied authorization',
+    'must not be promoted into proof that reboot is the correct diagnostic or repair action'
+)) { if (-not $rebootLine[0].Contains($required)) { throw "reboot authorization rule missing invariant: $required" } }
 foreach ($forbidden in @(
     'on a fresh entry do one bounded reconciliation of the targeted issue/PR/branch/dirty state',
     'no ready canonical issue/North-Star contribution and no safe supported blocker repair/preparation remains',
@@ -99,4 +106,6 @@ foreach ($forbidden in @(
     manual_go_pre_final_yield_audit_required = $true
     elapsed_time_never_stop_evidence = $true
     scope_exhaustion_stop_forbidden = $true
+    generic_go_never_authorizes_reboot = $true
+    explicit_machine_restart_required = $true
 } | ConvertTo-Json -Compress

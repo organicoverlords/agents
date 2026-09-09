@@ -2,7 +2,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $rulesPath = Join-Path $PSScriptRoot 'RULES.md'
+$agentsPath = Join-Path $PSScriptRoot 'AGENTS.md'
 $text = [IO.File]::ReadAllText($rulesPath)
+$agentsText = [IO.File]::ReadAllText($agentsPath)
 $bootstrap = @($text -split "`r?`n" | Where-Object { $_ -match '^- On a fresh chat that materially needs machine state, \*\*route eligibility precedes bootstrap\*\*' })
 if ($bootstrap.Count -ne 1) { throw "expected exactly one fresh-chat bootstrap rule; found $($bootstrap.Count)" }
 foreach ($required in @(
@@ -47,12 +49,31 @@ foreach ($required in @(
 if ($text.Contains('On every fresh chat, the first machine action is MCPv4 `read_output`')) { throw 'fresh-chat routing regressed to circular MCPv4-first bootstrap' }
 if ($text.Contains('mandatory fresh-chat bootstrap')) { throw 'fresh-chat bootstrap incorrectly remains universally mandatory' }
 if ($bootstrap[0].Contains('process_id="bootstrap"') -or $bootstrap[0].Contains('Never hard-code or persist a runtime process UUID for bootstrap')) { throw 'fresh-chat bootstrap rule reverted to obsolete alias semantics' }
+$issueFirstLine = @($text -split "`r?`n" | Where-Object { $_ -match '^- \*\*Material swarm work is issue-first, not issue-everything\.\*\*' })
+if ($issueFirstLine.Count -ne 1) { throw "expected exactly one material issue-first rule; found $($issueFirstLine.Count)" }
+foreach ($required in @(
+    'material, actionable idea, problem, fix, plan, regression, blocker, or improvement',
+    'smallest decision-relevant duplicate/owner check',
+    'create or reuse one canonical GitHub issue before deeper implementation work when no durable owner exists',
+    'One coherent outcome gets one issue',
+    'observations, hypotheses, measurements, sub-findings, and implementation notes stay inside that issue unless they become independently actionable outcomes',
+    'Do not turn this into broad GitHub enumeration, startup ceremony, or issue spam',
+    'initial shaping through diagnosis/design, patch/PR, validation, integration, and live proof or explicit disproval/supersession'
+)) { if (-not $issueFirstLine[0].Contains($required)) { throw "issue-first rule missing invariant: $required" } }
+foreach ($required in @(
+    'Material work gets a durable owner early',
+    'This is not issue-per-observation',
+    'idea/problem through design/diagnosis, patch/PR, validation, integration, and live proof or explicit disproval/supersession'
+)) { if (-not $agentsText.Contains($required)) { throw "AGENTS issue lifecycle missing invariant: $required" } }
 if ($text.Contains('The issue/task is the work identity.')) { throw 'legacy issue-as-worker-lane identity remains' }
 [ordered]@{
     ok = $true
     bounded_local_work_avoids_issue_ritual = $true
     issue_is_shared_convergence_not_assignment = $true
     targeted_issue_identity_when_needed = $true
+    material_swarm_work_issue_first = $true
+    issue_spam_forbidden = $true
+    lifecycle_reaches_live_proof = $true
     cross_issue_north_star_selection = $true
     disjoint_contributions_remain_parallel = $true
     bootstrap_uses_persistent_process_id = $true
