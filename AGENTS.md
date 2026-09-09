@@ -1,6 +1,8 @@
 # Shared agent work contract
 
-Shared contract version: 34
+Shared contract version: 35
+
+- **Shared-rule serving convergence is one-minute maximum.** `C:\Users\Lauri\.agents` must be checked against `origin/main` at least once per minute by the installed headless `AgentRulesCheckoutSync` task. The task may only use the fail-closed default `Sync-AgentRulesCheckout.ps1` path: clean-behind may fast-forward; dirty, ahead, diverged, wrong-branch, or error states remain untouched for explicit attribution/repair. Never stretch this cadence to batch convenience, and never put Git fetch/convergence inside bootstrap itself.
 
 Every agent uses this same repo-work contract. Local repo `AGENTS.md`/`CLAUDE.md` files only point here and to `RULES.md`.
 

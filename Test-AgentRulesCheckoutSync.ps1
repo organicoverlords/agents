@@ -11,10 +11,20 @@ foreach ($required in @(
     '`coherent` is false, run `C:\Users\Lauri\.agents\Sync-AgentRulesCheckout.ps1` once',
     'An exact `head_matches_remote_main` false value while `coherent` is true is diagnostic cache-lag evidence only and does not require sync',
     'once before selecting repo work or relying on the serving checkout for current shared behavior',
-    'Do not add Git fetch/convergence work inside bootstrap itself, create a watcher/scheduler',
+    'Shared-rule serving convergence is one-minute maximum',
+    '`AgentRulesCheckoutSync` task',
+    'at least once per minute',
     'separate worktree based on current `origin/main`',
     'preserves the exact index/worktree on a local `preserve/agents-live-*` branch')) {
     if (-not $agents.Contains($required)) { throw "AGENTS serving-checkout rule missing invariant: $required" }
+}
+
+
+$installer = Join-Path $PSScriptRoot 'Install-AgentRulesCheckoutSyncTask.ps1'
+if (-not (Test-Path -LiteralPath $installer)) { throw 'Install-AgentRulesCheckoutSyncTask.ps1 missing' }
+$installerText = [IO.File]::ReadAllText($installer)
+foreach ($required in @('[int]$IntervalMinutes = 1', 'if ($IntervalMinutes -lt 1)', "'AgentRulesCheckoutSync'", '-WindowStyle Hidden', '-RunLevel Limited')) {
+    if (-not $installerText.Contains($required)) { throw "rule-sync installer invariant missing: $required" }
 }
 
 function Invoke-Git {
