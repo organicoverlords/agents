@@ -3,22 +3,26 @@ $ErrorActionPreference = 'Stop'
 
 $rulesPath = Join-Path $PSScriptRoot 'RULES.md'
 $text = [IO.File]::ReadAllText($rulesPath)
-$bootstrap = @($text -split "`r?`n" | Where-Object { $_ -match '^- On every fresh chat, the first machine action is' })
+$bootstrap = @($text -split "`r?`n" | Where-Object { $_ -match '^- On a fresh chat that materially needs machine state, \*\*route eligibility precedes bootstrap\*\*' })
 if ($bootstrap.Count -ne 1) { throw "expected exactly one fresh-chat bootstrap rule; found $($bootstrap.Count)" }
 foreach ($required in @(
+    'route eligibility precedes bootstrap',
     'MCPv4 `read_output`',
     '231b7e74-4cc8-43d0-9702-fd6dfa2215b3',
     'max_chars=32000',
     'wait_ms=0',
-    'fall back once',
-    'stack_atlas.py bootstrap-glance'
+    'skip that MCPv4 bootstrap read',
+    'stack_atlas.py bootstrap-glance',
+    'If no usable route can obtain bootstrap'
 )) {
     if (-not $bootstrap[0].Contains($required)) { throw "fresh-chat bootstrap rule missing invariant: $required" }
 }
-$orientation = @($text -split "`r?`n" | Where-Object { $_ -match '^- After the mandatory fresh-chat bootstrap' })
+$orientation = @($text -split "`r?`n" | Where-Object { $_ -match '^- After a fresh-chat bootstrap snapshot is obtained' })
 if ($orientation.Count -ne 1) { throw "expected exactly one follow-up orientation rule; found $($orientation.Count)" }
 foreach ($required in @(
     'do not automatically rerun bootstrap for every follow-up or subtask',
+    'If bootstrap could not be obtained because no usable route existed',
+    'do not manufacture a bootstrap prerequisite later in the task',
     'A bounded local request such as reading, writing, or updating a specific Vault artifact does not by itself authorize or require GitHub',
     'one known/targeted issue/PR identity when needed',
     'Never turn task orientation into broad fanout or recurring refresh ceremony'
@@ -40,6 +44,8 @@ foreach ($required in @(
 )) {
     if (-not $identityLine[0].Contains($required)) { throw "shared work identity rule missing invariant: $required" }
 }
+if ($text.Contains('On every fresh chat, the first machine action is MCPv4 `read_output`')) { throw 'fresh-chat routing regressed to circular MCPv4-first bootstrap' }
+if ($text.Contains('mandatory fresh-chat bootstrap')) { throw 'fresh-chat bootstrap incorrectly remains universally mandatory' }
 if ($bootstrap[0].Contains('process_id="bootstrap"') -or $bootstrap[0].Contains('Never hard-code or persist a runtime process UUID for bootstrap')) { throw 'fresh-chat bootstrap rule reverted to obsolete alias semantics' }
 if ($text.Contains('The issue/task is the work identity.')) { throw 'legacy issue-as-worker-lane identity remains' }
 [ordered]@{
