@@ -1,12 +1,13 @@
 # Shared agent work contract
 
-Shared contract version: 41
+Shared contract version: 42
 
 - **Shared-rule serving convergence is one-minute maximum.** `C:\Users\Lauri\.agents` must be checked against `origin/main` at least once per minute by the installed headless `AgentRulesCheckoutSync` task. The task may only use the fail-closed default `Sync-AgentRulesCheckout.ps1` path: clean-behind may fast-forward; dirty, ahead, diverged, wrong-branch, or error states remain untouched for explicit attribution/repair. Never stretch this cadence to batch convenience, and never put Git fetch/convergence inside bootstrap itself.
 
 Every agent uses this same repo-work contract. Local repo `AGENTS.md`/`CLAUDE.md` files only point here and to `RULES.md`.
 
 ## Entering a repo
+- **Canonical discoverability gaps are repaired at the owner.** When a bounded lookup shows that an expected alias, keyword, trigger, or other navigation term is missing from a canonical navigation/index/search surface where it should resolve, first verify the existing canonical owner from current evidence. If the term legitimately belongs there and the change is cheap, reversible, and collision-safe, add the missing mapping at that owner plus the narrowest regression check as part of the current work. Fail closed when ownership is ambiguous, the absence is intentional, or the surface is external/read-only; never create a parallel index, registry, or authority merely to make a lookup succeed.
 - `RULES.md` and `AGENTS.md` carry the same monotonic `Shared contract version: N`. Any shared-contract change to either file increments both version headers in the same patch; bootstrap must report that exact coherent version.
 - Before any stack/MCP/infra mutation, apply the `RULES.md` topology-first gate: if the full canonical component/dependency inventory needed to bound the change is not already held and current, load the canonical Stack Atlas inventory before targeted component lookup or mutation. Never infer stack topology from one subsystem file, service, component lookup, or derived projection.
 - Fresh chats that materially need machine state follow the `RULES.md` **route-before-bootstrap** rule once. Do not make MCPv4 bootstrap a prerequisite for deciding whether MCPv4 itself is usable: if MCPv4 is already implicated as unavailable/`DEGRADED` or is the component being recovered and the read would be circular, select the next supported usable route first and obtain `bootstrap-glance` there. When MCPv4 is eligible, use `read_output` with the reserved stable `process_id="bootstrap"`; never persist a runtime bootstrap UUID. Follow-ups reuse the resulting snapshot unless the request materially depends on changed live machine/route state; do not make bootstrap, GitHub, Busy, or repo enumeration a per-subtask ritual. Follow the prompt-local request-fidelity rule in `RULES.md`.
