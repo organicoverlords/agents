@@ -1,6 +1,6 @@
 # Shared behavior rules
 
-Shared contract version: 31
+Shared contract version: 32
 
 These rules apply to every agent and every repository on this machine. Local `AGENTS.md`, `CLAUDE.md`, and equivalents are pointer-only and do not add policy.
 
