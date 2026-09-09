@@ -80,6 +80,28 @@ try {
     if ($ff.Code -ne 0 -or $ff.Data.status -ne 'FAST_FORWARDED') { throw "clean fast-forward failed: $($ff.Output -join "`n")" }
     if ((Invoke-Git $live @('rev-parse','HEAD')) -ne (Invoke-Git $seed @('rev-parse','HEAD'))) { throw 'clean fast-forward did not reach remote head' }
 
+    Invoke-Git $live @('switch','-c','feature/wrong-serving-branch') | Out-Null
+    [IO.File]::WriteAllText((Join-Path $live 'feature-only.txt'),"durable-feature`n")
+    Invoke-Git $live @('add','feature-only.txt') | Out-Null
+    Invoke-Git $live @('commit','-m','feature branch') | Out-Null
+    $featureHead = Invoke-Git $live @('rev-parse','HEAD')
+    [IO.File]::WriteAllText((Join-Path $live 'feature-only.txt'),"dirty-feature`n")
+
+    $wrongDirty = Invoke-Sync $live -Repair
+    if ($wrongDirty.Code -eq 0 -or $wrongDirty.Data.status -ne 'WRONG_BRANCH_DIRTY_BLOCKED') { throw "dirty wrong-branch repair did not fail closed: $($wrongDirty.Output -join "`n")" }
+    if ((Invoke-Git $live @('rev-parse','--abbrev-ref','HEAD')) -ne 'feature/wrong-serving-branch') { throw 'dirty wrong-branch repair switched branches' }
+    Invoke-Git $live @('restore','feature-only.txt') | Out-Null
+
+    $wrong = Invoke-Sync $live
+    if ($wrong.Code -eq 0 -or $wrong.Data.status -ne 'WRONG_BRANCH') { throw "wrong-branch default did not fail closed: $($wrong.Output -join "`n")" }
+    if ((Invoke-Git $live @('rev-parse','--abbrev-ref','HEAD')) -ne 'feature/wrong-serving-branch') { throw 'default wrong-branch check switched branches' }
+
+    $wrongRepaired = Invoke-Sync $live -Repair
+    if ($wrongRepaired.Code -ne 0 -or $wrongRepaired.Data.status -ne 'WRONG_BRANCH_REPAIRED') { throw "clean wrong-branch repair failed: $($wrongRepaired.Output -join "`n")" }
+    if ((Invoke-Git $live @('rev-parse','--abbrev-ref','HEAD')) -ne 'main') { throw 'wrong-branch repair did not restore main' }
+    if ((Invoke-Git $live @('rev-parse','HEAD')) -ne (Invoke-Git $seed @('rev-parse','HEAD'))) { throw 'wrong-branch repair did not restore current remote main' }
+    if ((Invoke-Git $live @('rev-parse','feature/wrong-serving-branch')) -ne $featureHead) { throw 'wrong-branch repair lost the feature branch commit' }
+
     [IO.File]::WriteAllText((Join-Path $seed 'AGENTS.md'),"remote-v3`n")
     [IO.File]::WriteAllText((Join-Path $seed 'remote-only.txt'),"remote-only`n")
     Invoke-Git $seed @('add','-A') | Out-Null
