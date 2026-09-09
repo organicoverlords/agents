@@ -30,7 +30,12 @@ foreach ($required in @(
     'A stale source cannot disprove a fresher source about the same current state',
     'a current source cannot erase a historical event proved for an earlier interval',
     'If the contradiction cannot be resolved from authoritative evidence, answer `UNKNOWN` or explicitly `CONFLICT`',
-    'never manufacture one truth from unresolved disagreement'
+    'never manufacture one truth from unresolved disagreement',
+    'Entailment strength must never increase in the answer',
+    'direct `OBSERVED`, logically `ENTAILED`',
+    'An inference, hypothesis, likely explanation, correlation, or temporal ordering must not be worded as observed/proven fact',
+    'Never convert sequence into causality, replacement into downtime, process disappearance into a kill by a particular actor',
+    'answer `UNKNOWN` for that stronger proposition even when weaker adjacent facts are known'
 )) {
     if ($rules.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "RULES missing exact-fact proof invariant: $required" }
 }
@@ -49,7 +54,10 @@ foreach ($required in @(
     'Apply the shared **contradiction-reconciliation gate** whenever relevant evidence disagrees',
     'Derived snapshots accelerate retrieval but never gain authority over their origin',
     'Do not hide a contradiction by citing only one side',
-    'report `UNKNOWN`/`CONFLICT` with the scoped competing facts'
+    'report `UNKNOWN`/`CONFLICT` with the scoped competing facts',
+    'Preserve **entailment strength** in factual answers',
+    'Do not promote `INFERRED` conclusions to `OBSERVED`/`ENTAILED` facts',
+    'For stronger yes/no propositions that remain unproved, answer `UNKNOWN` first'
 )) {
     if ($agents.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "AGENTS missing exact-fact proof invariant: $required" }
 }
