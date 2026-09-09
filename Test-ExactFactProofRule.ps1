@@ -35,7 +35,14 @@ foreach ($required in @(
     'direct `OBSERVED`, logically `ENTAILED`',
     'An inference, hypothesis, likely explanation, correlation, or temporal ordering must not be worded as observed/proven fact',
     'Never convert sequence into causality, replacement into downtime, process disappearance into a kill by a particular actor',
-    'answer `UNKNOWN` for that stronger proposition even when weaker adjacent facts are known'
+    'answer `UNKNOWN` for that stronger proposition even when weaker adjacent facts are known',
+    'Observation-channel failure is not target-state evidence',
+    'establishes `OBSERVATION_FAILED` for that measurement attempt',
+    'It does not establish that the target service/process/file/event is down, exited, missing, absent, unchanged, or never happened',
+    'Do not convert `read_output` disconnect into process exit',
+    'an empty search into nonexistence',
+    'if no independent proof is available, answer `UNKNOWN` and distinguish the failed observation channel from the target state',
+    'Repeating the same failed probe does not strengthen the target-state claim'
 )) {
     if ($rules.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "RULES missing exact-fact proof invariant: $required" }
 }
@@ -57,7 +64,10 @@ foreach ($required in @(
     'report `UNKNOWN`/`CONFLICT` with the scoped competing facts',
     'Preserve **entailment strength** in factual answers',
     'Do not promote `INFERRED` conclusions to `OBSERVED`/`ENTAILED` facts',
-    'For stronger yes/no propositions that remain unproved, answer `UNKNOWN` first'
+    'For stronger yes/no propositions that remain unproved, answer `UNKNOWN` first',
+    'Keep **observation-channel state separate from target state**',
+    'Tool/transport/query failure is `OBSERVATION_FAILED`, not evidence that the target is dead/missing/absent',
+    'Never use repeated identical probe failures as accumulating proof'
 )) {
     if ($agents.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "AGENTS missing exact-fact proof invariant: $required" }
 }
