@@ -18,7 +18,12 @@ foreach ($required in @(
     'Answer the exact fact before explanation or retrospective commentary',
     'Verify **proposition-appropriate evidence** before status claims',
     'historical, continuity, outage, restart, or “at any point” claims require lifecycle/interval evidence covering the requested window',
-    'Never answer a historical-status question from a current snapshot'
+    'Never answer a historical-status question from a current snapshot',
+    'Evidence retrieval precedes clarification',
+    'Do not ask the user to supply identifiers, filenames, process IDs, issue/PR numbers, timestamps, historical keywords, or other evidence locators',
+    'Ask at most one targeted clarifying question only when two or more materially different propositions remain',
+    'Tool/source uncertainty is not user ambiguity',
+    'Never turn factual verification into an interrogation loop'
 )) {
     if ($rules.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "RULES missing exact-fact proof invariant: $required" }
 }
@@ -29,7 +34,11 @@ foreach ($required in @(
     'never substitute current liveness for historical continuity',
     'never substitute process existence for route usability',
     'never substitute test/merge state for deployed runtime behavior',
-    'report `UNKNOWN` rather than answering a nearby easier question'
+    'report `UNKNOWN` rather than answering a nearby easier question',
+    'Apply **evidence-before-clarification** to factual work',
+    'Resolve evidence locators from the conversation and available tools rather than asking the user to repeat discoverable facts',
+    'Ask no more than one targeted clarification',
+    'A clear proposition with unavailable proof yields `UNKNOWN`'
 )) {
     if ($agents.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "AGENTS missing exact-fact proof invariant: $required" }
 }
