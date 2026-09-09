@@ -2,6 +2,7 @@
 param(
     [switch]$Probe,
     [switch]$ReadyProbe,
+    [switch]$TreeCleanupProbe,
     [switch]$AllowInteractiveAuthorization
 )
 
@@ -50,6 +51,93 @@ if ([string]::IsNullOrWhiteSpace($commandProcessor)) {
 if (-not (Test-Path -LiteralPath $commandProcessor -PathType Leaf)) {
     throw "DESKTOP_COMMANDER_COMMAND_PROCESSOR_MISSING=$commandProcessor"
 }
+if (-not ('DesktopCommanderProcessJob' -as [type])) {
+    Add-Type -TypeDefinition @"
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+
+public static class DesktopCommanderProcessJob
+{
+    [StructLayout(LayoutKind.Sequential)]
+    public struct JOBOBJECT_BASIC_LIMIT_INFORMATION
+    {
+        public long PerProcessUserTimeLimit;
+        public long PerJobUserTimeLimit;
+        public uint LimitFlags;
+        public UIntPtr MinimumWorkingSetSize;
+        public UIntPtr MaximumWorkingSetSize;
+        public uint ActiveProcessLimit;
+        public UIntPtr Affinity;
+        public uint PriorityClass;
+        public uint SchedulingClass;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct IO_COUNTERS
+    {
+        public ulong ReadOperationCount;
+        public ulong WriteOperationCount;
+        public ulong OtherOperationCount;
+        public ulong ReadTransferCount;
+        public ulong WriteTransferCount;
+        public ulong OtherTransferCount;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+    {
+        public JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+        public IO_COUNTERS IoInfo;
+        public UIntPtr ProcessMemoryLimit;
+        public UIntPtr JobMemoryLimit;
+        public UIntPtr PeakProcessMemoryUsed;
+        public UIntPtr PeakJobMemoryUsed;
+    }
+
+    private const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000;
+    private const int JobObjectExtendedLimitInformation = 9;
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr CreateJobObject(IntPtr jobAttributes, string name);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool SetInformationJobObject(IntPtr job, int infoClass, ref JOBOBJECT_EXTENDED_LIMIT_INFORMATION info, uint length);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
+
+    [DllImport("kernel32.dll")]
+    public static extern bool CloseHandle(IntPtr handle);
+
+    public static IntPtr CreateKillOnCloseJob()
+    {
+        IntPtr job = CreateJobObject(IntPtr.Zero, null);
+        if (job == IntPtr.Zero)
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "CreateJobObject failed");
+
+        var info = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
+        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        uint size = (uint)Marshal.SizeOf(typeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
+        if (!SetInformationJobObject(job, JobObjectExtendedLimitInformation, ref info, size))
+        {
+            int error = Marshal.GetLastWin32Error();
+            CloseHandle(job);
+            throw new Win32Exception(error, "SetInformationJobObject failed");
+        }
+        return job;
+    }
+
+    public static void Assign(IntPtr job, IntPtr process)
+    {
+        if (!AssignProcessToJobObject(job, process))
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "AssignProcessToJobObject failed");
+    }
+}
+"@
+}
+
+$script:DesktopCommanderJob = [DesktopCommanderProcessJob]::CreateKillOnCloseJob()
 
 function Start-HiddenChild {
     param(
@@ -67,6 +155,13 @@ function Start-HiddenChild {
     $process.StartInfo = $startInfo
     if (-not $process.Start()) {
         throw "DESKTOP_COMMANDER_HIDDEN_START_FAILED=$FileName"
+    }
+    try {
+        [DesktopCommanderProcessJob]::Assign($script:DesktopCommanderJob, $process.Handle)
+    }
+    catch {
+        try { $process.Kill() } catch {}
+        throw
     }
     return $process
 }
@@ -89,6 +184,16 @@ function Get-DescendantProcessIds {
     return @($result)
 }
 
+if ($TreeCleanupProbe) {
+    $treeProcess = Start-HiddenChild -FileName $commandProcessor -Arguments '/d /s /c "ping -t 127.0.0.1 >nul"'
+    [pscustomobject]@{
+        status = 'RUNNING'
+        child_pid = $treeProcess.Id
+    } | ConvertTo-Json -Compress
+    [Console]::Out.Flush()
+    $treeProcess.WaitForExit()
+    exit $treeProcess.ExitCode
+}
 if ($Probe) {
     $probeProcess = Start-HiddenChild -FileName $commandProcessor -Arguments '/d /s /c "ping -n 4 127.0.0.1 >nul"'
     Start-Sleep -Milliseconds 300
