@@ -23,7 +23,14 @@ foreach ($required in @(
     'Do not ask the user to supply identifiers, filenames, process IDs, issue/PR numbers, timestamps, historical keywords, or other evidence locators',
     'Ask at most one targeted clarifying question only when two or more materially different propositions remain',
     'Tool/source uncertainty is not user ambiguity',
-    'Never turn factual verification into an interrogation loop'
+    'Never turn factual verification into an interrogation loop',
+    'Contradictory evidence is a hard reconciliation gate',
+    'Evidence authority is proposition-specific, not a global source ranking',
+    'event time versus observation time',
+    'A stale source cannot disprove a fresher source about the same current state',
+    'a current source cannot erase a historical event proved for an earlier interval',
+    'If the contradiction cannot be resolved from authoritative evidence, answer `UNKNOWN` or explicitly `CONFLICT`',
+    'never manufacture one truth from unresolved disagreement'
 )) {
     if ($rules.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "RULES missing exact-fact proof invariant: $required" }
 }
@@ -38,7 +45,11 @@ foreach ($required in @(
     'Apply **evidence-before-clarification** to factual work',
     'Resolve evidence locators from the conversation and available tools rather than asking the user to repeat discoverable facts',
     'Ask no more than one targeted clarification',
-    'A clear proposition with unavailable proof yields `UNKNOWN`'
+    'A clear proposition with unavailable proof yields `UNKNOWN`',
+    'Apply the shared **contradiction-reconciliation gate** whenever relevant evidence disagrees',
+    'Derived snapshots accelerate retrieval but never gain authority over their origin',
+    'Do not hide a contradiction by citing only one side',
+    'report `UNKNOWN`/`CONFLICT` with the scoped competing facts'
 )) {
     if ($agents.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "AGENTS missing exact-fact proof invariant: $required" }
 }
