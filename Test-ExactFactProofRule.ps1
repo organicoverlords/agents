@@ -48,7 +48,13 @@ foreach ($required in @(
     'a negative existential (`never`, `none`, `did not happen at any point`), a universal (`all`/`every`), or an exact count requires coverage of the entire relevant domain/interval',
     'Partial enumeration may support only `at least N`',
     'If exhaustive coverage needed by the quantifier is unavailable, answer `UNKNOWN`',
-    'Never use a short current sample to answer `ever/never`'
+    'Never use a short current sample to answer `ever/never`',
+    'Identity layer is part of the proposition',
+    'Distinguish logical service/application identity, individual process instance/PID, listener/endpoint, launcher/supervisor, transport route, authenticated session, worker/caller',
+    'A PID replacement proves process-instance replacement; it does not by itself prove logical-service downtime',
+    'A route disconnect proves route/session observation failure, not service death',
+    'Before claiming `same`, `again`, `restarted`, `replaced`, `died`, `killed`, `remained up`, or continuity across observations, establish the identity mapping',
+    'answer `UNKNOWN` at the requested identity layer'
 )) {
     if ($rules.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "RULES missing exact-fact proof invariant: $required" }
 }
@@ -77,7 +83,11 @@ foreach ($required in @(
     'Preserve **quantifier coverage**',
     'One authoritative witness proves an existential positive (`ever`, `at least one`)',
     'Universal/negative/exact-total claims (`all`, `every`, `none`, `never`, `exactly N`, `how many`) require exhaustive relevant coverage',
-    'Incomplete coverage yields `UNKNOWN` for the total/universal/negative claim'
+    'Incomplete coverage yields `UNKNOWN` for the total/universal/negative claim',
+    'Preserve **identity-layer fidelity**',
+    'Do not use evidence about a PID/process instance to answer a logical-service question',
+    'bind observations to the same stable entity at the identity layer the user asked about',
+    'Missing identity mapping yields `UNKNOWN` at that layer'
 )) {
     if ($agents.IndexOf($required, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw "AGENTS missing exact-fact proof invariant: $required" }
 }
