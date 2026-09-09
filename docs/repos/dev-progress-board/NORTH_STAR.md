@@ -7,9 +7,9 @@ Implementation and WIP are tracked in [Nexus #16](https://github.com/organicover
 ## Mission
 Nexus is the shared operator workspace for understanding and steering development across the whole stack through the existing owning systems. Its job is to make the system understandable and steerable without reconstructing truth across separate dashboards, terminals, issue pages, worker reports, and status tools.
 
-**One graph, many synchronized projections. No shadow truth.**
+**One graph, one primary infinite canvas, no shadow truth.**
 
-The primary experience is one large infinite-zoom canvas. A Trello-style delivery board, inspectors, activity traces, stats, comments, issue/PR detail, milestones, checkpoints, dependencies, evidence, and worker focus are projections of the same underlying objects and authorities rather than separate applications or duplicated state.
+The primary experience is one large infinite-zoom canvas. Trello-like cards and interactions, inspectors, activity traces, stats, comments, issue/PR detail, milestones, checkpoints, dependencies, evidence, and worker focus all converge into that canvas rather than becoming a separate Board application or lane projection.
 
 ## Primary UI contract
 
@@ -20,12 +20,11 @@ The primary experience is one large infinite-zoom canvas. A Trello-style deliver
 - Nodes expose compact status/freshness/activity at distance, hover/focus glance at medium zoom, and a full actionable inspector when opened.
 - Typed edges show dependency, data flow, delivery linkage, proof handoff and current activity associations with source/provenance available on inspection.
 
-### 2. Trello board is a synchronized projection
-- Canvas and Board are views over the same work graph/cards.
-- Board lanes project delivery state (`IDEA`, `SHAPING`, `READY`, `ACTIVE`, `REVIEW`, `PROOF`, `BLOCKED`, `DONE`) and can be filtered by project, milestone, owner/source, freshness and blocker state.
-- Cards remain interactive: open, search/jump, comment/question, inspect issues/PRs, evidence, dependencies, milestones/checkpoints and activity without leaving Nexus.
-- Spatial movement and visual organization are presentation state only.
-- A lane/status mutation that would change authoritative delivery state must go through the owning source adapter with conflict/freshness checks; Nexus must never invent a shadow status.
+### 2. Cards are Trello-like without a Trello board
+- Work remains spatially organized on the infinite canvas.
+- Cards use Trello-like interaction affordances: compact labels/badges, cover/attachment treatment, clear title/body hierarchy, comments/questions, issue/PR links, evidence/checkpoint summaries, blockers/dependencies and quick actions.
+- GitHub delivery state remains GitHub-owned. Nexus may display status/freshness but does not create a second lane/status authority.
+- Spatial card movement is presentation state only.
 
 ### 3. Everything important is inspectable in place
 A selected node/card can expose, in one inspector:
@@ -35,12 +34,12 @@ A selected node/card can expose, in one inspector:
 - acceptance evidence and derived progress;
 - durable checkpoints: branch + immutable commit/PR + validation + next handoff;
 - dependencies/blockers;
-- append-only comments, questions, answers and decisions;
+- bounded human, worker and orchestrator comments/questions/answers/decisions with provenance;
 - attachments/proof links;
 - live worker/session focus and activity traces;
 - relevant stats and freshness timestamps.
 
-The user should not need a separate Stats page for normal operation. `/stats` can remain as a compatibility/deep-diagnostics view, but useful stats belong in the Nexus canvas/board experience.
+The user should not need a separate Stats page for normal operation. `/stats` can remain as a compatibility/deep-diagnostics view, but useful stats belong in the Nexus canvas/card/inspector experience.
 
 ### 4. Activity is visible but never confused with progress
 - Runtime/process evidence owns worker activity/liveness claims.
@@ -50,8 +49,8 @@ The user should not need a separate Stats page for normal operation. `/stats` ca
 - BusyCoordinator scopes may appear as exact mutation/collision context only. They are not worker liveness, scheduling, priority or product progress.
 
 ### 5. Issues, milestones and checkpoints are first-class
-- GitHub issues/PRs remain delivery authority; Nexus projects them live with bounded caching and explicit freshness.
-- GitHub milestones and native parent/sub-issue relationships are navigable from cards and board lanes.
+- GitHub issues/PRs remain delivery authority; Nexus surfaces them live with bounded caching and explicit freshness.
+- GitHub milestones and native parent/sub-issue relationships are navigable from cards/inspectors.
 - A checkpoint is evidence, not a new backlog: it records an immutable WIP boundary (branch/commit/PR), validation performed, blocker/finding and next integration action.
 - North Stars remain product-direction authority and are linked, not copied into competing prose.
 
@@ -63,10 +62,10 @@ Nexus should converge on explicit typed objects/relationships for:
 - **Execution** — worker/session, process/run, machine, worktree, focus/activity event.
 - **Evidence** — acceptance row, test/proof result, artifact or authoritative observation.
 - **Checkpoint** — immutable handoff boundary and validation state.
-- **Comment/Decision** — durable human/agent interaction history.
+- **Comment/Decision** — durable human/agent interaction history with source/provenance.
 - **Edge** — typed relationship between the above with provenance/freshness.
 
-Views may cache/project these objects, but must not create a competing authority.
+Views may cache/display these objects, but must not create a competing authority.
 
 ## Authority and safety rules
 - GitHub/repositories own delivery state.
@@ -104,7 +103,7 @@ The legacy Python Dev Progress Board is a read-only reporting implementation. It
 The target retains all of the following acceptance:
 
 - Nexus is the primary visible product name and `/` opens the infinite canvas; `/canvas` stays stable and `/stats` remains diagnostics.
-- Canvas and Trello Board share the same graph and preserve selection/context. Topology nodes, typed edges, search, minimap, pan/zoom, keyboard and mobile interaction work together.
+- Trello-like cards and inspectors share the Canvas graph and preserve selection/context. No separate Trello/Board view is required or introduced. Topology nodes, typed edges, search, minimap, pan/zoom, keyboard and mobile interaction work together.
 - Issues, native parent/sub-issues, PRs/checks, milestones, evidence, checkpoints, dependencies, comments/questions and contextual stats are inspectable in place.
 - Human and multiple agent clients share durable, conflict-safe state without silently lost edits or duplicate retries. Restart/crash recovery preserves acknowledged writes.
 - Unsupported acceptance, stale sources, unmapped activity and blocked prerequisite chains cannot appear complete/current/ready.
