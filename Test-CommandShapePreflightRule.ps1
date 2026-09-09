@@ -12,6 +12,9 @@ foreach ($required in @(
   'do not create a separate Vault write merely for this tooling finding',
   'repeated recurrence is an owned tooling defect',
   'fix the command-producing guidance/helper',
+  'Invoke-LiteralScript.ps1',
+  'transports arguments through JSON',
+  'do not fall back to re-embedding the same payload',
   'add the narrowest available regression check',
   'do not infer a platform-security cause'
 )) {
