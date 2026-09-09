@@ -5,15 +5,20 @@ foreach ($required in @(
     'function Get-RunnerWorkersForRoot',
     'function Get-CurrentLaunchLongBrokerBackoff',
     'function Get-CurrentLaunchRepeatedSessionConflict',
+    'function Get-CurrentLaunchRepeatedCancellationStorm',
     '$brokerBackoffMinimumSeconds = 300',
     '$sessionConflictMinimumCount = 3',
     '$sessionConflictMinimumSpanSeconds = 45',
     '$sessionConflictMaximumAgeSeconds = 60',
+    '$cancellationStormMinimumCount = 12',
+    '$cancellationStormMinimumSpanSeconds = 5',
+    '$cancellationStormMaximumAgeSeconds = 15',
     '$brokerSessionReleaseSeconds = 210',
     'if ($observedAt -lt $LaunchStartedUtc.AddSeconds(-1)) { continue }',
     'if ($workers.Count -gt 0) { continue }',
     'GITHUB_RUNNER_BROKER_BACKOFF_RECOVERY=',
     'GITHUB_RUNNER_SESSION_CONFLICT_RECOVERY=',
+    'GITHUB_RUNNER_CANCELLATION_STORM_RECOVERY=',
     'GITHUB_RUNNER_BROKER_SESSION_RELEASE_WAIT=',
     'Start-Sleep -Seconds $brokerSessionReleaseSeconds',
     '$taskKill /PID ([string]$process.Id) /T /F',
@@ -39,6 +44,15 @@ $sessionSample = '[2026-09-08 22:05:51Z ERR  Terminal] WRITE ERROR: A session fo
 if (-not [regex]::Match($sessionSample, $sessionPatternMatch.Groups['pattern'].Value).Success) {
     throw 'session conflict regex does not match the real runner terminal log shape'
 }
+$cancellationPatternLine = @($wrapper -split "`r?`n" | Where-Object { $_ -match '^\s*\$cancellationPattern\s*=' })
+if ($cancellationPatternLine.Count -ne 1) { throw 'expected exactly one cancellation storm regex' }
+$cancellationPatternMatch = [regex]::Match($cancellationPatternLine[0], "^\s*\`$cancellationPattern\s*=\s*'(?<pattern>.*)'\s*$")
+if (-not $cancellationPatternMatch.Success) { throw 'could not extract cancellation storm regex literal' }
+$cancellationSample = '[2026-09-08 23:55:57Z INFO JobDispatcher] Job cancellation request 48cd0226-f84d-529b-bfd9-27e5cba8cb14 received, cancellation timeout 5 minutes.'
+$cancellationSampleMatch = [regex]::Match($cancellationSample, $cancellationPatternMatch.Groups['pattern'].Value)
+if (-not $cancellationSampleMatch.Success -or $cancellationSampleMatch.Groups['job'].Value -ne '48cd0226-f84d-529b-bfd9-27e5cba8cb14') {
+    throw 'cancellation storm regex does not match the observed RR-KONE-02 runner log shape'
+}
 $tokens = $null
 $parseErrors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseInput($wrapper, [ref]$tokens, [ref]$parseErrors)
@@ -50,6 +64,13 @@ $detector = $ast.Find({
 }, $true)
 if (-not $detector) { throw 'session conflict detector AST missing' }
 Invoke-Expression $detector.Extent.Text
+$cancellationDetector = $ast.Find({
+    param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Get-CurrentLaunchRepeatedCancellationStorm'
+}, $true)
+if (-not $cancellationDetector) { throw 'cancellation storm detector AST missing' }
+Invoke-Expression $cancellationDetector.Extent.Text
 
 $fixtureRoot = Join-Path $env:TEMP ('github-runner-session-conflict-test-' + [guid]::NewGuid().ToString('N'))
 $diagRoot = Join-Path $fixtureRoot '_diag'
@@ -84,6 +105,51 @@ try {
 }
 finally {
     Remove-Item -LiteralPath $fixtureRoot -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+
+$cancellationFixtureRoot = Join-Path $env:TEMP ('github-runner-cancellation-storm-test-' + [guid]::NewGuid().ToString('N'))
+$cancellationDiagRoot = Join-Path $cancellationFixtureRoot '_diag'
+New-Item -ItemType Directory -Path $cancellationDiagRoot -Force | Out-Null
+$cancellationLogPath = Join-Path $cancellationDiagRoot 'Runner_fixture.log'
+function Write-CancellationFixture([datetime[]]$Times, [string]$JobId = '48cd0226-f84d-529b-bfd9-27e5cba8cb14') {
+    $lines = @($Times | ForEach-Object {
+        '[{0}Z INFO JobDispatcher] Job cancellation request {1} received, cancellation timeout 5 minutes.' -f $_.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture), $JobId
+    })
+    [IO.File]::WriteAllLines($cancellationLogPath, $lines, [Text.UTF8Encoding]::new($false))
+    (Get-Item -LiteralPath $cancellationLogPath).LastWriteTimeUtc = [datetime]::UtcNow
+}
+try {
+    $now = [datetime]::UtcNow
+    $stormTimes = @()
+    foreach ($offset in @(-9,-9,-8,-7,-7,-6,-5,-4,-4,-3,-2,-1)) { $stormTimes += $now.AddSeconds($offset) }
+    Write-CancellationFixture $stormTimes
+    $storm = Get-CurrentLaunchRepeatedCancellationStorm -Root $cancellationFixtureRoot -LaunchStartedUtc $now.AddSeconds(-20) -MinimumCount 12 -MinimumSpanSeconds 5 -MaximumAgeSeconds 15
+    if (-not $storm -or $storm.Count -ne 12 -or $storm.SpanSeconds -lt 5 -or $storm.JobId -ne '48cd0226-f84d-529b-bfd9-27e5cba8cb14') {
+        throw 'repeated current-launch same-job cancellation storm was not detected'
+    }
+
+    Write-CancellationFixture @($now.AddSeconds(-4), $now.AddSeconds(-2), $now.AddSeconds(-1))
+    $sparse = Get-CurrentLaunchRepeatedCancellationStorm -Root $cancellationFixtureRoot -LaunchStartedUtc $now.AddSeconds(-20) -MinimumCount 12 -MinimumSpanSeconds 5 -MaximumAgeSeconds 15
+    if ($sparse) { throw 'sparse cancellation requests must not trigger recovery' }
+
+    $staleTimes = @()
+    foreach ($offset in @(-40,-39,-38,-37,-36,-35,-34,-33,-32,-31,-30,-29)) { $staleTimes += $now.AddSeconds($offset) }
+    Write-CancellationFixture $staleTimes
+    $staleCancellation = Get-CurrentLaunchRepeatedCancellationStorm -Root $cancellationFixtureRoot -LaunchStartedUtc $now.AddSeconds(-60) -MinimumCount 12 -MinimumSpanSeconds 5 -MaximumAgeSeconds 15
+    if ($staleCancellation) { throw 'stale cancellation storm history must not trigger recovery' }
+
+    $mixed = @()
+    foreach ($offset in @(-9,-8,-7,-6,-5,-4)) { $mixed += $now.AddSeconds($offset) }
+    Write-CancellationFixture $mixed '48cd0226-f84d-529b-bfd9-27e5cba8cb14'
+    $other = @($mixed | ForEach-Object { '[{0}Z INFO JobDispatcher] Job cancellation request aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee received, cancellation timeout 5 minutes.' -f $_.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss', [Globalization.CultureInfo]::InvariantCulture) })
+    Add-Content -LiteralPath $cancellationLogPath -Value $other
+    (Get-Item -LiteralPath $cancellationLogPath).LastWriteTimeUtc = [datetime]::UtcNow
+    $mixedJobs = Get-CurrentLaunchRepeatedCancellationStorm -Root $cancellationFixtureRoot -LaunchStartedUtc $now.AddSeconds(-20) -MinimumCount 12 -MinimumSpanSeconds 5 -MaximumAgeSeconds 15
+    if ($mixedJobs) { throw 'different job cancellation ids must not be combined into a storm' }
+}
+finally {
+    Remove-Item -LiteralPath $cancellationFixtureRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 if ($wrapper.Contains('taskkill /IM Runner.Listener.exe')) {
