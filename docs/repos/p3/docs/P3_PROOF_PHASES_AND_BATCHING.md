@@ -50,6 +50,8 @@ For gameplay VFX, review the actual clip against production VFX fundamentals bef
 - Never use batching to hide a failed claim. A shared artifact may reduce work, but it does not turn an unclear claim into `PROVEN`.
 
 Shared C++ integration cohorts stop at compile, focused automation, and shared runtime acceptance. They do not auto-promote visual claims or synthesize screenshots/video. A PR whose lifecycle requires visual proof remains blocked until a worker-owned offscreen runtime is captured through `scripts/Invoke-P3VisualProofCapture.ps1` and the actual artifact is reviewed; motion claims require a playable MP4/clip rather than still-only evidence. This keeps build/runtime batching cheap without weakening player-visible acceptance.
+
+For ordinary shared review, capture remains independent of cloud availability by staging the write-once run under `C:\P3Proofs` first. The durable publication step then copies the original PNG/video bytes, hash-verifies them, and indexes the run under `G:\Oma Drive\P3 Visual Evidence\p3` (Google Drive **My Drive**). The chat-visible consumer route for that durable copy is the first-party **Google Drive -> ChatGPT Library** surface, located by the deterministic My Drive-relative run/media identity emitted by the publisher. Do not move ordinary proof through MCP media payloads, base64, custom HTTP, Git/LFS, or a second media store. If the ChatGPT session does not expose the connected Drive/Library surface, record the Library consumer gate as unmet rather than substituting another transport; publication to My Drive alone is not visual review.
 ## Minimal claim matrix
 
 ```text
