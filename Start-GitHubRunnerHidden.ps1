@@ -19,6 +19,192 @@ if (-not (Test-Path -LiteralPath $taskKill -PathType Leaf)) {
     throw "GITHUB_RUNNER_TASKKILL_MISSING=$taskKill"
 }
 
+if (-not ('GitHubRunnerHiddenConsoleProcess' -as [type])) {
+    Add-Type -TypeDefinition @"
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public sealed class GitHubRunnerHiddenConsoleProcess : IDisposable
+{
+    private const uint CREATE_NEW_CONSOLE = 0x00000010;
+    private const uint CREATE_UNICODE_ENVIRONMENT = 0x00000400;
+    private const uint STARTF_USESHOWWINDOW = 0x00000001;
+    private const ushort SW_HIDE = 0;
+    private const uint WAIT_OBJECT_0 = 0x00000000;
+    private const uint WAIT_TIMEOUT = 0x00000102;
+    private const uint INFINITE = 0xFFFFFFFF;
+    private const uint STILL_ACTIVE = 259;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct STARTUPINFO
+    {
+        public uint cb;
+        public IntPtr lpReserved;
+        public IntPtr lpDesktop;
+        public IntPtr lpTitle;
+        public uint dwX;
+        public uint dwY;
+        public uint dwXSize;
+        public uint dwYSize;
+        public uint dwXCountChars;
+        public uint dwYCountChars;
+        public uint dwFillAttribute;
+        public uint dwFlags;
+        public ushort wShowWindow;
+        public ushort cbReserved2;
+        public IntPtr lpReserved2;
+        public IntPtr hStdInput;
+        public IntPtr hStdOutput;
+        public IntPtr hStdError;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PROCESS_INFORMATION
+    {
+        public IntPtr hProcess;
+        public IntPtr hThread;
+        public uint dwProcessId;
+        public uint dwThreadId;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreateProcessW(
+        string lpApplicationName,
+        StringBuilder lpCommandLine,
+        IntPtr lpProcessAttributes,
+        IntPtr lpThreadAttributes,
+        [MarshalAs(UnmanagedType.Bool)] bool bInheritHandles,
+        uint dwCreationFlags,
+        IntPtr lpEnvironment,
+        string lpCurrentDirectory,
+        ref STARTUPINFO lpStartupInfo,
+        out PROCESS_INFORMATION lpProcessInformation);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetExitCodeProcess(IntPtr hProcess, out uint lpExitCode);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(IntPtr hObject);
+
+    private IntPtr processHandle;
+    private bool disposed;
+
+    private GitHubRunnerHiddenConsoleProcess(IntPtr processHandle, uint processId)
+    {
+        this.processHandle = processHandle;
+        this.Id = checked((int)processId);
+    }
+
+    public int Id { get; private set; }
+
+    public bool HasExited
+    {
+        get
+        {
+            EnsureNotDisposed();
+            uint code;
+            if (!GetExitCodeProcess(this.processHandle, out code))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "GetExitCodeProcess failed");
+            }
+            return code != STILL_ACTIVE;
+        }
+    }
+
+    public int ExitCode
+    {
+        get
+        {
+            EnsureNotDisposed();
+            uint code;
+            if (!GetExitCodeProcess(this.processHandle, out code))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "GetExitCodeProcess failed");
+            }
+            if (code == STILL_ACTIVE)
+            {
+                throw new InvalidOperationException("Process has not exited.");
+            }
+            return unchecked((int)code);
+        }
+    }
+
+    public static GitHubRunnerHiddenConsoleProcess Start(string applicationPath, string arguments, string workingDirectory)
+    {
+        STARTUPINFO startupInfo = new STARTUPINFO();
+        startupInfo.cb = checked((uint)Marshal.SizeOf(typeof(STARTUPINFO)));
+        startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+        startupInfo.wShowWindow = SW_HIDE;
+
+        StringBuilder commandLine = new StringBuilder();
+        commandLine.Append('"').Append(applicationPath).Append('"');
+        if (!String.IsNullOrWhiteSpace(arguments))
+        {
+            commandLine.Append(' ').Append(arguments);
+        }
+
+        PROCESS_INFORMATION processInformation;
+        uint creationFlags = CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT;
+        if (!CreateProcessW(
+            applicationPath,
+            commandLine,
+            IntPtr.Zero,
+            IntPtr.Zero,
+            false,
+            creationFlags,
+            IntPtr.Zero,
+            workingDirectory,
+            ref startupInfo,
+            out processInformation))
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "CreateProcessW hidden-console launch failed");
+        }
+
+        if (processInformation.hThread != IntPtr.Zero)
+        {
+            CloseHandle(processInformation.hThread);
+        }
+        return new GitHubRunnerHiddenConsoleProcess(processInformation.hProcess, processInformation.dwProcessId);
+    }
+
+    public bool WaitForExit(int milliseconds)
+    {
+        EnsureNotDisposed();
+        uint timeout = milliseconds < 0 ? INFINITE : checked((uint)milliseconds);
+        uint waitResult = WaitForSingleObject(this.processHandle, timeout);
+        if (waitResult == WAIT_OBJECT_0) { return true; }
+        if (waitResult == WAIT_TIMEOUT) { return false; }
+        throw new Win32Exception(Marshal.GetLastWin32Error(), "WaitForSingleObject failed");
+    }
+
+    private void EnsureNotDisposed()
+    {
+        if (this.disposed) { throw new ObjectDisposedException("GitHubRunnerHiddenConsoleProcess"); }
+    }
+
+    public void Dispose()
+    {
+        if (this.disposed) { return; }
+        this.disposed = true;
+        if (this.processHandle != IntPtr.Zero)
+        {
+            CloseHandle(this.processHandle);
+            this.processHandle = IntPtr.Zero;
+        }
+    }
+}
+"@
+}
+
+
 function Test-CommandLineContains {
     param(
         [AllowNull()]
@@ -349,24 +535,13 @@ while ($true) {
     Remove-OrphanedRunnerListeners -Root $root
     Copy-Item -LiteralPath $helperTemplate -Destination $helperCommand -Force
 
-    $startInfo = [Diagnostics.ProcessStartInfo]::new()
-    $startInfo.FileName = $commandProcessor
-    $startInfo.Arguments = '/d /s /c ""{0}""' -f $helperCommand
-    $startInfo.WorkingDirectory = $root
-    $startInfo.UseShellExecute = $false
-    # The scheduled PowerShell launcher already owns a hidden console. Keep that
-    # console attached so cmd/listener/worker descendants inherit the same hidden
-    # console instead of console-less parents allowing action children to allocate
-    # a new visible console window.
-    $startInfo.CreateNoWindow = $false
-    $startInfo.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden
-
-    $process = [Diagnostics.Process]::new()
-    $process.StartInfo = $startInfo
+    # Create an explicit hidden console for the helper. Runner.Listener, Runner.Worker,
+    # and action descendants inherit it, so console-subsystem children do not allocate
+    # their own visible console windows. Do not inherit the scheduled task's std handles;
+    # they are not guaranteed to be valid in the Interactive task host.
+    $helperArguments = '/d /s /c ""{0}""' -f $helperCommand
     $launchStartedUtc = [datetime]::UtcNow
-    if (-not $process.Start()) {
-        throw "GITHUB_RUNNER_HIDDEN_START_FAILED=$root"
-    }
+    $process = [GitHubRunnerHiddenConsoleProcess]::Start($commandProcessor, $helperArguments, $root)
 
     $brokerBackoffMinimumSeconds = 300
     $brokerBackoffPostJobGraceSeconds = 15

@@ -2,9 +2,15 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $launcher = Join-Path $PSScriptRoot 'Start-GitHubRunnerHidden.ps1'
 $text = [IO.File]::ReadAllText($launcher)
-if (-not $text.Contains('$startInfo.CreateNoWindow = $false')) { throw 'GITHUB_RUNNER_HIDDEN_CONSOLE_INHERITANCE_DISABLED' }
+foreach ($requiredHiddenConsoleContract in @(
+    'CREATE_NEW_CONSOLE = 0x00000010',
+    'STARTF_USESHOWWINDOW = 0x00000001',
+    'startupInfo.wShowWindow = SW_HIDE',
+    '[GitHubRunnerHiddenConsoleProcess]::Start($commandProcessor, $helperArguments, $root)'
+)) {
+    if (-not $text.Contains($requiredHiddenConsoleContract)) { throw "GITHUB_RUNNER_HIDDEN_CONSOLE_CONTRACT_MISSING=$requiredHiddenConsoleContract" }
+}
 if ($text.Contains('$startInfo.CreateNoWindow = $true')) { throw 'GITHUB_RUNNER_DESCENDANT_CONSOLE_DETACHMENT_REINTRODUCED' }
-if (-not $text.Contains('cmd/listener/worker descendants inherit the same hidden')) { throw 'GITHUB_RUNNER_DESCENDANT_HIDDEN_CONSOLE_CONTRACT_MISSING' }
 $tailStart = $text.IndexOf('    $exitCode = $process.ExitCode', [StringComparison]::Ordinal)
 if ($tailStart -lt 0) { throw 'GITHUB_RUNNER_PERSISTENCE_TAIL_MISSING' }
 $tail = $text.Substring($tailStart)
@@ -31,6 +37,45 @@ function New-FakeRunnerRoot([int]$ExitCode) {
     return $root
 }
 
+function New-HiddenConsoleProbeRunnerRoot {
+    $root = Join-Path $env:TEMP ('github-runner-hidden-console-test-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $root -Force | Out-Null
+    $result = Join-Path $root 'console-result.json'
+    $probe = Join-Path $root 'console-probe.ps1'
+    $probeBody = @"
+param([Parameter(Mandatory)][string]`$OutputPath)
+Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class GitHubRunnerConsoleProbe { [DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow(); [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr hWnd); }'
+`$hwnd = [GitHubRunnerConsoleProbe]::GetConsoleWindow()
+`$visible = if (`$hwnd -ne [IntPtr]::Zero) { [GitHubRunnerConsoleProbe]::IsWindowVisible(`$hwnd) } else { `$false }
+`$payload = [pscustomobject]@{ pid = `$PID; hwnd = `$hwnd.ToInt64(); visible = `$visible }
+[IO.File]::WriteAllText(`$OutputPath, (`$payload | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new(`$false))
+Start-Sleep -Seconds 20
+"@
+    [IO.File]::WriteAllText($probe, $probeBody, [Text.UTF8Encoding]::new($false))
+    $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    $template = Join-Path $root 'run-helper.cmd.template'
+    $command = '"{0}" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "{1}" -OutputPath "{2}"' -f $powershell, $probe, $result
+    [IO.File]::WriteAllLines($template, @('@echo off', $command, 'exit /b 0'), [Text.ASCIIEncoding]::new())
+    return [pscustomobject]@{ Root = $root; Result = $result }
+}
+
+$hiddenConsole = New-HiddenConsoleProbeRunnerRoot
+$hiddenConsoleProcess = $null
+try {
+    $hiddenConsoleProcess = Start-Process powershell.exe -ArgumentList @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',$launcher,'-RunnerRoot',$hiddenConsole.Root) -WindowStyle Hidden -PassThru
+    $deadline = [DateTime]::UtcNow.AddSeconds(8)
+    while (-not (Test-Path $hiddenConsole.Result) -and [DateTime]::UtcNow -lt $deadline -and -not $hiddenConsoleProcess.HasExited) {
+        Start-Sleep -Milliseconds 100
+    }
+    if (-not (Test-Path $hiddenConsole.Result)) { throw "GITHUB_RUNNER_HIDDEN_CONSOLE_PROBE_TIMEOUT=exited:$($hiddenConsoleProcess.HasExited)" }
+    $console = Get-Content -LiteralPath $hiddenConsole.Result -Raw | ConvertFrom-Json
+    if ([int64]$console.hwnd -eq 0) { throw 'GITHUB_RUNNER_HIDDEN_CONSOLE_NOT_ALLOCATED' }
+    if ([bool]$console.visible) { throw "GITHUB_RUNNER_HIDDEN_CONSOLE_VISIBLE=pid:$($console.pid)|hwnd:$($console.hwnd)" }
+}
+finally {
+    if ($hiddenConsoleProcess -and -not $hiddenConsoleProcess.HasExited) { & "$env:SystemRoot\System32\taskkill.exe" /PID ([string]$hiddenConsoleProcess.Id) /T /F | Out-Null }
+    Remove-Item -LiteralPath $hiddenConsole.Root -Recurse -Force -ErrorAction SilentlyContinue
+}
 $retryRoot = New-FakeRunnerRoot 0
 $retryProcess = $null
 try {
