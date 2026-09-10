@@ -354,7 +354,11 @@ while ($true) {
     $startInfo.Arguments = '/d /s /c ""{0}""' -f $helperCommand
     $startInfo.WorkingDirectory = $root
     $startInfo.UseShellExecute = $false
-    $startInfo.CreateNoWindow = $true
+    # The scheduled PowerShell launcher already owns a hidden console. Keep that
+    # console attached so cmd/listener/worker descendants inherit the same hidden
+    # console instead of console-less parents allowing action children to allocate
+    # a new visible console window.
+    $startInfo.CreateNoWindow = $false
     $startInfo.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden
 
     $process = [Diagnostics.Process]::new()
