@@ -9,22 +9,25 @@ Nexus is the shared operator workspace for understanding and steering developmen
 
 **One graph, one primary infinite canvas, no shadow truth.**
 
-The primary experience is one large infinite-zoom canvas. Trello-like cards and interactions, inspectors, activity traces, stats, comments, issue/PR detail, milestones, checkpoints, dependencies, evidence, and worker focus all converge into that canvas rather than becoming a separate Board application or lane projection.
+The primary experience is one large infinite-zoom **tree canvas**. Stack foundations form the roots, shared runtime/core systems form the trunk, projects and subsystems form branches, and Trello-like work cards form the leaves. A dockable Board projection may sit on top of the same canvas for dense work management, but it is only another view of the same graph objects and never a second backlog, lane/status authority, or separate application.
 
 ## Primary UI contract
 
 ### 1. Infinite canvas is home
 - `/` opens the Nexus canvas; `/canvas` remains a stable direct route.
-- Pan, wheel/pinch zoom, fit, minimap, search/jump, keyboard navigation and mobile touch are first-class.
+- Pan, wheel/pinch zoom, fit, minimap, search/jump, keyboard navigation and mobile touch are first-class. Zoom must feel genuinely infinite: cursor-centered zoom spans whole-tree overview through comfortably readable single-card focus, with fit-all, fit-project/branch and focus-selection behaviors.
+- Pointer ownership is explicit: card dragging starts only from an intentional card/header drag surface after a movement threshold; empty canvas pans, Space-drag pans from anywhere appropriate, decorative edges never capture input, and overlays consume their own pointer events so the wrong layer is not grabbed.
 - Major stack components are interactive topology nodes, not decorative regions.
 - Nodes expose compact status/freshness/activity at distance, hover/focus glance at medium zoom, and a full actionable inspector when opened.
 - Typed edges show dependency, data flow, delivery linkage, proof handoff and current activity associations with source/provenance available on inspection.
 
-### 2. Cards are Trello-like without a Trello board
-- Work remains spatially organized on the infinite canvas.
+### 2. Cards are the leaves; Board is an overlay projection
+- The infinite canvas remains the structural workspace: roots/trunk/branches communicate stack relationships while cards sit at branch tips as work leaves.
+- A dockable/toggleable Board overlay may group those same cards into readable project/status lanes without creating a separate route, store, queue, or delivery authority.
+- Canvas selection and Board selection stay synchronized: selecting a branch filters/highlights related cards; selecting a card focuses its branch/path in the tree.
 - Cards use Trello-like interaction affordances: compact labels/badges, cover/attachment treatment, clear title/body hierarchy, comments/questions, issue/PR links, evidence/checkpoint summaries, blockers/dependencies and quick actions.
 - GitHub delivery state remains GitHub-owned. Nexus may display status/freshness but does not create a second lane/status authority.
-- Spatial card movement is presentation state only.
+- Spatial card movement and Board grouping are presentation state only.
 
 ### 3. Everything important is inspectable in place
 A selected node/card can expose, in one inspector:
@@ -38,6 +41,7 @@ A selected node/card can expose, in one inspector:
 - attachments/proof links;
 - live worker/session focus and activity traces;
 - relevant stats and freshness timestamps.
+- first-class Asset Library context: bounded inventory/showroom summary, source/freshness, search/show navigation, and Nexus-native comments/questions attached to the library context without mutating Tiny3D asset/proof authority.
 
 The user should not need a separate Stats page for normal operation. `/stats` can remain as a compatibility/deep-diagnostics view, but useful stats belong in the Nexus canvas/card/inspector experience.
 
@@ -103,7 +107,8 @@ The legacy Python Dev Progress Board is a read-only reporting implementation. It
 The target retains all of the following acceptance:
 
 - Nexus is the primary visible product name and `/` opens the infinite canvas; `/canvas` stays stable and `/stats` remains diagnostics.
-- Trello-like cards and inspectors share the Canvas graph and preserve selection/context. No separate Trello/Board view is required or introduced. Topology nodes, typed edges, search, minimap, pan/zoom, keyboard and mobile interaction work together.
+- Trello-like cards and inspectors share the Canvas graph and preserve selection/context. A dockable Board overlay is allowed as a synchronized projection of those same cards; no separate Board application, route, store, queue or lane/status authority is introduced. Topology nodes, typed edges, search, minimap, deep cursor-centered pan/zoom, keyboard and mobile interaction work together.
+- The visual hierarchy reads as a tree rather than a flat box field: roots/foundations, trunk/core, project branches and card leaves use a richer semantic color system while preserving contrast/accessibility.
 - Issues, native parent/sub-issues, PRs/checks, milestones, evidence, checkpoints, dependencies, comments/questions and contextual stats are inspectable in place.
 - Human and multiple agent clients share durable, conflict-safe state without silently lost edits or duplicate retries. Restart/crash recovery preserves acknowledged writes.
 - Unsupported acceptance, stale sources, unmapped activity and blocked prerequisite chains cannot appear complete/current/ready.
