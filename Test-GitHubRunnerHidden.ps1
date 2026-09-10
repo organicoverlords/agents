@@ -2,8 +2,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $launcher = Join-Path $PSScriptRoot 'Start-GitHubRunnerHidden.ps1'
 $text = [IO.File]::ReadAllText($launcher)
-if (-not $text.Contains('$startInfo.CreateNoWindow = $true')) { throw 'GITHUB_RUNNER_CREATE_NO_WINDOW_NOT_ENABLED' }
-if ($text.Contains('$startInfo.CreateNoWindow = $false')) { throw 'GITHUB_RUNNER_CREATE_NO_WINDOW_DISABLED' }
+if (-not $text.Contains('$startInfo.CreateNoWindow = $false')) { throw 'GITHUB_RUNNER_HIDDEN_CONSOLE_INHERITANCE_DISABLED' }
+if ($text.Contains('$startInfo.CreateNoWindow = $true')) { throw 'GITHUB_RUNNER_DESCENDANT_CONSOLE_DETACHMENT_REINTRODUCED' }
+if (-not $text.Contains('cmd/listener/worker descendants inherit the same hidden')) { throw 'GITHUB_RUNNER_DESCENDANT_HIDDEN_CONSOLE_CONTRACT_MISSING' }
 $tailStart = $text.IndexOf('    $exitCode = $process.ExitCode', [StringComparison]::Ordinal)
 if ($tailStart -lt 0) { throw 'GITHUB_RUNNER_PERSISTENCE_TAIL_MISSING' }
 $tail = $text.Substring($tailStart)
