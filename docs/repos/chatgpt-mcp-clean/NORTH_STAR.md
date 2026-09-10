@@ -13,6 +13,8 @@ MCP is not the ownership system, scheduler, worker registry, backlog, product au
 
 This section is the human-facing current topology contract. The machine-readable authority is `C:\Users\Lauri\Desktop\vault\04 Operating Contracts\mcp-current-topology.json`, surfaced directly by Stack Atlas/bootstrap as `mcp_current_topology`. Historical recovery records must not override it.
 
+For the exact local production update -> restore -> proof procedure, use LOCAL_HOME_DIRECT_UPDATE_RESTORE_RUNBOOK.md. It is the operational companion to this topology contract; it must be updated whenever the serving/recovery generation changes.
+
 - **Connector URL:** `https://91-159-12-133.sslip.io/mcp`.
 - **Serving path:** GPT1/ChatGPT -> local HTTPS Caddy -> `127.0.0.1:3022`. The pinned runtime is `%LOCALAPPDATA%\ChatGPTMcpV4HomeDirectStable` on `chatgpt/home-direct-stable-runtime`, supervised by `McpV4HomeDirect3022`; local Caddy is supervised by `McpV4HomeDirectCaddy`.
 - **OAuth:** discovery and authorization use the same local public origin, with `https://91-159-12-133.sslip.io/authorize` and backend owner-auth mode `local-edge`. Authentication repair must not introduce a second network topology.
