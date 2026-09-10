@@ -1,18 +1,18 @@
 $ErrorActionPreference='Stop'
 $rules = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'RULES.md') -Raw
 $p3Proof = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'docs\repos\p3\docs\P3_PROOF_PHASES_AND_BATCHING.md') -Raw
+$agents = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'AGENTS.md') -Raw
 $required = @(
-  'Visual proof review is **native-image/video-first, with explicit lossless MCP file transfer as the default retrieval route whenever that tool surface is exposed**',
-  'every worker/project defaults to `upload_local_file`',
-  'Use `download_chatgpt_file` for ChatGPT/Library -> local exact-byte delivery',
-  'report byte count plus SHA-256',
-  'do not recompress or transcode media/artifacts as stored content',
-  '`start_process`/`read_output` are process tools only',
-  'legacy `CHATGPT_LIBRARY_UPLOAD=<absolute path>` process-result metadata bridge is transition fallback only',
-  'Do not prefer',
-  'Drive/Library',
-  'actual inspection of the rendered pixels or video frames',
-  'paths, storage surfaces, transport metadata, hashes, or pixel gates alone are not acceptance',
+  'VISION TRANSPORT IS PLUGIN-ONLY AND FAIL-CLOSED FOR THE VISUAL CLAIM, NOT FOR THE WHOLE TASK',
+  '`MCPVisual.upload_local_file` / the exposed dedicated `upload_local_file` tool',
+  'Base64 and alternate byte-smuggling routes are absolutely prohibited for vision',
+  '`start_process`/`read_output` upload metadata bridges',
+  'Drive/Library detours',
+  'actual native inspection of the rendered pixels or video frames',
+  '12-VIEW PROOF TRANSFERS ARE ASSET-BATCHED',
+  'transfer it once through `MCPVisual.upload_local_file` / the exposed dedicated `upload_local_file` tool',
+  'inspect all twelve panels thoroughly with native vision in that exposure',
+  'Do not split/crop the sheet into 12 per-view assets or perform 12 separate transfers merely to review it',
   'must inspect its own captured pixels/video',
   'Producer review may record `NOT_PROVEN` or `REJECTED`',
   'must never promote its own capture to `PROVEN`',
@@ -20,6 +20,13 @@ $required = @(
   'Rerender the affected claim rather than relabeling a rejected artifact'
 )
 foreach ($needle in $required) { if (-not $rules.Contains($needle)) { throw "visual proof rule missing: $needle" } }
+$requiredRouting = @(
+  'Route a 12-view review as one media transfer',
+  'transfer the sheet once over the approved `MCPVisual.upload_local_file` / `upload_local_file` route and inspect every panel in that exposure',
+  'Per-view crop/transfer is exception-only for an unreadable panel or an explicit per-view acceptance artifact',
+  'never default to 12 separate transfers'
+)
+foreach ($needle in $requiredRouting) { if (-not $agents.Contains($needle)) { throw "visual routing rule missing: $needle" } }
 $forbiddenRoutes = @(
   'must first exist in ChatGPT Library',
   'opened through the native Files surface',
