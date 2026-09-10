@@ -9,6 +9,10 @@ $required = @(
   '`start_process`/`read_output` upload metadata bridges',
   'Drive/Library detours',
   'actual native inspection of the rendered pixels or video frames',
+  'VISUAL PROOF PACKAGING HAPPENS AT PRODUCER COMPLETION, NOT LATER',
+  'first asset render, explicit multi-asset batch completion, or live/editor/PIE/live-coding capture completion',
+  'one transient ZIP carrying the exact original media plus a compact manifest',
+  'silently fall back to N individual uploads if packaging fails',
   '12-VIEW PROOF TRANSFERS ARE ASSET-BATCHED AND ORIGINAL-FIDELITY',
   'Transfer it once through `MCPVisual.upload_local_file` / the exposed dedicated `upload_local_file` tool',
   'inspect all twelve panels thoroughly with native vision in that exposure',
@@ -22,6 +26,9 @@ $required = @(
 )
 foreach ($needle in $required) { if (-not $rules.Contains($needle)) { throw "visual proof rule missing: $needle" } }
 $requiredRouting = @(
+  'Package retained visual proof at completion',
+  'first asset-render completion, explicit asset-batch completion, or live/editor/PIE/live-coding capture completion',
+  'Multi-file payloads use one transient ZIP with exact originals plus existing labels, relative paths, byte counts, and SHA-256 manifest',
   'Route a 12-view review as one original-fidelity media transfer',
   'transfer that exact sheet once over the approved `MCPVisual.upload_local_file` / `upload_local_file` route and inspect every panel in that exposure',
   'Never substitute thumbnails, reduced per-view previews, or a recomposed lower-resolution contact sheet',
