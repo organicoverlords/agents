@@ -9,10 +9,11 @@ $required = @(
   '`start_process`/`read_output` upload metadata bridges',
   'Drive/Library detours',
   'actual native inspection of the rendered pixels or video frames',
-  '12-VIEW PROOF TRANSFERS ARE ASSET-BATCHED',
-  'transfer it once through `MCPVisual.upload_local_file` / the exposed dedicated `upload_local_file` tool',
+  '12-VIEW PROOF TRANSFERS ARE ASSET-BATCHED AND ORIGINAL-FIDELITY',
+  'Transfer it once through `MCPVisual.upload_local_file` / the exposed dedicated `upload_local_file` tool',
   'inspect all twelve panels thoroughly with native vision in that exposure',
-  'Do not split/crop the sheet into 12 per-view assets or perform 12 separate transfers merely to review it',
+  'Do **not** substitute thumbnails, reduced per-view preview derivatives, or a recomposed lower-resolution contact sheet',
+  'If a prior verdict was made only from reduced derivatives while the original full sheet existed, treat that verdict as provisional',
   'must inspect its own captured pixels/video',
   'Producer review may record `NOT_PROVEN` or `REJECTED`',
   'must never promote its own capture to `PROVEN`',
@@ -21,10 +22,11 @@ $required = @(
 )
 foreach ($needle in $required) { if (-not $rules.Contains($needle)) { throw "visual proof rule missing: $needle" } }
 $requiredRouting = @(
-  'Route a 12-view review as one media transfer',
-  'transfer the sheet once over the approved `MCPVisual.upload_local_file` / `upload_local_file` route and inspect every panel in that exposure',
-  'Per-view crop/transfer is exception-only for an unreadable panel or an explicit per-view acceptance artifact',
-  'never default to 12 separate transfers'
+  'Route a 12-view review as one original-fidelity media transfer',
+  'transfer that exact sheet once over the approved `MCPVisual.upload_local_file` / `upload_local_file` route and inspect every panel in that exposure',
+  'Never substitute thumbnails, reduced per-view previews, or a recomposed lower-resolution contact sheet',
+  'Derived/recomposed sheets are fallback-only when no original full sheet exists',
+  'Any verdict made only from reduced derivatives while the original existed is provisional until the original full sheet is reviewed'
 )
 foreach ($needle in $requiredRouting) { if (-not $agents.Contains($needle)) { throw "visual routing rule missing: $needle" } }
 $forbiddenRoutes = @(
