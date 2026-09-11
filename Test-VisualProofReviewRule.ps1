@@ -3,6 +3,9 @@ $rules = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'RULES.md') -Raw
 $p3Proof = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'docs\repos\p3\docs\P3_PROOF_PHASES_AND_BATCHING.md') -Raw
 $agents = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'AGENTS.md') -Raw
 $required = @(
+  'VISUAL ACCEPTANCE IS PIXEL-GATED; METRICS NEVER SUBSTITUTE',
+  'the user must not become the first visual reviewer',
+  'Numeric metrics, logs, point counts, reprojection error',
   'VISION TRANSPORT IS PLUGIN-ONLY AND FAIL-CLOSED FOR THE VISUAL CLAIM, NOT FOR THE WHOLE TASK',
   '`MCPVisual.upload_local_file` / the exposed dedicated `upload_local_file` tool',
   'Base64 and alternate byte-smuggling routes are absolutely prohibited for vision',
@@ -31,6 +34,9 @@ $required = @(
 )
 foreach ($needle in $required) { if (-not $rules.Contains($needle)) { throw "visual proof rule missing: $needle" } }
 $requiredRouting = @(
+  'Pixel-inspect visual outputs before handoff',
+  'The user is never the first visual reviewer',
+  'Metrics, logs, point counts, reprojection error',
   'Package retained visual proof at completion',
   'first asset-render completion, explicit asset-batch completion, or live/editor/PIE/live-coding capture completion',
   'Multi-file payloads use one transient ZIP with exact originals plus existing labels, relative paths, byte counts, and SHA-256 manifest',
