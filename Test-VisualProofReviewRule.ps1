@@ -30,7 +30,13 @@ $required = @(
   'Producer review may record `NOT_PROVEN` or `REJECTED`',
   'must never promote its own capture to `PROVEN`',
   'final `PROVEN` remains an independent visual review',
-  'Rerender the affected claim rather than relabeling a rejected artifact'
+  'Rerender the affected claim rather than relabeling a rejected artifact',
+  'ALREADY-EXPOSED MEDIA IS REUSED IN PLACE; PRESENTATION IS NOT A NEW TRANSPORT',
+  'Do not call `MCPVisual.upload_local_file` / `upload_local_file` again for the same already-exposed asset',
+  'Do not create a `/mnt/data` copy, Python/matplotlib/PIL render',
+  'MCPVisual crosses the machine -> ChatGPT boundary only when the required exact asset is not already exposed',
+  'does not by itself prove current user-visible rendering',
+  'Never tell the user that an image/file is visible merely because upload/transfer succeeded'
 )
 foreach ($needle in $required) { if (-not $rules.Contains($needle)) { throw "visual proof rule missing: $needle" } }
 $requiredRouting = @(
@@ -48,7 +54,13 @@ $requiredRouting = @(
   'package those exact originals once in the transient ZIP+manifest form and inspect the declared originals after transfer',
   'A combined/recomposed sheet is valid only when it is the owning renderer/grid builder''s canonical standardized output or an explicit acceptance artifact',
   'Never change background, exposure, lighting, crop, scale/resolution, tone/color, or panel layout merely for review convenience',
-  'Any verdict made only from reduced derivatives while the original existed is provisional until the original full sheet is reviewed'
+  'Any verdict made only from reduced derivatives while the original existed is provisional until the original full sheet is reviewed',
+  'Reuse already-exposed media directly',
+  'do not re-upload it through MCPVisual',
+  'create a new `/mnt/data` copy',
+  'invoke Python/PIL/matplotlib merely to display it',
+  'Use MCPVisual only to cross the machine -> ChatGPT boundary for media not already exposed',
+  'does not prove that the user currently sees the asset'
 )
 foreach ($needle in $requiredRouting) { if (-not $agents.Contains($needle)) { throw "visual routing rule missing: $needle" } }
 $forbiddenRoutes = @(
