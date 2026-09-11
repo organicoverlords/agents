@@ -20,6 +20,8 @@ foreach ($pair in @(@('request-fidelity',$requestLine),@('yield-audit',$yieldAud
 foreach ($required in @(
     'rather than treating the currently open issue/PR/branch/worktree, repository, project, or any inferred "scope" as a lane or stop boundary',
     'the highest-value safe supported work that materially advances the same user goal',
+    'Finishing the currently selected contribution is not evidence that the user''s established goal is complete',
+    'instead of asking the user for a new task',
     'Absence of ready work inside any chosen issue/repo/project/scope is never a stop condition by itself',
     'broaden by relevance to the user goal before concluding execution is blocked'
 )) { if (-not $requestLine[0].Contains($required)) { throw "request-fidelity rule missing invariant: $required" } }
@@ -38,6 +40,8 @@ foreach ($required in @(
     'Immediately before final-answering a manual `go`/`continue` turn, apply the `RULES.md` pre-final yield audit',
     'if no permitted stop condition is supported by live evidence, continue execution',
     'Never treat elapsed wall time, tool-call count, work already completed, handoff/PR state, or an exact-scope collision as stop evidence',
+    'Landing the current contribution is not a permitted stop unless live evidence proves the user''s established goal complete',
+    'never answer `go` by asking the user for a new task merely because the current contribution finished',
     'A user correction that a manual `go` was answered with apology, explanation, or status instead of execution resumes that same continuation immediately',
     'never count apology/status/incident narration as progress or as satisfaction of the yield audit'
 )) { if (-not $agentsText.Contains($required)) { throw "AGENTS missing manual-go yield audit invariant: $required" } }

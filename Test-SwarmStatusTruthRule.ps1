@@ -8,8 +8,9 @@ $required = @(
   'MCPv4, MCPv3, and Remote Desktop Commander',
   '`MCPv4-observed` engaged-worker count',
   'Route health/availability is reported separately from worker activity',
-  'single canonical active `S2` recurring fleet',
-  'paused `S1` partition',
+  'two independent canonical recurring partitions',
+  '`S1` and `S2`',
+  'at most five recurring workers per partition',
   'never infer fleet membership from caller id',
   'manual/on-demand population',
   'scheduler/fleet-watch result describes recurrence/recovery evidence, not current swarm liveness'
@@ -17,4 +18,4 @@ $required = @(
 foreach ($token in $required) {
   if (-not $rules.Contains($token)) { throw "swarm status truth rule missing: $token" }
 }
-Write-Output 'PASS swarm status requires truth-scoped liveness, route coverage, and S1/S2 identity evidence'
+Write-Output 'PASS swarm status requires truth-scoped liveness, route coverage, and dual S1/S2 identity evidence'

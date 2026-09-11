@@ -7,15 +7,17 @@ $worker = [IO.File]::ReadAllText($workerContractPath)
 $lines = @($rules -split "`r?`n" | Where-Object { $_ -match '^- \*\*Recurring-fleet topology and liveness are separate dimensions\.\*\*' })
 if ($lines.Count -ne 1) { throw "expected exactly one recurring-fleet topology invariant; found $($lines.Count)" }
 foreach ($required in @(
-  'single canonical active `S2` recurring fleet',
-  'paused `S1` partition',
-  'global five-worker cap',
+  'two independent canonical recurring partitions',
+  '`S1` and `S2`',
+  'at most five recurring workers per partition',
   'scheduler/fleet-watch result describes recurrence/recovery evidence, not current swarm liveness'
 )) { if (-not $lines[0].Contains($required)) { throw "global worker invariant missing: $required" } }
 
 foreach ($required in @(
-  'The current canonical active recurring fleet is `S2`; `S1` is a known paused partition and does not count as active recurring membership.',
-  'The supported swarm is the canonical active `S2` recurring fleet with at most five timed workers; `S1` is paused, plus the separate manual/on-demand ChatGPT worker population.'
+  'hard maximum of five recurring workers per subscription partition',
+  '`S1` and `S2` are both canonical recurring partitions',
+  'five enabled in one partition does not consume slots in the other',
+  'probe that exact ChatGPT automation live and reconcile `is_enabled` plus `last_run_time`'
 )) { if (-not $rules.Contains($required)) { throw "shared fleet topology statement missing: $required" } }
 
 $schedulerLines = @($rules -split "`r?`n" | Where-Object { $_ -match '^- \*\*SCHEDULER AUTHORITY IS DENY-BY-DEFAULT\.\*\*' })
@@ -25,14 +27,14 @@ foreach ($required in @('Do not create non-fleet scheduled tasks','unless the us
 }
 
 foreach ($required in @(
-  'The recurring fleet has a global hard maximum of five workers',
-  'current canonical active recurring fleet is `S2`',
-  '`S1` is a paused partition',
+  'Each recurring subscription partition has a hard maximum of five workers',
+  '`S1` and `S2` are both canonical recurring partitions',
+  'scheduler-write authority',
   'A recurring worker must never administer itself or any sibling',
   'targeted `is_enabled=true` recovery',
   'preserve prompt/title/schedule/timezone/stagger',
   'Do not preflight with a broad scheduler read',
-  'Never create verifier, spare, overlap, replacement, or temporary sixth recurring workers globally'
+  'Never create verifier, spare, overlap, replacement, or temporary sixth recurring workers inside either canonical partition'
 )) { if (-not $worker.Contains($required)) { throw "worker owner contract missing mechanic: $required" } }
 
-[ordered]@{ok=$true; global_policy_compact=$true; mechanics_owner='fresh-worker-generation-launch.md'; active_partition='S2'; paused_partition='S1'; global_recurring_max=5; no_self_or_sibling_admin=$true; nonfleet_task_creation_forbidden=$true} | ConvertTo-Json -Compress
+[ordered]@{ok=$true; global_policy_compact=$true; mechanics_owner='fresh-worker-generation-launch.md'; canonical_partitions=@('S1','S2'); recurring_partition_max=5; recurring_total_max=10; no_self_or_sibling_admin=$true; live_scheduler_probe_required=$true; nonfleet_task_creation_forbidden=$true} | ConvertTo-Json -Compress
