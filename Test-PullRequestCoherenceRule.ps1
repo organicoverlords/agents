@@ -17,10 +17,37 @@ foreach ($required in @(
 )) {
     if (-not $rule.Contains($required)) { throw "PR coherence rule missing invariant: $required" }
 }
+
+$agentsText = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'AGENTS.md'))
+$queueRules = @($text -split "`r?`n" | Where-Object { $_ -match '^- \*\*No passive integration queue\.\*\*' })
+$queueAgents = @($agentsText -split "`r?`n" | Where-Object { $_ -match '^- \*\*No passive integration queue\.\*\*' })
+if ($queueRules.Count -ne 1) { throw "expected exactly one no-passive-integration-queue rule in RULES.md; found $($queueRules.Count)" }
+if ($queueAgents.Count -ne 1) { throw "expected exactly one no-passive-integration-queue rule in AGENTS.md; found $($queueAgents.Count)" }
+foreach ($required in @(
+    'immediate integration action',
+    'Optional or queued CI',
+    'no batching window or review holding period',
+    'next entrant touching the same owner/objective must reconcile that PR',
+    'stale or conflicting',
+    'important or high-impact regression fixes remain load-bearing',
+    'open PR alone is never completion or a passive handoff'
+)) {
+    if (-not $queueRules[0].Contains($required)) { throw "RULES no-passive-integration-queue rule missing invariant: $required" }
+}
+foreach ($required in @(
+    'Merge immediately through the repo''s supported path',
+    'repair/rebase that still-valid PR before creating overlapping follow-on changes',
+    'important or high-impact regression remains load-bearing',
+    'open PR alone is not a handoff, completion state, or reason to start a parallel replacement'
+)) {
+    if (-not $queueAgents[0].Contains($required)) { throw "AGENTS no-passive-integration-queue rule missing invariant: $required" }
+}
+$no_passive_integration_queue = $true
 [ordered]@{
     ok = $true
     rule_count = 1
     coherent_pr_boundary = $true
     parallel_agents_preserved = $true
     independent_boundaries_preserved = $true
+    no_passive_integration_queue = $no_passive_integration_queue
 } | ConvertTo-Json -Compress
