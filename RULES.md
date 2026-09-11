@@ -1,6 +1,6 @@
 # Shared behavior rules
 
-Shared contract version: 70
+Shared contract version: 71
 
 - **Shared-rule serving convergence is one-minute maximum.** `C:\Users\Lauri\.agents` must be checked against `origin/main` at least once per minute by the installed headless `AgentRulesCheckoutSync` task. The task may only use the fail-closed default `Sync-AgentRulesCheckout.ps1` path: clean-behind may fast-forward; dirty, ahead, diverged, wrong-branch, or error states remain untouched for explicit attribution/repair. Never stretch this cadence to batch convenience, and never put Git fetch/convergence inside bootstrap itself.
 
@@ -109,6 +109,8 @@ These rules apply to every agent and every repository on this machine. Local `AG
 
 ## Shared state and evidence
 - BusyCoordinator is exact shared-mutation collision control only. Its live contract is `%LOCALAPPDATA%\BusyCoordinator\coordinator-contract.json`; canonical scope/recovery/collision-handoff semantics live in `docs/repos/regression-research/BUSY_COORDINATOR_NORTH_STAR.md`. Never treat Busy as backlog, scheduling, priority, liveness, progress, capacity, worker/task identity, or permission to evade an equivalent claim.
+- Busy ownership identity is per active harness/task/session, never a shared recovery label. Use an approved harness plus a unique task/session suffix for every actor; concurrent workers must never intentionally reuse the same actor string. The coordinator caps claim/heartbeat horizons at 240 seconds, so while exclusivity is still required, heartbeat every owned exact scope at least every 120 seconds with a fresh semantic operation ID. Lease expiry means only collision ownership expired; it never proves work completion or abandonment and never authorizes cleanup of WIP, worktrees, reports, branches, or artifacts.
+- Active WIP worktrees must live in a durable repo-owned root or %LOCALAPPDATA%\AgentWorktrees\<unique-id>, never %TEMP%, npm/npx cache, a report-reaper launch root, or another lifecycle-cleaned scratch tree. A cleanup/reaper may remove a worktree only after positively attributing it to the finished owner and proving there is no active claim/process and no dirty unique state; Busy lease expiry alone is never cleanup authority.
 - Git ref mutation ownership is per exact ref (`<repo>:git-ref:refs/heads/<branch>`), never repo-wide metadata; the Busy owner defines canonical scope normalization and alias handling.
 - Busy recovery is evidence-backed compare-and-swap against the still-identical owner/scope/claim timestamp. Follow the Busy owner protocol; age alone, an opaque caller ID, or ambiguous MCP evidence never authorizes recovery.
 - On an exact Busy collision, reconcile existing WIP first. If distinct conflicting work must be handed off, use the Busy owner's `incoming change` protocol; the collision blocks only that exact mutation.
