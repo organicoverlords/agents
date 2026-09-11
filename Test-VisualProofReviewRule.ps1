@@ -17,6 +17,11 @@ $required = @(
   'Transfer it once through `MCPVisual.upload_local_file` / the exposed dedicated `upload_local_file` tool',
   'inspect all twelve panels thoroughly with native vision in that exposure',
   'Do **not** substitute thumbnails, reduced per-view preview derivatives, or a recomposed lower-resolution contact sheet',
+  'If no original producer sheet exists but a complete standardized 12-view set already exists as canonical individual images',
+  'do not create a reviewer-authored contact sheet',
+  'Package the exact standardized images once using the transient ZIP+manifest rule below',
+  'A combined/recomposed sheet is allowed only when it is itself the owning renderer/grid builder''s canonical standardized output or an explicit acceptance artifact',
+  'Never alter background, exposure, lighting, crop, scale/resolution, tone/color, or panel layout merely to make review transport convenient',
   'If a prior verdict was made only from reduced derivatives while the original full sheet existed, treat that verdict as provisional',
   'must inspect its own captured pixels/video',
   'Producer review may record `NOT_PROVEN` or `REJECTED`',
@@ -32,7 +37,11 @@ $requiredRouting = @(
   'Route a 12-view review as one original-fidelity media transfer',
   'transfer that exact sheet once over the approved `MCPVisual.upload_local_file` / `upload_local_file` route and inspect every panel in that exposure',
   'Never substitute thumbnails, reduced per-view previews, or a recomposed lower-resolution contact sheet',
-  'Derived/recomposed sheets are fallback-only when no original full sheet exists',
+  'If no original producer sheet exists but the complete standardized 12-view set already exists as canonical individual images',
+  'do not invent a reviewer-authored contact sheet',
+  'package those exact originals once in the transient ZIP+manifest form and inspect the declared originals after transfer',
+  'A combined/recomposed sheet is valid only when it is the owning renderer/grid builder''s canonical standardized output or an explicit acceptance artifact',
+  'Never change background, exposure, lighting, crop, scale/resolution, tone/color, or panel layout merely for review convenience',
   'Any verdict made only from reduced derivatives while the original existed is provisional until the original full sheet is reviewed'
 )
 foreach ($needle in $requiredRouting) { if (-not $agents.Contains($needle)) { throw "visual routing rule missing: $needle" } }
