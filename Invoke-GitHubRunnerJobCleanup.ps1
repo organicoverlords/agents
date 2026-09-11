@@ -97,7 +97,9 @@ if (-not [string]::IsNullOrWhiteSpace($Workspace)) {
             $skipped.Add('workspace_reparse_root')
         }
         else {
-            Remove-BoundedNode -Path $workspacePath -RemoveRoot $true
+            # Keep the workspace root itself: the runner/hook shell can still hold
+            # Windows CWD/handle state there. Reclaim only its exact owned contents.
+            Remove-BoundedNode -Path $workspacePath -RemoveRoot $false
         }
     }
     elseif (-not $workspaceShapeValid) {

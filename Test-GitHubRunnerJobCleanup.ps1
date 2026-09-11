@@ -30,7 +30,7 @@ try {
 
     $result = & $hook -RunnerRoot $root -Workspace $workspace -RunnerTemp $temp | ConvertFrom-Json
     if ($result.status -ne 'ok' -or [int]$result.removed_items -lt 2) { throw "RUNNER_JOB_CLEANUP_VALID_BAD=$($result | ConvertTo-Json -Compress)" }
-    if (Test-Path -LiteralPath $workspace) { throw 'RUNNER_JOB_CLEANUP_WORKSPACE_RETAINED' }
+    if (-not (Test-Path -LiteralPath $workspace -PathType Container) -or @(Get-ChildItem -LiteralPath $workspace -Force).Count -ne 0) { throw 'RUNNER_JOB_CLEANUP_WORKSPACE_NOT_EMPTIED' }
     if (-not (Test-Path -LiteralPath (Join-Path $warm 'warm.bin'))) { throw 'RUNNER_JOB_CLEANUP_WARM_CACHE_REMOVED' }
     if (-not (Test-Path -LiteralPath $temp -PathType Container) -or @(Get-ChildItem -LiteralPath $temp -Force).Count -ne 0) { throw 'RUNNER_JOB_CLEANUP_TEMP_NOT_EMPTIED' }
     if (-not (Test-Path -LiteralPath (Join-Path $outside 'keep.bin'))) { throw 'RUNNER_JOB_CLEANUP_OUTSIDE_REMOVED' }
@@ -66,7 +66,7 @@ try {
     New-Item -ItemType Junction -Path $nestedLink -Target $outside | Out-Null
     [IO.File]::WriteAllText((Join-Path $nestedWorkspace 'job.bin'), 'job')
     $nested = & $hook -RunnerRoot $root -Workspace $nestedWorkspace -RunnerTemp '' | ConvertFrom-Json
-    if ($nested.status -ne 'ok' -or (Test-Path -LiteralPath $nestedWorkspace)) { throw "RUNNER_JOB_CLEANUP_NESTED_REPARSE_BAD=$($nested | ConvertTo-Json -Compress)" }
+    if ($nested.status -ne 'ok' -or -not (Test-Path -LiteralPath $nestedWorkspace -PathType Container) -or @(Get-ChildItem -LiteralPath $nestedWorkspace -Force).Count -ne 0) { throw "RUNNER_JOB_CLEANUP_NESTED_REPARSE_BAD=$($nested | ConvertTo-Json -Compress)" }
     if (-not (Test-Path -LiteralPath (Join-Path $outside 'keep.bin'))) { throw 'RUNNER_JOB_CLEANUP_NESTED_REPARSE_TARGET_MUTATED' }
 }
 finally {
