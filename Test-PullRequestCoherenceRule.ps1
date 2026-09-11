@@ -30,7 +30,10 @@ foreach ($required in @(
     'next entrant touching the same owner/objective must reconcile that PR',
     'stale or conflicting',
     'important or high-impact regression fixes remain load-bearing',
-    'open PR alone is never completion or a passive handoff'
+    'open PR alone is never completion or a passive handoff',
+    'Set-PullRequestConvergenceReady.ps1',
+    'agent/convergence-ready',
+    'ReadyPullRequestConvergence'
 )) {
     if (-not $queueRules[0].Contains($required)) { throw "RULES no-passive-integration-queue rule missing invariant: $required" }
 }
@@ -38,7 +41,10 @@ foreach ($required in @(
     'Merge immediately through the repo''s supported path',
     'repair/rebase that still-valid PR before creating overlapping follow-on changes',
     'important or high-impact regression remains load-bearing',
-    'open PR alone is not a handoff, completion state, or reason to start a parallel replacement'
+    'open PR alone is not a handoff, completion state, or reason to start a parallel replacement',
+    'Set-PullRequestConvergenceReady.ps1',
+    'ReadyPullRequestConvergence',
+    'Do not publish readiness before the required proof is actually satisfied'
 )) {
     if (-not $queueAgents[0].Contains($required)) { throw "AGENTS no-passive-integration-queue rule missing invariant: $required" }
 }
