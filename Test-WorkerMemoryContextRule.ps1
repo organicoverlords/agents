@@ -16,10 +16,11 @@ $requiredRules = @(
     'reuse it and do not query memory again',
     'memory_bank.py timeline <query>',
     'Stack/MCP/infra retains its separate evidence-sufficiency mutation gate',
-    'Stack/MCP/infra understanding is an evidence-sufficiency mutation gate, not a fixed lookup ritual',
+    'Stack/MCP/infra understanding is an evidence-sufficiency mutation gate, not a subsystem-only lookup ritual',
+    'Topology-first rule',
     'Use already-held current task evidence first',
     'do not require both memory reads merely because the target is stack/MCP/infra',
-    'Use targeted Stack Atlas `find`/`lookup` only when ownership/topology/dependency facts are unknown, stale, or contradictory',
+    'only then use targeted `find`/`lookup` for touched components',
     'Do not require memory plus Atlas when the required evidence fields are already established directly',
     'do not require that component to provide the evidence needed to authorize its own repair',
     'Understanding only one local file/service remains insufficient when the mutation can affect broader stack resources'

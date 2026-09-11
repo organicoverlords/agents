@@ -30,12 +30,16 @@ foreach ($required in @(
     'an exact-scope Busy collision',
     'Scope exhaustion, `no ready in scope`, no ready issue/North-Star work, or a decision-ready blocker are never stop evidence',
     'A final answer is allowed only when live evidence supports one of',
-    'If the audit cannot name one of those conditions and its live evidence, do not final-answer'
+    'If the audit cannot name one of those conditions and its live evidence, do not final-answer',
+    'If the user corrects a failed `go`/`continue` turn because the assistant yielded, apologized, explained, or reported status instead of advancing the established goal',
+    'Apology, status recap, incident narration, rule-reading, or explaining the prior failure is not progress and cannot satisfy the yield audit'
 )) { if (-not $yieldAuditLine[0].Contains($required)) { throw "yield audit rule missing invariant: $required" } }
 foreach ($required in @(
     'Immediately before final-answering a manual `go`/`continue` turn, apply the `RULES.md` pre-final yield audit',
     'if no permitted stop condition is supported by live evidence, continue execution',
-    'Never treat elapsed wall time, tool-call count, work already completed, handoff/PR state, or an exact-scope collision as stop evidence'
+    'Never treat elapsed wall time, tool-call count, work already completed, handoff/PR state, or an exact-scope collision as stop evidence',
+    'A user correction that a manual `go` was answered with apology, explanation, or status instead of execution resumes that same continuation immediately',
+    'never count apology/status/incident narration as progress or as satisfaction of the yield audit'
 )) { if (-not $agentsText.Contains($required)) { throw "AGENTS missing manual-go yield audit invariant: $required" } }
 
 foreach ($required in @(

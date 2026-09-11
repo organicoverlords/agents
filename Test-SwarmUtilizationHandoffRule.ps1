@@ -26,7 +26,8 @@ foreach ($required in @(
 foreach ($required in @(
     'existing implementation/PRs/checkpoints',
     'multiple real non-overlapping contribution boundaries',
-    'existing WIP, and immutable checkpoints',
+    'existing implementation/PRs/checkpoints',
+    'At a meaningful checkpoint/handoff, record branch plus immutable commit when available',
     'branch plus immutable commit when available',
     'validation already performed',
     'next integration action',

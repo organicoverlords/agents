@@ -5,17 +5,18 @@ $rulesPath = Join-Path $PSScriptRoot 'RULES.md'
 $agentsPath = Join-Path $PSScriptRoot 'AGENTS.md'
 $text = [IO.File]::ReadAllText($rulesPath)
 $agentsText = [IO.File]::ReadAllText($agentsPath)
-$bootstrap = @($text -split "`r?`n" | Where-Object { $_ -match '^- On a fresh chat that materially needs machine state, \*\*route eligibility precedes bootstrap\*\*' })
+$bootstrap = @($text -split "`r?`n" | Where-Object { $_ -match '^- On a fresh chat that materially needs machine state, \*\*bootstrap is the first machine action\.\*\*' })
 if ($bootstrap.Count -ne 1) { throw "expected exactly one fresh-chat bootstrap rule; found $($bootstrap.Count)" }
 foreach ($required in @(
-    'route eligibility precedes bootstrap',
+    'bootstrap is the first machine action',
     'MCPv4 `read_output`',
-    '231b7e74-4cc8-43d0-9702-fd6dfa2215b3',
+    'reserved stable bootstrap alias `process_id="bootstrap"`',
     'max_chars=32000',
     'wait_ms=0',
-    'skip that MCPv4 bootstrap read',
+    'Never hard-code or persist a runtime process UUID for bootstrap',
     'stack_atlas.py bootstrap-glance',
-    'If no usable route can obtain bootstrap'
+    '`bootstrap.status` other than `OK`',
+    'read the stable alias itself'
 )) {
     if (-not $bootstrap[0].Contains($required)) { throw "fresh-chat bootstrap rule missing invariant: $required" }
 }
@@ -46,9 +47,8 @@ foreach ($required in @(
 )) {
     if (-not $identityLine[0].Contains($required)) { throw "shared work identity rule missing invariant: $required" }
 }
-if ($text.Contains('On every fresh chat, the first machine action is MCPv4 `read_output`')) { throw 'fresh-chat routing regressed to circular MCPv4-first bootstrap' }
-if ($text.Contains('mandatory fresh-chat bootstrap')) { throw 'fresh-chat bootstrap incorrectly remains universally mandatory' }
-if ($bootstrap[0].Contains('process_id="bootstrap"') -or $bootstrap[0].Contains('Never hard-code or persist a runtime process UUID for bootstrap')) { throw 'fresh-chat bootstrap rule reverted to obsolete alias semantics' }
+if ($text.Contains('On every fresh chat, the first machine action is MCPv4 `read_output`')) { throw 'bootstrap incorrectly became universal instead of machine-state conditional' }
+if ($bootstrap[0] -match 'process_id="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"') { throw 'fresh-chat bootstrap hard-codes a runtime UUID' }
 $issueFirstLine = @($text -split "`r?`n" | Where-Object { $_ -match '^- \*\*Material swarm work is issue-first, not issue-everything\.\*\*' })
 if ($issueFirstLine.Count -ne 1) { throw "expected exactly one material issue-first rule; found $($issueFirstLine.Count)" }
 foreach ($required in @(
@@ -84,5 +84,5 @@ if ($text.Contains('The issue/task is the work identity.')) { throw 'legacy issu
     issue_first_never_serializes_workers = $true
     cross_issue_north_star_selection = $true
     disjoint_contributions_remain_parallel = $true
-    bootstrap_uses_persistent_process_id = $true
+    bootstrap_uses_stable_alias = $true
 } | ConvertTo-Json -Compress

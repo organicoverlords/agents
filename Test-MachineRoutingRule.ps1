@@ -27,10 +27,9 @@ foreach ($required in @('the Linux OMEN is the default build, runtime, test, and
     if (-not ($agents.Contains($required) -or $rules.Contains($required))) { throw "execution routing invariant missing: $required" }
 }
 foreach ($required in @(
-    'route eligibility precedes bootstrap',
-    'do not call a route merely to obtain permission to decide whether that same route is usable',
-    'skip that MCPv4 bootstrap read and use the next supported usable machine route',
-    'If no usable route can obtain bootstrap',
+    'bootstrap is the first machine action',
+    'reserved stable bootstrap alias `process_id="bootstrap"`',
+    'Never hard-code or persist a runtime process UUID for bootstrap',
     'prefer MCPv4 only while it is **usable for the requested operation**',
     'known-lightweight local operation that is normally sub-second remains above 5 seconds on one bounded confirmation',
     '`DEGRADED` is fallback-worthy exactly like unavailability',
@@ -39,20 +38,22 @@ foreach ($required in @(
     '`READY` permits a connection attempt but does not itself prove route usability',
     'Missing/invalid persisted authorization is `UNAVAILABLE` for unattended recovery',
     'never poll it as a recovery loop'
-)) { if (-not $rules.Contains($required)) { throw "degraded-route invariant missing: $required" } }
+)) { if (-not $rules.Contains($required)) { throw "bootstrap/route invariant missing: $required" } }
 foreach ($required in @(
-    'Fresh chats that materially need machine state follow the `RULES.md` **route-before-bootstrap** rule once',
-    'Do not make MCPv4 bootstrap a prerequisite for deciding whether MCPv4 itself is usable',
+    'Fresh chats that materially need machine state follow the `RULES.md` **first-machine-action bootstrap** rule once',
+    'reserved stable `process_id="bootstrap"`',
     'Machine-route choice follows **operation usability**, not service existence',
     'A live listener or HTTP 200 does not pin work to MCPv4',
     '`-ReadyProbe` proves only persisted authorization readiness',
     'never trigger browser authorization during unattended fallback'
-)) { if (-not $agents.Contains($required)) { throw "AGENTS degraded-route invariant missing: $required" } }
+)) { if (-not $agents.Contains($required)) { throw "AGENTS bootstrap/route invariant missing: $required" } }
 foreach ($forbidden in @(
     'When MCPv4 is genuinely unavailable, fall back',
     'before choosing machine routes or reporting machine state',
-    'the first machine action is MCPv4 `read_output`',
-    'a healthy route is a usable route'
-)) { if ($rules.Contains($forbidden) -or $agents.Contains($forbidden)) { throw "stale route-liveness substitution remains: $forbidden" } }
+    'a healthy route is a usable route',
+    'route eligibility precedes bootstrap',
+    'skip that MCPv4 bootstrap read and use the next supported usable machine route'
+)) { if ($rules.Contains($forbidden) -or $agents.Contains($forbidden)) { throw "stale route/bootstrap substitution remains: $forbidden" } }
+if ($rules -match 'process_id="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"' -or $agents -match 'process_id="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"') { throw 'bootstrap contract hard-codes runtime UUID' }
 if (($rules -split "`r?`n" | Where-Object { $_ -match '^- Machine-route precedence: prefer MCPv4' }).Count -ne 1) { throw 'expected exactly one MCPv4 route precedence rule' }
 Write-Output 'PASS machine routing owner-bound rule'

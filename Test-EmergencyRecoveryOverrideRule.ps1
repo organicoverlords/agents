@@ -36,7 +36,9 @@ foreach ($required in @(
 )) {
     if (-not $emergency.Contains($required)) { throw "emergency contract missing: $required" }
 }
-$versionPattern = '(?m)^Shared contract version:\s*50\s*$'
-if (-not [regex]::IsMatch($rules, $versionPattern)) { throw 'RULES contract version not 50' }
-if (-not [regex]::IsMatch($agents, $versionPattern)) { throw 'AGENTS contract version not 50' }
+$versionPattern = '(?m)^Shared contract version:\s*([1-9][0-9]*)\s*$'
+$rulesMatch = [regex]::Match($rules, $versionPattern)
+$agentsMatch = [regex]::Match($agents, $versionPattern)
+if (-not $rulesMatch.Success -or -not $agentsMatch.Success) { throw 'shared contract version missing' }
+if ($rulesMatch.Groups[1].Value -ne $agentsMatch.Groups[1].Value) { throw 'shared contract versions are incoherent' }
 [ordered]@{ok=$true; dormant=$true; trigger_pointer=$true; anti_deadlock=$true; local_recovery_priority=$true; external_security_boundaries_preserved=$true} | ConvertTo-Json -Compress
