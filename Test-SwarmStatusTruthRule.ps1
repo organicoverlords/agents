@@ -8,8 +8,9 @@ $required = @(
   'MCPv4, MCPv3, and Remote Desktop Commander',
   '`MCPv4-observed` engaged-worker count',
   'Route health/availability is reported separately from worker activity',
-  'Read the current `swarm_topology` bootstrap/contract for S1/S2 membership',
-  'never infer subscription from caller id',
+  'single canonical active `S2` recurring fleet',
+  'paused `S1` partition',
+  'never infer fleet membership from caller id',
   'manual/on-demand population',
   'scheduler/fleet-watch result describes recurrence/recovery evidence, not current swarm liveness'
 )
