@@ -8,12 +8,43 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Get-DesktopCommanderJwtEmail {
+    param([string]$AccessToken)
+    if ([string]::IsNullOrWhiteSpace($AccessToken)) { return $null }
+    try {
+        $parts = $AccessToken.Split('.')
+        if ($parts.Count -lt 2) { return $null }
+        $payload = $parts[1].Replace('-', '+').Replace('_', '/')
+        switch ($payload.Length % 4) {
+            2 { $payload += '==' }
+            3 { $payload += '=' }
+            1 { return $null }
+        }
+        $json = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($payload))
+        $claims = $json | ConvertFrom-Json
+        $email = [string]$claims.email
+        if ([string]::IsNullOrWhiteSpace($email)) { return $null }
+        return $email.Trim()
+    }
+    catch { return $null }
+}
+
 function Get-DesktopCommanderAuthorizationState {
-    $configPath = Join-Path $env:USERPROFILE '.desktop-commander-device\device.json'
+    $configDir = Join-Path $env:USERPROFILE '.desktop-commander-device'
+    $configPath = Join-Path $configDir 'device.json'
+    $expectedAccountPath = Join-Path $configDir 'expected-account.txt'
+    $expectedAccount = $null
+    if (Test-Path -LiteralPath $expectedAccountPath -PathType Leaf) {
+        try { $expectedAccount = (Get-Content -LiteralPath $expectedAccountPath -Raw).Trim() } catch {}
+    }
     $state = [ordered]@{
         status = 'AUTHORIZATION_REQUIRED'
         ready = $false
         config_path = $configPath
+        expected_account_path = $expectedAccountPath
+        expected_account_email = $expectedAccount
+        session_account_email = $null
+        account_matches_expected = $false
         has_device_id = $false
         has_session = $false
         has_access_token = $false
@@ -33,8 +64,29 @@ function Get-DesktopCommanderAuthorizationState {
     $state.has_session = $null -ne $config.session
     $state.has_access_token = $state.has_session -and -not [string]::IsNullOrWhiteSpace([string]$config.session.access_token)
     $state.has_refresh_token = $state.has_session -and -not [string]::IsNullOrWhiteSpace([string]$config.session.refresh_token)
-    $state.ready = $state.has_device_id -and $state.has_access_token -and $state.has_refresh_token
-    if ($state.ready) { $state.status = 'READY' }
+    if (-not ($state.has_device_id -and $state.has_access_token -and $state.has_refresh_token)) {
+        return [pscustomobject]$state
+    }
+    if ([string]::IsNullOrWhiteSpace($expectedAccount)) {
+        $state.status = 'EXPECTED_ACCOUNT_REQUIRED'
+        return [pscustomobject]$state
+    }
+    $state.session_account_email = Get-DesktopCommanderJwtEmail -AccessToken ([string]$config.session.access_token)
+    if ([string]::IsNullOrWhiteSpace([string]$state.session_account_email)) {
+        $state.status = 'SESSION_IDENTITY_UNREADABLE'
+        return [pscustomobject]$state
+    }
+    $state.account_matches_expected = [string]::Equals(
+        [string]$state.session_account_email,
+        [string]$expectedAccount,
+        [StringComparison]::OrdinalIgnoreCase
+    )
+    if (-not $state.account_matches_expected) {
+        $state.status = 'ACCOUNT_MISMATCH'
+        return [pscustomobject]$state
+    }
+    $state.ready = $true
+    $state.status = 'READY'
     return [pscustomobject]$state
 }
 
@@ -220,9 +272,33 @@ $authorization = Get-DesktopCommanderAuthorizationState
 if (-not $authorization.ready -and -not $AllowInteractiveAuthorization) {
     throw "DESKTOP_COMMANDER_PERSISTED_SESSION_REQUIRED=$($authorization.config_path) status=$($authorization.status)"
 }
+if ($AllowInteractiveAuthorization) {
+    if ([string]::IsNullOrWhiteSpace([string]$authorization.expected_account_email)) {
+        throw "DESKTOP_COMMANDER_EXPECTED_ACCOUNT_REQUIRED=$($authorization.expected_account_path)"
+    }
+    if ((Test-Path -LiteralPath $authorization.config_path -PathType Leaf) -and $authorization.status -in @('ACCOUNT_MISMATCH','SESSION_IDENTITY_UNREADABLE','INVALID_PERSISTED_CONFIG')) {
+        $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+        $quarantine = "$($authorization.config_path).rejected-$stamp"
+        Move-Item -LiteralPath $authorization.config_path -Destination $quarantine -Force
+    }
+}
 
 $npx = (Get-Command npx.cmd -ErrorAction Stop).Source
 $escapedNpx = $npx.Replace('"', '""')
 $child = Start-HiddenChild -FileName $commandProcessor -Arguments ('/d /s /c ""{0}" --yes @wonderwhy-er/desktop-commander@latest remote"' -f $escapedNpx)
+if ($AllowInteractiveAuthorization) {
+    while (-not $child.HasExited) {
+        Start-Sleep -Milliseconds 250
+        $liveAuthorization = Get-DesktopCommanderAuthorizationState
+        if ($liveAuthorization.has_session) {
+            if ($liveAuthorization.status -eq 'ACCOUNT_MISMATCH' -or $liveAuthorization.status -eq 'SESSION_IDENTITY_UNREADABLE') {
+                [DesktopCommanderProcessJob]::CloseHandle($script:DesktopCommanderJob) | Out-Null
+                $script:DesktopCommanderJob = [IntPtr]::Zero
+                throw "DESKTOP_COMMANDER_AUTH_ACCOUNT_REJECTED expected=$($liveAuthorization.expected_account_email) actual=$($liveAuthorization.session_account_email) status=$($liveAuthorization.status)"
+            }
+            if ($liveAuthorization.ready) { break }
+        }
+    }
+}
 $child.WaitForExit()
 exit $child.ExitCode
