@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "poll_interval_minutes": 1,
+  "existing_pr_grace_minutes": 15,
+  "missing_readiness_escalation_minutes": 10,
+  "pending_required_check_escalation_minutes": 15,
+  "blocking_escalation_minutes": 5,
+  "priority_escalation_minutes": 2,
+  "priority_labels": [
+    "important",
+    "priority:high",
+    "priority:critical",
+    "regression",
+    "hotfix"
+  ],
+  "repos": [
+    {
+      "repo": "organicoverlords/agent-rules",
+      "mode": "github",
+      "required_readiness_context": "agent/convergence-ready",
+      "required_checks": [],
+      "allow_update_branch": true
+    },
+    {
+      "repo": "organicoverlords/agents",
+      "mode": "github",
+      "required_readiness_context": "agent/convergence-ready",
+      "required_checks": [],
+      "allow_update_branch": true
+    },
+    {
+      "repo": "organicoverlords/chatgpt-mcp-clean",
+      "mode": "github",
+      "required_readiness_context": "agent/convergence-ready",
+      "required_checks": [],
+      "allow_update_branch": true
+    },
+    {
+      "repo": "organicoverlords/regression-research",
+      "mode": "github",
+      "required_readiness_context": "",
+      "required_checks": [
+        {
+          "type": "check",
+          "name": "verify",
+          "workflow": "changelog-landing"
+        }
+      ],
+      "allow_update_branch": true
+    },
+    {
+      "repo": "organicoverlords/p3",
+      "mode": "p3_guard",
+      "required_readiness_context": "",
+      "required_checks": [],
+      "allow_update_branch": false,
+      "local_path": "C:\\Users\\Lauri\\Documents\\Unreal Projects\\p3",
+      "guard": "scripts\\ci\\control\\Invoke-P3PrMergeGuard.ps1"
+    }
+  ]
+}
