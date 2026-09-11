@@ -48,10 +48,29 @@ function Write-JsonAtomic {
 
 function Write-Event {
     param([hashtable]$Event)
-    if ($NoMutate -or $SnapshotPath) { return }
+    if ($NoMutate) { return }
     $dir = Split-Path -Parent $LogPath
     if ($dir) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-    ($Event | ConvertTo-Json -Depth 20 -Compress) | Add-Content -LiteralPath $LogPath -Encoding UTF8
+    $line = ($Event | ConvertTo-Json -Depth 20 -Compress) + [Environment]::NewLine
+    $bytes = (New-Object Text.UTF8Encoding($false)).GetBytes($line)
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        $stream = $null
+        try {
+            $stream = [IO.File]::Open($LogPath, [IO.FileMode]::Append, [IO.FileAccess]::Write, [IO.FileShare]::ReadWrite)
+            $stream.Write($bytes, 0, $bytes.Length)
+            $stream.Flush($true)
+            return
+        } catch [IO.IOException] {
+            if ($attempt -eq 3) {
+                Write-Warning "ReadyPullRequestConvergence event logging failed after $attempt attempts: $($_.Exception.Message)"
+                return
+            }
+            Start-Sleep -Milliseconds (20 * $attempt)
+        } finally {
+            if ($null -ne $stream) { $stream.Dispose() }
+        }
+    }
+    return $false
 }
 
 function Get-Now {
@@ -257,6 +276,23 @@ function Add-BlockerComment {
     return [pscustomobject]@{ ok=($LASTEXITCODE -eq 0); output=($output -join "`n") }
 }
 
+$runMutex = $null
+$runMutexHeld = $false
+if (-not $NoMutate -and -not $SnapshotPath) {
+    $runMutex = New-Object Threading.Mutex($false, 'Local\ReadyPullRequestConvergence')
+    try {
+        $runMutexHeld = $runMutex.WaitOne(0, $false)
+    } catch [Threading.AbandonedMutexException] {
+        $runMutexHeld = $true
+    }
+    if (-not $runMutexHeld) {
+        [ordered]@{ ok=$true; skipped='SINGLE_FLIGHT_BUSY' } | ConvertTo-Json -Compress
+        $runMutex.Dispose()
+        return
+    }
+}
+
+try {
 $config = Read-JsonFile -Path $ConfigPath
 if ($null -eq $config -or [int]$config.schema_version -ne 1) { throw "Invalid convergence config: $ConfigPath" }
 $snapshot = if ($SnapshotPath) { Read-JsonFile -Path $SnapshotPath } else { $null }
@@ -383,3 +419,9 @@ $summary = [ordered]@{
     results = $results
 }
 $summary | ConvertTo-Json -Depth 20 -Compress
+} finally {
+    if ($runMutexHeld -and $null -ne $runMutex) {
+        try { $runMutex.ReleaseMutex() } catch { }
+    }
+    if ($null -ne $runMutex) { $runMutex.Dispose() }
+}
