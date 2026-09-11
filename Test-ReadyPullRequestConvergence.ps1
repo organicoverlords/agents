@@ -62,6 +62,40 @@ try {
     foreach ($key in $expected.Keys) {
         if ($byPr[$key] -ne $expected[$key]) { throw "PR $key decision mismatch: expected=$($expected[$key]) actual=$($byPr[$key])" }
     }
+    $logPath = Join-Path $temporary 'events.jsonl'
+    $reader = Start-Job -ArgumentList $logPath -ScriptBlock {
+        param($Path)
+        for ($i = 0; $i -lt 250; $i++) {
+            if (Test-Path -LiteralPath $Path -PathType Leaf) {
+                try { Get-Content -LiteralPath $Path -Tail 4 -ErrorAction Stop | Out-Null } catch { }
+            }
+            Start-Sleep -Milliseconds 2
+        }
+    }
+    try {
+        for ($iteration = 0; $iteration -lt 12; $iteration++) {
+            $probe = & $script -ConfigPath $configPath -StatePath $statePath -LogPath $logPath -SnapshotPath $snapshotPath -NowUtc '2026-09-11T11:02:00Z'
+            $probeResult = $probe | ConvertFrom-Json
+            if (-not [bool]$probeResult.ok) { throw "event-log contention probe failed at iteration $iteration" }
+        }
+    } finally {
+        Wait-Job -Job $reader -Timeout 5 | Out-Null
+        Stop-Job -Job $reader -ErrorAction SilentlyContinue
+        Remove-Job -Job $reader -Force -ErrorAction SilentlyContinue
+    }
+    $eventLines = @(Get-Content -LiteralPath $logPath | Where-Object { $_.Trim() })
+    if ($eventLines.Count -ne (12 * $expected.Count)) {
+        throw "event-log contention probe line count mismatch: expected=$(12 * $expected.Count) actual=$($eventLines.Count)"
+    }
+    foreach ($line in $eventLines) {
+        try { $null = $line | ConvertFrom-Json } catch { throw "event-log contention probe emitted invalid JSON: $line" }
+    }
+
+    $scriptText = [IO.File]::ReadAllText($script)
+    foreach ($required in @('FileShare]::ReadWrite', 'Local\ReadyPullRequestConvergence', 'SINGLE_FLIGHT_BUSY')) {
+        if (-not $scriptText.Contains($required)) { throw "convergence runtime guard missing: $required" }
+    }
+
     [ordered]@{
         ok = $true
         scenarios = $expected.Count
@@ -71,6 +105,8 @@ try {
         conflict_block = $true
         p3_guard_delegation = $true
         legacy_backlog_not_blindly_merged = $true
+        concurrent_log_read_safe = $true
+        process_single_flight = $true
     } | ConvertTo-Json -Compress
 } finally {
     Remove-Item -LiteralPath $temporary -Recurse -Force -ErrorAction SilentlyContinue
