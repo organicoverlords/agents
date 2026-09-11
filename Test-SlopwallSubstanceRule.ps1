@@ -5,14 +5,22 @@ $rules = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
 $agents = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'AGENTS.md'))
 
 $markerLines = @($rules -split "`r?`n" | Where-Object { $_ -match '^- `slopwall` is a user correction marker\.' })
-if ($markerLines.Count -ne 1) { throw "expected exactly one compact slopwall correction marker; found $($markerLines.Count)" }
+if ($markerLines.Count -ne 1) { throw "expected exactly one slopwall rule; found $($markerLines.Count)" }
 $marker = $markerLines[0]
 foreach ($required in @(
     'Correction handling is answer-first',
-    'give/execute the corrected result before any retrospective explanation, learning record, or process commentary',
-    'Never make correction logging a prerequisite to returning the corrected answer'
+    'treat the immediately preceding assistant reply/action as failed against the inherited objective',
+    'recover the exact requested result and the missing user-relevant substance',
+    'A slopwall is not defined by length: it is substance displacement',
+    'filler, meta-commentary, procedural narration, templated structure, promises, weak proxy evidence, premature closure, wrong-objective work, or control-plane/tool drift',
+    'The correction is not satisfied by shortening, apologizing, restating the complaint, explaining the failure, or promising a new style',
+    'The next user-visible reply must lead with the corrected result',
+    'every paragraph kept must materially advance the requested result, evidence, decision, or necessary next action',
+    'For an execution request, take a concrete safe execution step before explanatory prose when possible',
+    'Never make correction logging a prerequisite to returning the corrected answer',
+    'never invent mandatory Slopwall ceremony that delays the inherited task'
 )) {
-    if (-not $marker.Contains($required)) { throw "slopwall marker missing invariant: $required" }
+    if (-not $marker.Contains($required)) { throw "slopwall rule missing invariant: $required" }
 }
 
 $outputLines = @($rules -split "`r?`n" | Where-Object { $_ -match '^- \*\*For direct replies to the user only:\*\*' })
@@ -39,14 +47,11 @@ foreach ($required in @(
     if (-not $correctionRule.Contains($required)) { throw "durable correction owner missing invariant: $required" }
 }
 
-if ($rules -match '(?m)^- `slopwall` is a response-quality failure:') {
-    throw 'obsolete inline slopwall response-style mini-contract returned to RULES.md'
-}
-
 [ordered]@{
     ok = $true
-    compact_marker_in_rules = $true
-    durable_correction_owner_in_agents = $true
-    direct_user_reply_contract_present = $true
-    obsolete_inline_response_contract_absent = $true
+    slopwall_substance_definition_present = $true
+    inherited_task_preserved = $true
+    corrected_result_first = $true
+    no_logging_or_incident_prerequisite = $true
+    no_length_only_fix = $true
 } | ConvertTo-Json -Compress
