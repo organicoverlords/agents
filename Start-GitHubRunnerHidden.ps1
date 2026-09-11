@@ -457,14 +457,16 @@ function Get-CurrentLaunchDisconnectedReadyListener {
 }
 
 
-function Get-CurrentLaunchPreReadyNoLogStall {
+function Get-CurrentLaunchPreReadyStall {
     param(
         [Parameter(Mandatory)][string]$Root,
         [Parameter(Mandatory)][datetime]$LaunchStartedUtc,
         [Parameter(Mandatory)][int]$MinimumLaunchAgeSeconds,
+        [int]$MinimumLogSilenceSeconds = 90,
         [Parameter(Mandatory)][int]$HelperPid
     )
-    $launchAgeSeconds = [int][Math]::Floor(([datetime]::UtcNow - $LaunchStartedUtc).TotalSeconds)
+    $nowUtc = [datetime]::UtcNow
+    $launchAgeSeconds = [int][Math]::Floor(($nowUtc - $LaunchStartedUtc).TotalSeconds)
     if ($launchAgeSeconds -lt $MinimumLaunchAgeSeconds) { return $null }
 
     $diagRoot = Join-Path $Root '_diag'
@@ -477,16 +479,38 @@ function Get-CurrentLaunchPreReadyNoLogStall {
 
     $currentLaunchLogs = @(Get-ChildItem -LiteralPath $diagRoot -Filter 'Runner_*.log' -File -ErrorAction SilentlyContinue |
         Where-Object { $_.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-1) } |
-        Select-Object -First 1)
-    if ($currentLaunchLogs.Count -gt 0) { return $null }
+        Sort-Object LastWriteTimeUtc -Descending |
+        Select-Object -First 4)
+    if ($currentLaunchLogs.Count -eq 0) {
+        return [pscustomobject]@{
+            Reason = 'no-log'
+            LaunchAgeSeconds = $launchAgeSeconds
+            LogSilenceSeconds = $null
+            ListenerPid = [int]$listener.ProcessId
+            HelperPid = $HelperPid
+            LogPath = $null
+        }
+    }
+
+    foreach ($log in $currentLaunchLogs) {
+        if (Select-String -LiteralPath $log.FullName -Pattern ': Listening for Jobs$' -Quiet -ErrorAction SilentlyContinue) {
+            return $null
+        }
+    }
+
+    $latestLog = $currentLaunchLogs[0]
+    $logSilenceSeconds = [int][Math]::Floor(($nowUtc - $latestLog.LastWriteTimeUtc).TotalSeconds)
+    if ($logSilenceSeconds -lt $MinimumLogSilenceSeconds) { return $null }
 
     return [pscustomobject]@{
+        Reason = 'log-silent'
         LaunchAgeSeconds = $launchAgeSeconds
+        LogSilenceSeconds = $logSilenceSeconds
         ListenerPid = [int]$listener.ProcessId
         HelperPid = $HelperPid
+        LogPath = $latestLog.FullName
     }
 }
-
 
 function Test-ListenerHasLiveLauncher {
     param(
@@ -554,42 +578,48 @@ while ($true) {
     $disconnectedReadyMinimumAgeSeconds = 120
     $disconnectedReadyProbeIntervalSeconds = 30
     $nextDisconnectedReadyProbeUtc = $launchStartedUtc.AddSeconds($disconnectedReadyMinimumAgeSeconds)
-    $preReadyNoLogMinimumAgeSeconds = 300
-    $preReadyNoLogProbeIntervalSeconds = 30
-    $nextPreReadyNoLogProbeUtc = $launchStartedUtc.AddSeconds($preReadyNoLogMinimumAgeSeconds)
+    $preReadyMinimumAgeSeconds = 120
+    $preReadyLogSilenceSeconds = 90
+    $preReadyProbeIntervalSeconds = 15
+    $nextPreReadyProbeUtc = $launchStartedUtc.AddSeconds($preReadyMinimumAgeSeconds)
     # Observed server-side session release after an owned recycle took up to 188 seconds on RR-KONE-02.
     # Wait slightly longer before spawning a replacement so recovery does not manufacture its own 409 loop.
     $brokerSessionReleaseSeconds = 210
     $brokerRecycleTriggered = $false
+    $brokerSessionReleaseRequired = $false
     while (-not $process.WaitForExit(1000)) {
         $backoff = Get-CurrentLaunchLongBrokerBackoff -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumSeconds $brokerBackoffMinimumSeconds -PostJobTransitionGraceSeconds $brokerBackoffPostJobGraceSeconds
         $sessionConflict = Get-CurrentLaunchRepeatedSessionConflict -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumCount $sessionConflictMinimumCount -MinimumSpanSeconds $sessionConflictMinimumSpanSeconds -MaximumAgeSeconds $sessionConflictMaximumAgeSeconds
         $cancellationStorm = Get-CurrentLaunchRepeatedCancellationStorm -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumCount $cancellationStormMinimumCount -MinimumSpanSeconds $cancellationStormMinimumSpanSeconds -MaximumAgeSeconds $cancellationStormMaximumAgeSeconds
         $disconnectedReady = $null
-        $preReadyNoLog = $null
+        $preReadyStall = $null
         $probeNowUtc = [datetime]::UtcNow
         if ($probeNowUtc -ge $nextDisconnectedReadyProbeUtc) {
             $disconnectedReady = Get-CurrentLaunchDisconnectedReadyListener -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumReadyAgeSeconds $disconnectedReadyMinimumAgeSeconds
             $nextDisconnectedReadyProbeUtc = $probeNowUtc.AddSeconds($disconnectedReadyProbeIntervalSeconds)
         }
-        if ($probeNowUtc -ge $nextPreReadyNoLogProbeUtc) {
-            $preReadyNoLog = Get-CurrentLaunchPreReadyNoLogStall -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumLaunchAgeSeconds $preReadyNoLogMinimumAgeSeconds -HelperPid $process.Id
-            $nextPreReadyNoLogProbeUtc = $probeNowUtc.AddSeconds($preReadyNoLogProbeIntervalSeconds)
+        if ($probeNowUtc -ge $nextPreReadyProbeUtc) {
+            $preReadyStall = Get-CurrentLaunchPreReadyStall -Root $root -LaunchStartedUtc $launchStartedUtc -MinimumLaunchAgeSeconds $preReadyMinimumAgeSeconds -MinimumLogSilenceSeconds $preReadyLogSilenceSeconds -HelperPid $process.Id
+            $nextPreReadyProbeUtc = $probeNowUtc.AddSeconds($preReadyProbeIntervalSeconds)
         }
-        if ($null -eq $backoff -and $null -eq $sessionConflict -and $null -eq $cancellationStorm -and $null -eq $disconnectedReady -and $null -eq $preReadyNoLog) { continue }
+        if ($null -eq $backoff -and $null -eq $sessionConflict -and $null -eq $cancellationStorm -and $null -eq $disconnectedReady -and $null -eq $preReadyStall) { continue }
         $workers = @(Get-RunnerWorkersForRoot -Root $root)
         if ($workers.Count -gt 0) { continue }
 
         if ($null -ne $backoff) {
+            $brokerSessionReleaseRequired = $true
             Write-Warning "GITHUB_RUNNER_BROKER_BACKOFF_RECOVERY=root:$root|seconds:$($backoff.Seconds)|log:$($backoff.LogPath)|helper_pid:$($process.Id)"
         } elseif ($null -ne $sessionConflict) {
+            $brokerSessionReleaseRequired = $true
             Write-Warning "GITHUB_RUNNER_SESSION_CONFLICT_RECOVERY=root:$root|count:$($sessionConflict.Count)|span_seconds:$($sessionConflict.SpanSeconds)|helper_pid:$($process.Id)"
         } elseif ($null -ne $cancellationStorm) {
+            $brokerSessionReleaseRequired = $true
             Write-Warning "GITHUB_RUNNER_CANCELLATION_STORM_RECOVERY=root:$root|job:$($cancellationStorm.JobId)|count:$($cancellationStorm.Count)|span_seconds:$($cancellationStorm.SpanSeconds)|helper_pid:$($process.Id)"
         } elseif ($null -ne $disconnectedReady) {
+            $brokerSessionReleaseRequired = $true
             Write-Warning "GITHUB_RUNNER_DISCONNECTED_READY_RECOVERY=root:$root|listener_pid:$($disconnectedReady.ListenerPid)|ready_age_seconds:$($disconnectedReady.ReadyAgeSeconds)|log:$($disconnectedReady.LogPath)|helper_pid:$($process.Id)"
         } else {
-            Write-Warning "GITHUB_RUNNER_PRE_READY_NO_LOG_RECOVERY=root:$root|listener_pid:$($preReadyNoLog.ListenerPid)|launch_age_seconds:$($preReadyNoLog.LaunchAgeSeconds)|helper_pid:$($process.Id)"
+            Write-Warning "GITHUB_RUNNER_PRE_READY_STALL_RECOVERY=root:$root|reason:$($preReadyStall.Reason)|listener_pid:$($preReadyStall.ListenerPid)|launch_age_seconds:$($preReadyStall.LaunchAgeSeconds)|log_silence_seconds:$($preReadyStall.LogSilenceSeconds)|log:$($preReadyStall.LogPath)|helper_pid:$($process.Id)"
         }
         & $taskKill /PID ([string]$process.Id) /T /F | Out-Null
         if ($LASTEXITCODE -ne 0 -and -not $process.HasExited) {
@@ -607,8 +637,13 @@ while ($true) {
         exit $exitCode
     }
     if ($brokerRecycleTriggered) {
-        Write-Warning "GITHUB_RUNNER_BROKER_SESSION_RELEASE_WAIT=root:$root|seconds:$brokerSessionReleaseSeconds"
-        Start-Sleep -Seconds $brokerSessionReleaseSeconds
+        if ($brokerSessionReleaseRequired) {
+            Write-Warning "GITHUB_RUNNER_BROKER_SESSION_RELEASE_WAIT=root:$root|seconds:$brokerSessionReleaseSeconds"
+            Start-Sleep -Seconds $brokerSessionReleaseSeconds
+        } else {
+            Write-Warning "GITHUB_RUNNER_PRE_READY_RESTART_WAIT=root:$root|seconds:2"
+            Start-Sleep -Seconds 2
+        }
         continue
     }
 
