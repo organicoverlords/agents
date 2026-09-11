@@ -12,7 +12,10 @@ foreach ($needle in @(
     'JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE',
     '[DesktopCommanderProcessJob]::Assign',
     '[switch]$AllowInteractiveAuthorization',
-    'DESKTOP_COMMANDER_PERSISTED_SESSION_REQUIRED'
+    'DESKTOP_COMMANDER_PERSISTED_SESSION_REQUIRED',
+    'EXPECTED_ACCOUNT_REQUIRED',
+    'ACCOUNT_MISMATCH',
+    'DESKTOP_COMMANDER_AUTH_ACCOUNT_REJECTED'
 )) {
     if ($text.IndexOf($needle, [StringComparison]::Ordinal) -lt 0) {
         throw "DESKTOP_COMMANDER_HIDDEN_CONTRACT_MISSING=$needle"
@@ -112,18 +115,41 @@ try {
 
     $configDir = Join-Path $tempProfile '.desktop-commander-device'
     New-Item -ItemType Directory -Path $configDir -Force | Out-Null
+    $payload = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('{"email":"expected@example.com"}')).TrimEnd('=').Replace('+','-').Replace('/','_')
+    $matchingToken = "e30.$payload.sig"
     [pscustomobject]@{
         deviceId = 'test-device'
-        session = [pscustomobject]@{ access_token = 'test-access'; refresh_token = 'test-refresh' }
+        session = [pscustomobject]@{ access_token = $matchingToken; refresh_token = 'test-refresh' }
     } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $configDir 'device.json') -Encoding UTF8
 
+    $missingExpectedOutput = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File $launcher -ReadyProbe 2>$null
+    if ($LASTEXITCODE -ne 2 -or (($missingExpectedOutput | ConvertFrom-Json).status -ne 'EXPECTED_ACCOUNT_REQUIRED')) {
+        throw "DESKTOP_COMMANDER_EXPECTED_ACCOUNT_FAIL_CLOSED_BAD=$missingExpectedOutput exit=$LASTEXITCODE"
+    }
+
+    Set-Content -LiteralPath (Join-Path $configDir 'expected-account.txt') -Value 'expected@example.com' -NoNewline -Encoding UTF8
     $readyOutput = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File $launcher -ReadyProbe
     if ($LASTEXITCODE -ne 0) {
         throw "DESKTOP_COMMANDER_READY_PROBE_AUTHORIZED_EXIT=$LASTEXITCODE output=$readyOutput"
     }
     $ready = $readyOutput | ConvertFrom-Json
-    if ($ready.status -ne 'READY' -or -not $ready.ready -or -not $ready.has_refresh_token) {
+    if ($ready.status -ne 'READY' -or -not $ready.ready -or -not $ready.has_refresh_token -or -not $ready.account_matches_expected) {
         throw "DESKTOP_COMMANDER_READY_PROBE_AUTHORIZED_BAD=$readyOutput"
+    }
+
+    $badPayload = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('{"email":"wrong@example.com"}')).TrimEnd('=').Replace('+','-').Replace('/','_')
+    $badToken = "e30.$badPayload.sig"
+    [pscustomobject]@{
+        deviceId = 'test-device'
+        session = [pscustomobject]@{ access_token = $badToken; refresh_token = 'test-refresh' }
+    } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $configDir 'device.json') -Encoding UTF8
+    $mismatchOutput = & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File $launcher -ReadyProbe 2>$null
+    if ($LASTEXITCODE -ne 2) {
+        throw "DESKTOP_COMMANDER_ACCOUNT_MISMATCH_EXIT=$LASTEXITCODE output=$mismatchOutput"
+    }
+    $mismatch = $mismatchOutput | ConvertFrom-Json
+    if ($mismatch.status -ne 'ACCOUNT_MISMATCH' -or $mismatch.ready -or $mismatch.account_matches_expected) {
+        throw "DESKTOP_COMMANDER_ACCOUNT_MISMATCH_NOT_REJECTED=$mismatchOutput"
     }
 }
 finally {
