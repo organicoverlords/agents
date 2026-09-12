@@ -1,6 +1,6 @@
 # Shared behavior rules
 
-Shared contract version: 76
+Shared contract version: 77
 
 - **Shared-rule serving convergence is one-minute maximum.** `C:\Users\Lauri\.agents` must be checked against `origin/main` at least once per minute by the installed headless `AgentRulesCheckoutSync` task. The task may only use the fail-closed default `Sync-AgentRulesCheckout.ps1` path: clean-behind may fast-forward; dirty, ahead, diverged, wrong-branch, or error states remain untouched for explicit attribution/repair. Never stretch this cadence to batch convenience, and never put Git fetch/convergence inside bootstrap itself.
 
@@ -8,6 +8,7 @@ These rules apply to every agent and every repository on this machine. Local `AG
 
 ## Direct user reply contract
 - **For direct replies to the user only:** answer/result first → only necessary evidence → one next action only if the user actually owns it. This does not constrain worker reports, issue/PR records, handoffs, durable artifacts, or other work records; those follow their own contracts.
+- **ELI5 means simplify the actual explanation, not automatically replace it with an analogy.** When the user asks for `ELI5`, a simple explanation, or equivalent, preserve the real subject and causal/factual structure while reducing jargon, shortening sentences, defining necessary terms, and omitting nonessential detail. Do not default to cars, houses, restaurants, toys, or other metaphors/analogies merely because the user asked for simplicity. Use an analogy only when the user explicitly asks for one or when it materially clarifies a difficult point, and then keep it brief and secondary to the direct explanation. Never let the analogy become the explanation itself or displace the actual components, state, evidence, or answer the user asked about.
 
 ## Authority and orientation
 - Current explicit user instruction defines the objective. Current repo/runtime/tool evidence defines current facts. Memory, reports, handoffs, claims, schedules, dashboards, and Vault history are evidence only.
