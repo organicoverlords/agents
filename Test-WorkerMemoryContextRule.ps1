@@ -6,6 +6,8 @@ foreach ($doc in @($rules, $agents)) {
 }
 $requiredRules = @(
     'Task memory is conditional drill-down evidence, not a first-line search surface or startup tax',
+    'do not stop at that placeholder when the returned bounded local lineage can recover the object',
+    'origin/memory/live',
     'stack_atlas.py find',
     'memory_bank.py context <query>',
     'memory_bank.py timeline <query>',
@@ -19,6 +21,9 @@ foreach ($needle in $requiredRules) {
 }
 $requiredAgents = @(
     'use one unified `stack_atlas.py find` pass',
+    'Task-scoped memory is conditional drill-down evidence, not startup ceremony',
+    'resolve it with `stack_atlas.py find <mem-id>`',
+    'origin/memory/live',
     'Task memory/timeline is drill-down only after a relevant historical thread is surfaced',
     'Use full Atlas inventory only when bootstrap plus targeted discovery still leaves the dependency/blast radius materially unknown',
     'use an independent supported evidence source rather than making the broken component certify its own repair'
