@@ -6,6 +6,10 @@ $owners = @($rules -split "`r?`n" | Where-Object { $_ -match '^- \*\*DIRECT REPL
 if ($owners.Count -ne 1) { throw "expected one direct-reply gate; found $($owners.Count)" }
 foreach ($required in @(
   'silent pre-final gate',
+  'unresolved literal `slopwall`',
+  'fail-closed pre-final block',
+  'memory_bank.py record --kind correction',
+  'accepted durable record',
   'do not confuse a short answer with shallow work',
   'use proposition-appropriate evidence',
   'refresh materially changeable facts from the current/live owner',
