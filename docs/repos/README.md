@@ -7,6 +7,7 @@ Human-facing documentation for product repositories is authoritative here, on `o
 - `docs/repos/p3/` — P3 product direction, architecture, operating documentation, README/start-here material, and changelog.
 - `docs/repos/tiny3d/` — Tiny3D product direction and human-facing repository documentation.
 - `docs/repos/lowvram3d-studio/` — LowVRAM3D Studio product direction and human-facing repository documentation.
+- `docs/repos/AITubeTranscript/` — AITubeTranscript routing, evidence-boundary, and verified-reading guidance for YouTube research.
 
 Paths below each repository directory preserve their former product-repository layout so documentation-to-documentation relative links remain stable where possible.
 
