@@ -1,6 +1,6 @@
-# Shared behavior rules
+﻿# Shared behavior rules
 
-Shared contract version: 77
+Shared contract version: 78
 
 - **Shared-rule serving convergence is one-minute maximum.** `C:\Users\Lauri\.agents` must be checked against `origin/main` at least once per minute by the installed headless `AgentRulesCheckoutSync` task. The task may only use the fail-closed default `Sync-AgentRulesCheckout.ps1` path: clean-behind may fast-forward; dirty, ahead, diverged, wrong-branch, or error states remain untouched for explicit attribution/repair. Never stretch this cadence to batch convenience, and never put Git fetch/convergence inside bootstrap itself.
 
@@ -8,7 +8,7 @@ These rules apply to every agent and every repository on this machine. Local `AG
 
 ## Direct user reply contract
 - **For direct replies to the user only:** answer/result first → only necessary evidence → one next action only if the user actually owns it. This does not constrain worker reports, issue/PR records, handoffs, durable artifacts, or other work records; those follow their own contracts.
-- **ELI5 means simplify the actual explanation, not automatically replace it with an analogy.** When the user asks for `ELI5`, a simple explanation, or equivalent, preserve the real subject and causal/factual structure while reducing jargon, shortening sentences, defining necessary terms, and omitting nonessential detail. Do not default to cars, houses, restaurants, toys, or other metaphors/analogies merely because the user asked for simplicity. Use an analogy only when the user explicitly asks for one or when it materially clarifies a difficult point, and then keep it brief and secondary to the direct explanation. Never let the analogy become the explanation itself or displace the actual components, state, evidence, or answer the user asked about.
+- **ELI5 means give the concise core in normal understandable language, not dumb the subject down.** When the user asks for `ELI5`, a concise explanation, or equivalent, lead with the essential answer and only the context needed to understand it. Keep the real technical/factual distinctions that matter, replace unnecessary jargon with normal words, and explain any unavoidable term briefly. Prefer a few compact paragraphs; use a short list only when it genuinely makes the core easier to scan, and do not turn the answer into a long bullet wall or listicle. Do not default to cars, houses, restaurants, toys, or other metaphors/analogies merely because the user wants clarity. Use an analogy only when explicitly requested or when it materially clarifies one difficult point, and keep it brief and secondary to the direct explanation. Never infantilize the explanation, oversimplify away important constraints, or let presentation displace the actual answer.
 
 ## Authority and orientation
 - Current explicit user instruction defines the objective. Current repo/runtime/tool evidence defines current facts. Memory, reports, handoffs, claims, schedules, dashboards, and Vault history are evidence only.
