@@ -4,6 +4,8 @@ Canonical product repository: `organicoverlords/AITubeTranscript`.
 
 Use AITubeTranscript when work requires reading, proving, or reusing the contents of a YouTube video. It is the canonical path for transcript evidence and for the related description/comment/API overlays when those are actually required.
 
+The full migrated agent-facing operating guidance is in [`AGENT_GUIDANCE.md`](AGENT_GUIDANCE.md). Shared machine/repository behavior remains governed by the root `RULES.md` and `AGENTS.md` in this repository.
+
 ## Routing
 
 For a supplied YouTube URL or 11-character video ID:
