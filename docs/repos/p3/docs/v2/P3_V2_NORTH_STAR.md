@@ -160,6 +160,15 @@ Workers own continuity from this roadmap. When the current parent issue is satis
 
 The next product milestone is a **visible, fully playable two-player Lane War match** on the V2 production path. Work that directly advances this integrated slice outranks isolated polish or infrastructure that does not unblock it.
 
+### 2026-09-08 user priority refinement - visual library integration first
+
+Within that friend-playable milestone, the user's highest current product priority is **visible integration of the qualified asset library into the real game**. When multiple ready #803 contributions are available, prefer consuming already reviewed/hash-bound Tiny3D/library assets through the existing P3 consumer paths, binding them to real gameplay roles, and proving them in normal first-/third-person play over additional infrastructure, isolated source polish, placeholder work, or catalog-only progress.
+
+- Turn approved library assets into visible bases/defences, characters/creeps, battlefield dressing, construction pieces and other gameplay presentation where an existing owner/acceptance path calls for them; do not create a parallel asset framework.
+- Preserve exact source/provenance, gameplay collision/authority and visual-QA gates. A catalog entry, hash, import receipt or generated package is not integration until the asset is visibly used by the default product path and reviewed in gameplay.
+- Prefer replacement of remaining placeholders and weak/unfinished presentation when the qualified library already contains a suitable reviewed candidate. Do not substitute an unreviewed asset merely to increase coverage.
+- Machine-capacity work and memory-recall work remain important enabling priorities across the swarm, but for P3 they should reduce friction for this product objective rather than become competing products.
+
 **Current player-view priority:** implement, integrate, playtest and visually prove this milestone in **first-person and third-person**. RTS/overhead camera, input and UI work is deferred and must not consume current feature, integration, proof or polish time unless the user explicitly reactivates it. The future RTS architecture remains documented only so current work does not hard-wire a dead end.
 
 ### Game-first delivery and infrastructure stop condition
