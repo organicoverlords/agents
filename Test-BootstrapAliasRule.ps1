@@ -14,6 +14,19 @@ foreach ($required in @(
     'Producer file age, Task Scheduler results, or direct producer success do not certify the alias',
     'any bootstrap producer/scheduler acceptance must read `process_id="bootstrap"` itself'
 )) { if (-not $agents.Contains($required)) { throw "AGENTS missing bootstrap freshness invariant: $required" } }
+foreach ($required in @(
+    'refresh/re-discover only the needed binding',
+    'Never tight-loop an unchanged failure',
+    'another retry requires changed binding/schema/authorization/route evidence or a natural recovery boundary'
+)) { if (-not $rules.Contains($required)) { throw "RULES missing state-aware bootstrap recovery invariant: $required" } }
+foreach ($required in @(
+    'refresh/re-discover only that binding',
+    'Never tight-loop an unchanged failure',
+    'another retry requires changed route/binding/authorization evidence or a natural recovery boundary'
+)) { if (-not $agents.Contains($required)) { throw "AGENTS missing state-aware bootstrap recovery invariant: $required" } }
+foreach ($forbidden in @('make at most one MCPv4 fallback call', 'use the single MCPv4 `start_process` fallback', 'use the next supported usable machine route once')) {
+    if ($rules.Contains($forbidden) -or $agents.Contains($forbidden)) { throw "single-attempt bootstrap ceiling remains: $forbidden" }
+}
 $uuidPattern = 'process_id="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"'
 if ($rules -match $uuidPattern -or $agents -match $uuidPattern) { throw 'runtime UUID hard-coded as bootstrap process id' }
 Write-Host 'BOOTSTRAP_ALIAS_RULE=PASS'
