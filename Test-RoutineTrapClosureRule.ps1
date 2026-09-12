@@ -7,7 +7,9 @@ foreach ($doc in @($rules, $agents)) {
 }
 foreach ($required in @(
   'Do not ask the user for permission or merely narrate the workaround',
-  'Repeated recurrence makes the owner repair load-bearing work, not optional cleanup'
+  'Repeated recurrence makes the owner repair load-bearing work, not optional cleanup',
+  'canonical path, tool entrypoint, instruction, lifecycle owner, or automation behavior',
+  'do not merely route around it, recreate the lost surface, or continue as though the defect did not occur'
 )) {
   if (-not $rules.Contains($required)) { throw "RULES missing routine-trap invariant: $required" }
 }
