@@ -6,6 +6,7 @@ if ($line.Count -ne 1) { throw "expected exactly one start_process command-shape
 foreach ($required in @(
   'For local Python helpers on Windows, prefer the PowerShell call-operator form',
   'never assign to the read-only automatic `$PID` variable',
+  'PowerShell variable names are case-insensitive, so `$pid`/`$Pid` are the same variable',
   '`$args` is writable and may be assigned when that overwrite is intentional',
   '& python.exe',
   'make one materially normalized retry',
