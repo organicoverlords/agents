@@ -1,12 +1,13 @@
 # Shared agent work contract
 
-Shared contract version: 78
+Shared contract version: 79
 
 - **Shared-rule serving convergence is one-minute maximum.** `C:\Users\Lauri\.agents` must be checked against `origin/main` at least once per minute by the installed headless `AgentRulesCheckoutSync` task. The task may only use the fail-closed default `Sync-AgentRulesCheckout.ps1` path: clean-behind may fast-forward; dirty, ahead, diverged, wrong-branch, or error states remain untouched for explicit attribution/repair. Never stretch this cadence to batch convenience, and never put Git fetch/convergence inside bootstrap itself.
 
 Every agent uses this same repo-work contract. Local repo `AGENTS.md`/`CLAUDE.md` files only point here and to `RULES.md`.
 
 ## Entering a repo
+- Apply the `RULES.md` **research-deep/output-lean direct-reply gate** before returning a direct user answer: investigate to the depth needed for correctness, refresh materially changeable facts from proposition-appropriate current/live evidence, then compress the final reply to the result and only explanation/caveats that change understanding or action. Do not expose tool chronology, evidence inventories, internal audit steps, or research volume merely because they were needed to reach the answer.
 - **Canonical discoverability gaps are repaired at the owner.** When a bounded lookup shows that an expected alias, keyword, trigger, or other navigation term is missing from a canonical navigation/index/search surface where it should resolve, first verify the existing canonical owner from current evidence. If the term legitimately belongs there and the change is cheap, reversible, and collision-safe, add the missing mapping at that owner plus the narrowest regression check as part of the current work. Fail closed when ownership is ambiguous, the absence is intentional, or the surface is external/read-only; never create a parallel index, registry, or authority merely to make a lookup succeed.
 - `RULES.md` and `AGENTS.md` carry the same monotonic `Shared contract version: N`. Any shared-contract change to either file increments both version headers in the same patch; bootstrap must report that exact coherent version.
 - Before any stack/MCP/infra mutation, apply the `RULES.md` evidence-sufficiency gate: reuse the fresh bootstrap's bounded current topology/recovery orientation, then use one targeted `stack_atlas.py find <natural-language-query>` when owner/WIP/runtime/history identity is unknown. Load full Stack Atlas inventory only when bootstrap plus targeted discovery still cannot bound the cross-component dependency/blast radius. Never infer stack topology from one subsystem file, service, search hit, component lookup, or derived projection.
