@@ -13,6 +13,7 @@ foreach ($required in @(
   'derive one reusable prevention lesson as an actionable condition/action rule that would have prevented the recurrence',
   'persist one compact durable correction containing the user''s literal `slopwall` signal, the rejected behavior, the diagnosis/mechanism, and the prevention lesson',
   'The durable correction is mandatory for literal `slopwall`',
+  'Slopwall remains pending and the direct-reply pre-final gate must fail closed',
   'an apology, shorter rewrite, explanation, promise, or response-style change does not satisfy the incident',
   'A slopwall is not defined by length: it is substance displacement'
 )) {
@@ -23,6 +24,8 @@ $agent = @($agents -split "`r?`n" | Where-Object { $_ -match '^- \*\*User correc
 if ($agent.Count -ne 1) { throw "expected exactly one Slopwall durable-learning owner; found $($agent.Count)" }
 foreach ($required in @(
   'Literal `slopwall` is the durability exception, not a task-priority exception',
+  'pending fail-closed pre-final state',
+  'accepted `memory_bank.py record --kind correction` result',
   'name the concrete rejected behavior',
   'infer the best-supported mechanism or decision failure',
   'derive one reusable prevention lesson that names the triggering condition and required different action',
