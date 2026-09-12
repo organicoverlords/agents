@@ -1,16 +1,19 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $rules = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RULES.md'))
-$owners = @($rules -split "`r?`n" | Where-Object { $_ -match '^- \*\*ELI5 means simplify the actual explanation, not automatically replace it with an analogy\.\*\*' })
+$owners = @($rules -split "`r?`n" | Where-Object { $_ -match '^- \*\*ELI5 means give the concise core in normal understandable language, not dumb the subject down\.\*\*' })
 if ($owners.Count -ne 1) { throw "expected one ELI5 reply owner; found $($owners.Count)" }
 foreach ($required in @(
-  'preserve the real subject and causal/factual structure',
-  'reducing jargon',
+  'lead with the essential answer and only the context needed to understand it',
+  'Keep the real technical/factual distinctions that matter',
+  'replace unnecessary jargon with normal words',
+  'Prefer a few compact paragraphs',
+  'use a short list only when it genuinely makes the core easier to scan',
+  'do not turn the answer into a long bullet wall or listicle',
   'Do not default to cars, houses, restaurants, toys, or other metaphors/analogies',
-  'Use an analogy only when the user explicitly asks for one or when it materially clarifies a difficult point',
-  'keep it brief and secondary to the direct explanation',
-  'Never let the analogy become the explanation itself'
+  'Never infantilize the explanation',
+  'oversimplify away important constraints'
 )) {
   if (-not $owners[0].Contains($required)) { throw "ELI5 rule missing invariant: $required" }
 }
-[ordered]@{ ok=$true; simplify_not_metaphorize=$true; analogy_not_default=$true; direct_explanation_primary=$true } | ConvertTo-Json -Compress
+[ordered]@{ ok=$true; concise_core=$true; normal_language=$true; no_dumbing_down=$true; no_bullet_wall=$true; analogy_not_default=$true } | ConvertTo-Json -Compress
